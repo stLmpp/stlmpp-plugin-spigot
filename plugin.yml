@@ -1,5 +1,0 @@
-name: 'First'
-version: 1.0.0
-author: stLmpp
-main: com.stlmpp.spigot.plugins.Second
-api-version: 1.17
