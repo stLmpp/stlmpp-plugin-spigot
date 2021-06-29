@@ -17,9 +17,9 @@ public class ThunderCheckEvent implements Listener {
   @EventHandler
   public void onThunderChange(ThunderChangeEvent event) {
     if (event.toThunderState()) {
-      this.plugin.activateThunderEvent();
+      this.plugin.activateSuperThunderEvent();
     } else {
-      this.plugin.deactivateThunderEvent();
+      this.plugin.deactivateSuperThunderEvent();
     }
   }
 }

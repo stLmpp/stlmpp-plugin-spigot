@@ -13,6 +13,11 @@ public class Config {
   public static final String superThunderEnabled = "super-thunder-enabled";
   public static final String superThunderChance = "super-thunder-chance";
   public static final String superThunderSecondsIntervalEvents = "super-thunder-seconds-interval-events";
+  public static final String superThunderEventChance = "super-thunder-event-chance";
+  public static final String superThunderLightningWeight = "super-thunder-lightning-weight";
+  public static final String superThunderExplosiveLightningWeight = "super-thunder-explosive-lightning-weight";
+  public static final String superThunderLightningCreeperWeight = "super-thunder-lightning-creeper-weight";
+  public static final String world = "world";
 
   public static final String devMode = "dev-mode";
 }
