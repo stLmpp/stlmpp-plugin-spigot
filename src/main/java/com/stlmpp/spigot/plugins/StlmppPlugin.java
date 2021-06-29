@@ -17,6 +17,7 @@ public class StlmppPlugin extends JavaPlugin {
     this.config.addDefault(Config.lightningChancePerSecond, 10);
     this.config.addDefault(Config.lightningExplosionChance, 50);
     this.config.addDefault(Config.worldNether, "world_nether");
+    this.config.addDefault(Config.seedMaxBlocks, 40);
     this.config.addDefault(Config.devMode, false);
     this.config.options().copyDefaults(true);
     this.saveConfig();
