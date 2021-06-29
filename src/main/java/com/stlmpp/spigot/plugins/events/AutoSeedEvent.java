@@ -3,7 +3,6 @@ package com.stlmpp.spigot.plugins.events;
 import com.stlmpp.spigot.plugins.StlmppPlugin;
 import com.stlmpp.spigot.plugins.utils.Config;
 import java.util.*;
-import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -57,9 +56,7 @@ public class AutoSeedEvent implements Listener {
     while (!queue.isEmpty() && blocks.size() < maxBlocks) {
       currentIteration++;
       if (currentIteration > 1000) {
-        if (this.plugin.isDevMode) {
-          StlmppPlugin.sendConsoleMessage("Auto seed tried more than 1000 iterations!");
-        }
+        StlmppPlugin.sendConsoleMessage("Auto seed tried more than 1000 iterations!");
         break;
       }
       var block = queue.remove();
