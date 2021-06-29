@@ -9,5 +9,6 @@ public class Config {
   public static final String worldNether = "world-nether";
   public static final String autoSeedMaxBlocks = "auto-seed-max-blocks";
   public static final String autoSeedEnabled = "auto-seed-enabled";
+  public static final String autoSeedAllowedSeedList = "auto-seed-allowed-seed-list";
   public static final String devMode = "dev-mode";
 }

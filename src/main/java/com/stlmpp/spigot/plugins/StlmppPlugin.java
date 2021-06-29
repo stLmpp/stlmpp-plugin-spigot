@@ -4,6 +4,7 @@ import com.stlmpp.spigot.plugins.events.AutoSeedEvent;
 import com.stlmpp.spigot.plugins.tasks.NetherLightningTask;
 import com.stlmpp.spigot.plugins.utils.Config;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -13,7 +14,7 @@ public class StlmppPlugin extends JavaPlugin {
     Bukkit.getConsoleSender().sendMessage("[StlmppPlugin] " + message);
   }
 
-  public FileConfiguration config = this.getConfig();
+  public final FileConfiguration config = this.getConfig();
   public Boolean isDevMode = false;
 
   private void createConfig() {
@@ -24,6 +25,15 @@ public class StlmppPlugin extends JavaPlugin {
     this.config.addDefault(Config.worldNether, "world_nether");
     this.config.addDefault(Config.autoSeedEnabled, true);
     this.config.addDefault(Config.autoSeedMaxBlocks, 40);
+    var autoSeedAllowedSeedList = new String[] {
+      Material.WHEAT_SEEDS.name(),
+      Material.MELON_SEEDS.name(),
+      Material.BEETROOT_SEEDS.name(),
+      Material.PUMPKIN_SEEDS.name(),
+      Material.POTATO.name(),
+      Material.CARROT.name(),
+    };
+    this.config.addDefault(Config.autoSeedAllowedSeedList, autoSeedAllowedSeedList);
     this.config.addDefault(Config.devMode, false);
     this.config.options().copyDefaults(true);
     this.saveConfig();
