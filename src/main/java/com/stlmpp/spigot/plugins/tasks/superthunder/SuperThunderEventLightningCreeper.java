@@ -17,7 +17,7 @@ public class SuperThunderEventLightningCreeper implements SuperThunderEvent {
     if (location == null) {
       return;
     }
-    var creeper = (Creeper) world.spawnEntity(location, EntityType.CREEPER);
+    var creeper = (Creeper) world.spawnEntity(location.add(0, 1, 0), EntityType.CREEPER);
     creeper.setPowered(true);
   }
 }
