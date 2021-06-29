@@ -1,5 +1,6 @@
 package com.stlmpp.spigot.plugins;
 
+import com.stlmpp.spigot.plugins.events.SeedEvent;
 import com.stlmpp.spigot.plugins.tasks.NetherLightningTask;
 import com.stlmpp.spigot.plugins.utils.Config;
 import org.bukkit.Bukkit;
@@ -39,6 +40,7 @@ public class StlmppPlugin extends JavaPlugin {
         );
       new NetherLightningTask(this);
     }
+    new SeedEvent(this);
   }
 
   @Override

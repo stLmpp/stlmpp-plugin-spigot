@@ -3,6 +3,7 @@ package com.stlmpp.spigot.plugins.events;
 import com.stlmpp.spigot.plugins.StlmppPlugin;
 import com.stlmpp.spigot.plugins.utils.Config;
 import java.util.*;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -15,6 +16,7 @@ public class SeedEvent implements Listener {
 
   public SeedEvent(StlmppPlugin plugin) {
     this.plugin = plugin;
+    this.plugin.getServer().getPluginManager().registerEvents(this, this.plugin);
   }
 
   private final StlmppPlugin plugin;
@@ -71,19 +73,23 @@ public class SeedEvent implements Listener {
     if (block == null) {
       return;
     }
+    Bukkit.getConsoleSender().sendMessage("Material " + block.getType().name());
+    if (event.getItem() != null) {
+      Bukkit.getConsoleSender().sendMessage("InHand " + event.getItem().getType().name());
+    }
     var blockType = block.getType();
     var playerInventory = player.getInventory();
     if (
       !player.isSneaking() ||
       !event.hasItem() ||
       blockType != Material.FARMLAND ||
-      !playerInventory.contains(Material.GRASS)
+      !playerInventory.contains(Material.WHEAT_SEEDS)
     ) {
       return;
     }
     var items = new ArrayList<ItemStack>();
     for (ItemStack itemStack : playerInventory) {
-      if (itemStack.getType() == Material.GRASS) {
+      if (itemStack != null && itemStack.getType() == Material.WHEAT_SEEDS) {
         items.add(itemStack);
       }
     }
@@ -94,5 +100,13 @@ public class SeedEvent implements Listener {
     var maxBlocks = Math.max(this.plugin.config.getInt(Config.seedMaxBlocks), itemsAmount);
     var blocks = new HashSet<Block>();
     this.getBlocks(blocks, block, new HashSet<Block>(), maxBlocks, 0);
+    var world = player.getWorld();
+    blocks.forEach(
+      _block -> {
+        Bukkit.getConsoleSender().sendMessage("X=" + _block.getX() + ", Y=" + _block.getY() + ", Z=" + _block.getZ());
+        var blockAbove = world.getBlockAt(_block.getX(), _block.getY() + 3, _block.getZ());
+        blockAbove.setType(Material.DIAMOND_BLOCK);
+      }
+    );
   }
 }
