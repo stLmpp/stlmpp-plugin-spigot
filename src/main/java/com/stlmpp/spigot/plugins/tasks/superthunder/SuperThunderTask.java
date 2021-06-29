@@ -25,7 +25,7 @@ public class SuperThunderTask extends BukkitRunnable {
         0,
         Tick.fromSeconds(this.plugin.config.getInt(Config.superThunderSecondsIntervalEvents))
       );
-    Bukkit.broadcastMessage("R.I.P.");
+    Bukkit.broadcastMessage("R.I.P. Preparem os cuzes");
     this.events.add(
         this.getWeight(Config.superThunderExplosiveLightningWeight),
         new SuperThunderEventExplosiveLightning()
