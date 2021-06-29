@@ -158,6 +158,9 @@ public class StlmppPlugin extends JavaPlugin {
       this.autoSeedEvent = new AutoSeedEvent(this);
     }
     if (this.config.getBoolean(Config.superThunderEnabled)) {
+      StlmppPlugin.sendConsoleMessage(
+        "Super thunder activated with " + this.config.getInt(Config.superThunderChance) + "% of chance"
+      );
       this.thunderCheckEvent = new ThunderCheckEvent(this);
     }
   }
