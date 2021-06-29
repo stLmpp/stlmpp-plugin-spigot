@@ -66,7 +66,7 @@ public class StlmppPlugin extends JavaPlugin {
     };
     this.config.addDefault(Config.autoSeedAllowedSeedList, autoSeedAllowedSeedList);
     this.config.addDefault(Config.superThunderEnabled, true);
-    this.config.addDefault(Config.superThunderChance, 25);
+    this.config.addDefault(Config.superThunderChance, 20);
     this.config.addDefault(Config.superThunderSecondsIntervalEvents, 2);
     this.config.addDefault(Config.superThunderEventChance, 50);
     this.config.addDefault(Config.superThunderLightningWeight, 20d);
