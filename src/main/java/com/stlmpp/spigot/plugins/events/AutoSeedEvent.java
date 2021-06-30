@@ -2,6 +2,7 @@ package com.stlmpp.spigot.plugins.events;
 
 import com.stlmpp.spigot.plugins.StlmppPlugin;
 import com.stlmpp.spigot.plugins.utils.Config;
+import com.stlmpp.spigot.plugins.utils.Util;
 import java.util.*;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
@@ -24,17 +25,9 @@ public class AutoSeedEvent implements Listener {
     this.fromSeed.put(Material.BEETROOT_SEEDS, Material.BEETROOTS);
     this.fromSeed.put(Material.POTATO, Material.POTATOES);
     this.fromSeed.put(Material.CARROT, Material.CARROTS);
-    var allowedSeedNames = this.plugin.config.getList(Config.autoSeedAllowedSeedList);
+    final var allowedSeedNames = this.plugin.config.getList(Config.autoSeedAllowedSeedList);
     if (allowedSeedNames != null) {
-      for (Object allowedSeedName : allowedSeedNames) {
-        if (!(allowedSeedName instanceof String allowedSeedNameString)) {
-          continue;
-        }
-        var allowedSeedMaterial = Material.getMaterial(allowedSeedNameString);
-        if (allowedSeedMaterial != null) {
-          this.allowedSeeds.add(allowedSeedMaterial);
-        }
-      }
+      Util.setMaterialsFromNames(this.allowedSeeds, allowedSeedNames);
     }
   }
 
@@ -49,17 +42,17 @@ public class AutoSeedEvent implements Listener {
 
   private Set<Block> getBlocks(Block startBlock, int maxBlocks) {
     int currentIteration = 0;
-    var blocks = new HashSet<Block>();
-    var visited = new HashSet<Block>();
+    final var blocks = new HashSet<Block>();
+    final var visited = new HashSet<Block>();
     blocks.add(startBlock);
-    var queue = new LinkedList<>(this.getRelatives(startBlock));
+    final var queue = new LinkedList<>(this.getRelatives(startBlock));
     while (!queue.isEmpty() && blocks.size() < maxBlocks) {
       currentIteration++;
       if (currentIteration > 1000) {
         StlmppPlugin.sendConsoleMessage("Auto seed tried more than 1000 iterations!");
         break;
       }
-      var block = queue.remove();
+      final var block = queue.remove();
       if (!visited.contains(block)) {
         visited.add(block);
         if (block.getType() == Material.FARMLAND) {
@@ -77,7 +70,7 @@ public class AutoSeedEvent implements Listener {
     if (items.size() == 0) {
       return;
     }
-    var first = items.get(0);
+    final var first = items.get(0);
     first.setAmount(first.getAmount() - 1);
     if (first.getAmount() <= 0) {
       items.remove(0);
@@ -89,38 +82,38 @@ public class AutoSeedEvent implements Listener {
     if (event.getAction() != Action.RIGHT_CLICK_BLOCK) {
       return;
     }
-    var itemInHand = event.getItem();
+    final var itemInHand = event.getItem();
     if (itemInHand == null) {
       return;
     }
-    var itemInHandType = itemInHand.getType();
+    final var itemInHandType = itemInHand.getType();
     if (!this.allowedSeeds.contains(itemInHandType)) {
       return;
     }
-    var plant = this.fromSeed.get(itemInHandType);
+    final var plant = this.fromSeed.get(itemInHandType);
     if (plant == null) {
       return;
     }
-    var block = event.getClickedBlock();
+    final var block = event.getClickedBlock();
     if (block == null) {
       return;
     }
     if (event.getBlockFace() != BlockFace.UP) {
       return;
     }
-    var blockType = block.getType();
+    final var blockType = block.getType();
     if (blockType != Material.FARMLAND) {
       return;
     }
-    var player = event.getPlayer();
+    final var player = event.getPlayer();
     if (!player.isSneaking()) {
       return;
     }
-    var playerInventory = player.getInventory();
+    final var playerInventory = player.getInventory();
     if (!playerInventory.contains(itemInHandType)) {
       return;
     }
-    var items = new ArrayList<ItemStack>();
+    final var items = new ArrayList<ItemStack>();
     for (ItemStack itemStack : playerInventory) {
       if (itemStack != null && itemStack.getType() == itemInHandType) {
         items.add(itemStack);
@@ -129,13 +122,13 @@ public class AutoSeedEvent implements Listener {
     if (items.size() == 0) {
       return;
     }
-    var configAutoSeedMaxBlocks = this.plugin.config.getInt(Config.autoSeedMaxBlocks);
-    var isCreativeGameMode = player.getGameMode() == GameMode.CREATIVE;
-    var itemsAmount = isCreativeGameMode
+    final var configAutoSeedMaxBlocks = this.plugin.config.getInt(Config.autoSeedMaxBlocks);
+    final var isCreativeGameMode = player.getGameMode() == GameMode.CREATIVE;
+    final var itemsAmount = isCreativeGameMode
       ? configAutoSeedMaxBlocks
       : items.stream().reduce(0, (acc, item) -> acc + item.getAmount(), Integer::sum);
-    var maxBlocks = Math.min(configAutoSeedMaxBlocks, itemsAmount);
-    var blocks = this.getBlocks(block, maxBlocks);
+    final var maxBlocks = Math.min(configAutoSeedMaxBlocks, itemsAmount);
+    final var blocks = this.getBlocks(block, maxBlocks);
     for (Block _block : blocks) {
       if (!isCreativeGameMode) {
         this.removeOneFromStackList(items);

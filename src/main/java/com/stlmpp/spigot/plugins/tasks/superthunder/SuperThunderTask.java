@@ -39,9 +39,9 @@ public class SuperThunderTask extends BukkitRunnable {
     if (!Chance.of(this.plugin.config.getInt(Config.superThunderEventChance))) {
       return;
     }
-    var randomEvent = this.events.next();
+    final var randomEvent = this.events.next();
     if (this.plugin.isDevMode) {
-      Bukkit.broadcastMessage("Super thunder event: " + randomEvent.getClass().getName());
+      Bukkit.broadcastMessage("Super thunder event: " + randomEvent.getClass().getSimpleName());
     }
     randomEvent.run(this.plugin);
   }

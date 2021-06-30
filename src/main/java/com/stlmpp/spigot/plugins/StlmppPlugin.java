@@ -1,16 +1,17 @@
 package com.stlmpp.spigot.plugins;
 
 import com.stlmpp.spigot.plugins.events.AutoSeedEvent;
+import com.stlmpp.spigot.plugins.events.CaveInEvent;
 import com.stlmpp.spigot.plugins.events.ThunderCheckEvent;
 import com.stlmpp.spigot.plugins.tasks.NetherLightningTask;
 import com.stlmpp.spigot.plugins.tasks.superthunder.SuperThunderTask;
 import com.stlmpp.spigot.plugins.utils.Chance;
 import com.stlmpp.spigot.plugins.utils.Config;
+import com.stlmpp.spigot.plugins.utils.Util;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -40,6 +41,11 @@ public class StlmppPlugin extends JavaPlugin {
   @Nullable
   public SuperThunderTask superThunderTask = null;
 
+  @Nullable
+  public CaveInEvent caveInEvent = null;
+
+  public StlmppPluginConfig stlmppPluginConfig;
+
   public String getWorldName() {
     return this.config.getString(Config.world);
   }
@@ -48,35 +54,14 @@ public class StlmppPlugin extends JavaPlugin {
     return this.config.getString(Config.worldNether);
   }
 
-  private void createConfig() {
-    this.config.addDefault(Config.lightningChance, 40);
-    this.config.addDefault(Config.lightningEnabled, true);
-    this.config.addDefault(Config.lightningChancePerSecond, 10);
-    this.config.addDefault(Config.lightningExplosionChance, 50);
-    this.config.addDefault(Config.worldNether, "world_nether");
-    this.config.addDefault(Config.autoSeedEnabled, true);
-    this.config.addDefault(Config.autoSeedMaxBlocks, 40);
-    var autoSeedAllowedSeedList = new String[] {
-      Material.WHEAT_SEEDS.name(),
-      Material.MELON_SEEDS.name(),
-      Material.BEETROOT_SEEDS.name(),
-      Material.PUMPKIN_SEEDS.name(),
-      Material.POTATO.name(),
-      Material.CARROT.name(),
-    };
-    this.config.addDefault(Config.autoSeedAllowedSeedList, autoSeedAllowedSeedList);
-    this.config.addDefault(Config.superThunderEnabled, true);
-    this.config.addDefault(Config.superThunderChance, 20);
-    this.config.addDefault(Config.superThunderSecondsIntervalEvents, 2);
-    this.config.addDefault(Config.superThunderEventChance, 50);
-    this.config.addDefault(Config.superThunderLightningWeight, 20d);
-    this.config.addDefault(Config.superThunderExplosiveLightningWeight, 10d);
-    this.config.addDefault(Config.superThunderLightningCreeperWeight, 5d);
-    this.config.addDefault(Config.world, "world");
-    this.config.addDefault(Config.devMode, false);
-    this.config.options().copyDefaults(true);
-    this.saveConfig();
-    this.isDevMode = this.config.getBoolean(Config.devMode);
+  @Nullable
+  public World getWorld() {
+    return this.getServer().getWorld(this.getWorldName());
+  }
+
+  @Nullable
+  public World getWorldNether() {
+    return this.getServer().getWorld(this.getWorldNetherName());
   }
 
   public void activateSuperThunderEvent() {
@@ -93,43 +78,37 @@ public class StlmppPlugin extends JavaPlugin {
     }
   }
 
+  @Nullable
   public Location strikeLightningRandomPlayer(@NotNull World world) {
-    var players = world.getPlayers();
-    var playersSize = players.size();
+    final var players = world.getPlayers();
+    final var playersSize = players.size();
     if (playersSize == 0) {
       return null;
     }
-    var randomPlayer = players.get(this.random.nextInt(playersSize));
-    var playerLocation = randomPlayer.getLocation();
-    var playerX = playerLocation.getBlockX();
-    var playerY = playerLocation.getBlockY();
-    var playerZ = playerLocation.getBlockZ();
-    var lightningX = ThreadLocalRandom.current().nextInt(playerX - 50, playerX + 51);
-    var lightningY = ThreadLocalRandom.current().nextInt(playerY - 10, playerY + 11);
-    var lightningZ = ThreadLocalRandom.current().nextInt(playerZ - 50, playerZ + 51);
-    var iteration = 0;
-    while (world.getBlockAt(lightningX, lightningY, lightningZ).getType().isAir()) {
-      iteration++;
-      if (iteration > 64) {
-        break;
-      }
-      lightningY--;
-    }
+    final var playerLocation = players.get(this.random.nextInt(playersSize)).getLocation();
+    final var playerX = playerLocation.getBlockX();
+    final var playerY = playerLocation.getBlockY();
+    final var playerZ = playerLocation.getBlockZ();
+    final var lightningX = ThreadLocalRandom.current().nextInt(playerX - 50, playerX + 51);
+    final var lightningY = ThreadLocalRandom.current().nextInt(playerY - 10, playerY + 11);
+    final var lightningZ = ThreadLocalRandom.current().nextInt(playerZ - 50, playerZ + 51);
+    final var lightningLocation = new Location(world, lightningX, lightningY, lightningZ);
+    lightningLocation.setY(Util.getFloor(world, lightningLocation));
     if (this.isDevMode) {
       Bukkit.broadcastMessage("Striking lightning at X=" + lightningX + ", Y=" + lightningY + ", Z=" + lightningZ);
     }
-    var lightningLocation = new Location(world, lightningX, lightningY, lightningZ);
     world.strikeLightning(lightningLocation);
     return lightningLocation;
   }
 
+  @Nullable
   public Location strikeLightningRandomPlayerWithChanceOfExplosion(@NotNull World world, int chanceOfExplosion) {
-    var lightningLocation = this.strikeLightningRandomPlayer(world);
+    final var lightningLocation = this.strikeLightningRandomPlayer(world);
     if (lightningLocation == null) {
       return null;
     }
     if (Chance.of(chanceOfExplosion)) {
-      var explosionPower = ThreadLocalRandom.current().nextInt(0, 16);
+      final var explosionPower = ThreadLocalRandom.current().nextInt(0, 16);
       if (this.isDevMode) {
         Bukkit.broadcastMessage("Struck lightning with explosive power of " + explosionPower);
       }
@@ -140,13 +119,13 @@ public class StlmppPlugin extends JavaPlugin {
 
   @Override
   public void onEnable() {
-    this.createConfig();
-    if (this.config.getBoolean(Config.lightningEnabled)) {
+    this.stlmppPluginConfig = new StlmppPluginConfig(this);
+    if (this.config.getBoolean(Config.netherLightningEnabled)) {
       StlmppPlugin.sendConsoleMessage(
         "Nether lightning activated with " +
-        this.config.getInt(Config.lightningChance) +
+        this.config.getInt(Config.netherLightningChance) +
         "% of chance, every " +
-        this.config.getInt(Config.lightningChancePerSecond) +
+        this.config.getInt(Config.netherLightningChancePerSecond) +
         " seconds!"
       );
       this.netherLightningTask = new NetherLightningTask(this);
@@ -162,6 +141,10 @@ public class StlmppPlugin extends JavaPlugin {
         "Super thunder activated with " + this.config.getInt(Config.superThunderChance) + "% of chance"
       );
       this.thunderCheckEvent = new ThunderCheckEvent(this);
+    }
+    if (this.config.getBoolean(Config.caveInEnabled)) {
+      StlmppPlugin.sendConsoleMessage("Cave-in enabled"); // TODO add more info to message
+      this.caveInEvent = new CaveInEvent(this);
     }
   }
 
