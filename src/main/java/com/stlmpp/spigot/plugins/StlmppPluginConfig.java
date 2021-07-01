@@ -44,6 +44,8 @@ public class StlmppPluginConfig {
     config.addDefault(Config.caveInChance, 3);
     final var caveInBlocks = new String[] { Material.STONE.name(), Material.COBBLESTONE.name() };
     config.addDefault(Config.caveInBlocks, caveInBlocks);
+    config.addDefault(Config.caveInMaxWidth, 10);
+    config.addDefault(Config.caveInMaxHeight, 10);
     config.addDefault(Config.devMode, false);
     config.options().copyDefaults(true);
     plugin.saveConfig();

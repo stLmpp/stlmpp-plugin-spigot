@@ -49,7 +49,7 @@ public class AutoSeedEvent implements Listener {
     while (!queue.isEmpty() && blocks.size() < maxBlocks) {
       currentIteration++;
       if (currentIteration > 1000) {
-        StlmppPlugin.sendConsoleMessage("Auto seed tried more than 1000 iterations!");
+        this.plugin.sendConsoleMessage("Auto seed tried more than 1000 iterations!");
         break;
       }
       final var block = queue.remove();

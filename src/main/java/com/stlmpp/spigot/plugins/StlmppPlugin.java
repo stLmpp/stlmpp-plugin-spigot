@@ -10,7 +10,6 @@ import com.stlmpp.spigot.plugins.utils.Config;
 import com.stlmpp.spigot.plugins.utils.Util;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -22,8 +21,8 @@ public class StlmppPlugin extends JavaPlugin {
 
   private final Random random = new Random();
 
-  public static void sendConsoleMessage(String message) {
-    Bukkit.getConsoleSender().sendMessage("[StlmppPlugin] " + message);
+  public void sendConsoleMessage(String message) {
+    this.getServer().getConsoleSender().sendMessage("[StlmppPlugin] " + message);
   }
 
   public final FileConfiguration config = this.getConfig();
@@ -95,7 +94,8 @@ public class StlmppPlugin extends JavaPlugin {
     final var lightningLocation = new Location(world, lightningX, lightningY, lightningZ);
     lightningLocation.setY(Util.getFloor(world, lightningLocation));
     if (this.isDevMode) {
-      Bukkit.broadcastMessage("Striking lightning at X=" + lightningX + ", Y=" + lightningY + ", Z=" + lightningZ);
+      this.getServer()
+        .broadcastMessage("Striking lightning at X=" + lightningX + ", Y=" + lightningY + ", Z=" + lightningZ);
     }
     world.strikeLightning(lightningLocation);
     return lightningLocation;
@@ -110,7 +110,7 @@ public class StlmppPlugin extends JavaPlugin {
     if (Chance.of(chanceOfExplosion)) {
       final var explosionPower = ThreadLocalRandom.current().nextInt(0, 16);
       if (this.isDevMode) {
-        Bukkit.broadcastMessage("Struck lightning with explosive power of " + explosionPower);
+        this.getServer().broadcastMessage("Struck lightning with explosive power of " + explosionPower);
       }
       world.createExplosion(lightningLocation, (float) explosionPower, true, true);
     }
@@ -121,29 +121,29 @@ public class StlmppPlugin extends JavaPlugin {
   public void onEnable() {
     this.stlmppPluginConfig = new StlmppPluginConfig(this);
     if (this.config.getBoolean(Config.netherLightningEnabled)) {
-      StlmppPlugin.sendConsoleMessage(
-        "Nether lightning activated with " +
-        this.config.getInt(Config.netherLightningChance) +
-        "% of chance, every " +
-        this.config.getInt(Config.netherLightningChancePerSecond) +
-        " seconds!"
-      );
+      this.sendConsoleMessage(
+          "Nether lightning activated with " +
+          this.config.getInt(Config.netherLightningChance) +
+          "% of chance, every " +
+          this.config.getInt(Config.netherLightningChancePerSecond) +
+          " seconds!"
+        );
       this.netherLightningTask = new NetherLightningTask(this);
     }
     if (this.config.getBoolean(Config.autoSeedEnabled)) {
-      StlmppPlugin.sendConsoleMessage(
-        "Auto seed activated with max of " + this.config.getInt(Config.autoSeedMaxBlocks) + " blocks!"
-      );
+      this.sendConsoleMessage(
+          "Auto seed activated with max of " + this.config.getInt(Config.autoSeedMaxBlocks) + " blocks!"
+        );
       this.autoSeedEvent = new AutoSeedEvent(this);
     }
     if (this.config.getBoolean(Config.superThunderEnabled)) {
-      StlmppPlugin.sendConsoleMessage(
-        "Super thunder activated with " + this.config.getInt(Config.superThunderChance) + "% of chance"
-      );
+      this.sendConsoleMessage(
+          "Super thunder activated with " + this.config.getInt(Config.superThunderChance) + "% of chance"
+        );
       this.thunderCheckEvent = new ThunderCheckEvent(this);
     }
     if (this.config.getBoolean(Config.caveInEnabled)) {
-      StlmppPlugin.sendConsoleMessage("Cave-in enabled"); // TODO add more info to message
+      this.sendConsoleMessage("Cave-in enabled with " + this.config.getInt(Config.caveInChance) + "% of chance");
       this.caveInEvent = new CaveInEvent(this);
     }
   }

@@ -20,6 +20,8 @@ public class Config {
   public static final String caveInEnabled = "cave-in-enabled";
   public static final String caveInMinHeight = "cave-in-min-height";
   public static final String caveInMinWidth = "cave-in-min-width";
+  public static final String caveInMaxWidth = "cave-in-max-width";
+  public static final String caveInMaxHeight = "cave-in-max-height";
   public static final String caveInMaxY = "cave-in-max-y";
   public static final String caveInImmunityItems = "cave-in-immunity-items";
   public static final String caveInChance = "cave-in-chance";

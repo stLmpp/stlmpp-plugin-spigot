@@ -6,9 +6,9 @@ import com.stlmpp.spigot.plugins.utils.Config;
 import com.stlmpp.spigot.plugins.utils.Util;
 import java.util.HashSet;
 import java.util.Set;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
+import java.util.concurrent.ThreadLocalRandom;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
@@ -22,7 +22,9 @@ public class CaveInEvent implements Listener {
   private final StlmppPlugin plugin;
   private final int maxY;
   private final int minHeight;
+  private final int maxHeight;
   private final int minWidth;
+  private final int maxWidth;
   private final Set<Material> blocks = new HashSet<>();
   private final BlockFace[] blockFaces = { BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST };
 
@@ -31,7 +33,9 @@ public class CaveInEvent implements Listener {
     this.plugin.getServer().getPluginManager().registerEvents(this, this.plugin);
     this.maxY = this.plugin.config.getInt(Config.caveInMaxY);
     this.minHeight = this.plugin.config.getInt(Config.caveInMinHeight);
+    this.maxHeight = this.plugin.config.getInt(Config.caveInMaxHeight);
     this.minWidth = this.plugin.config.getInt(Config.caveInMinWidth);
+    this.maxWidth = this.plugin.config.getInt(Config.caveInMaxWidth);
     final var materialNames = this.plugin.config.getList(Config.caveInBlocks);
     if (materialNames != null) {
       Util.setMaterialsFromNames(this.blocks, materialNames);
@@ -48,38 +52,44 @@ public class CaveInEvent implements Listener {
 
   private int getWidth(World world, Player player) {
     final var playerLocation = player.getLocation();
-    final var playerFacingDirectionIndex = this.getBlockFaceIndex(player.getEyeLocation().getYaw());
-    var rightDirectionIndex = playerFacingDirectionIndex + 1;
-    if (rightDirectionIndex > this.blockFaces.length - 1) {
-      rightDirectionIndex -= this.blockFaces.length;
+    final var leftBlockFace = this.getLeftBlockFace(player);
+
+    final var rightBlockFace = leftBlockFace.getOppositeFace();
+    final var blockPlayer = world.getBlockAt(playerLocation);
+    var notSolidBlocksToTheRight = 0;
+    var blockRight = blockPlayer.getRelative(rightBlockFace);
+    while (!blockRight.getType().isSolid() && notSolidBlocksToTheRight <= this.maxWidth) {
+      notSolidBlocksToTheRight++;
+      blockRight = blockRight.getRelative(rightBlockFace);
     }
+    var notSolidBlocksToTheLeft = 0;
+    var blockLeft = blockPlayer.getRelative(leftBlockFace);
+    while (!blockLeft.getType().isSolid() && notSolidBlocksToTheLeft <= this.maxWidth) {
+      notSolidBlocksToTheLeft++;
+      blockLeft = blockLeft.getRelative(leftBlockFace);
+    }
+    return (notSolidBlocksToTheLeft + notSolidBlocksToTheRight) + 1;
+  }
+
+  private BlockFace getFrontBlockFace(Player player) {
+    final var playerFacingDirectionIndex = this.getBlockFaceIndex(player.getEyeLocation().getYaw());
+    return this.blockFaces[playerFacingDirectionIndex].getOppositeFace();
+  }
+
+  private BlockFace getLeftBlockFace(Player player) {
+    final var playerFacingDirectionIndex = this.getBlockFaceIndex(player.getEyeLocation().getYaw());
     var leftDirectionIndex = playerFacingDirectionIndex - 1;
     if (leftDirectionIndex < 0) {
       leftDirectionIndex += this.blockFaces.length;
     }
-    final var rightBlockFace = this.blockFaces[rightDirectionIndex];
-    final var leftBlockFace = this.blockFaces[leftDirectionIndex];
-    final var blockPlayer = world.getBlockAt(playerLocation);
-    var airBlocksToTheRight = 0;
-    var blockRight = blockPlayer.getRelative(rightBlockFace);
-    while (!blockRight.getType().isSolid() && airBlocksToTheRight <= 10) {
-      airBlocksToTheRight++;
-      blockRight = blockRight.getRelative(rightBlockFace);
-    }
-    var airBlocksToTheLeft = 0;
-    var blockLeft = blockPlayer.getRelative(leftBlockFace);
-    while (!blockLeft.getType().isSolid() && airBlocksToTheLeft <= 10) {
-      airBlocksToTheLeft++;
-      blockLeft = blockLeft.getRelative(leftBlockFace);
-    }
-    return (airBlocksToTheLeft + airBlocksToTheRight) + 1;
+    return this.blockFaces[leftDirectionIndex].getOppositeFace();
   }
 
   @EventHandler(priority = EventPriority.LOWEST)
   public void onBlockBreak(BlockBreakEvent event) {
-    /*if (!Chance.of(this.plugin.config.getInt(Config.caveInChance))) {
+    if (!Chance.of(this.plugin.config.getInt(Config.caveInChance))) {
       return;
-    } TODO activate*/
+    }
     final var player = event.getPlayer();
     final var world = player.getWorld();
     if (!world.getName().equals(this.plugin.getWorldName())) {
@@ -105,37 +115,45 @@ public class CaveInEvent implements Listener {
       return;
     }
     final var height = ceilingY - floorY;
-    Bukkit.broadcastMessage("HEIGHT = " + height);
     if (height < this.minHeight) {
       return;
     }
     final var width = this.getWidth(world, player);
-    Bukkit.broadcastMessage("WIDTH = " + width);
-    Bukkit.broadcastMessage("Min-width = " + this.minWidth);
     if (width < this.minWidth) {
       return;
     }
     final var blockAbovePlayer = world.getBlockAt(playerLocation.getBlockX(), ceilingY, playerLocation.getBlockZ());
-    final var blockAbovePlayerType = blockAbovePlayer.getState().getData();
-    var x = playerLocation.getBlockX();
-    int y = ceilingY;
-    var z = playerLocation.getBlockZ();
-    for (int i = 0; i < 2; i++) {
-      for (int j = 0; j < 2; j++) {
-        for (int k = 0; k < 2; k++) {
-          var blockAt = world.getBlockAt(x, y, z);
-          Bukkit.broadcastMessage(x + " " + y + " " + z + " = " + blockAt.getType().name());
+    final var widthOfCaveIn = Math.max(width - 2, 2);
+    final var increaseSidesWidth = widthOfCaveIn / 2;
+    final var increaseFront = ThreadLocalRandom.current().nextInt(3, 11);
+    final var leftBlockFace = this.getLeftBlockFace(player);
+    final var rightBlockFace = leftBlockFace.getOppositeFace();
+    final var frontBlockFace = this.getFrontBlockFace(player);
+    final var backBlockFace = frontBlockFace.getOppositeFace();
+    final var caveInHeight = ThreadLocalRandom.current().nextInt(this.minHeight, this.maxHeight + 1);
+    final var firstBlock = blockAbovePlayer
+      .getRelative(backBlockFace, increaseFront)
+      .getRelative(leftBlockFace, increaseSidesWidth);
+
+    world.playSound(blockAbovePlayer.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1, 1);
+
+    for (var x = 0; x < increaseFront * 2; x++) {
+      for (var y = 0; y < caveInHeight; y++) {
+        for (var z = 0; z < widthOfCaveIn; z++) {
+          final var blockAt = firstBlock
+            .getRelative(frontBlockFace, x)
+            .getRelative(BlockFace.UP, y)
+            .getRelative(rightBlockFace, z);
           if (blockAt.getType().isSolid()) {
-            var blockAtData = blockAt.getState().getData();
-            blockAt.setType(Material.AIR);
-            var location = new Location(world, x, y, z);
-            world.spawnFallingBlock(location, blockAtData);
+            final var blockData = blockAt.getState().getBlockData();
+            final var blockReplaced = world.getBlockAt(blockAt.getX(), blockAt.getY() - height, blockAt.getZ());
+            if (!blockReplaced.getType().isSolid()) {
+              blockReplaced.setBlockData(blockData);
+              blockAt.setType(Material.AIR);
+            }
           }
-          x++;
         }
-        z++;
       }
-      y++;
     }
   }
 }
