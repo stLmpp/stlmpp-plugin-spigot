@@ -5,7 +5,6 @@ import com.stlmpp.spigot.plugins.utils.Chance;
 import com.stlmpp.spigot.plugins.utils.Config;
 import com.stlmpp.spigot.plugins.utils.Tick;
 import com.stlmpp.spigot.plugins.utils.WeightedRandomCollection;
-import org.bukkit.Bukkit;
 import org.bukkit.scheduler.BukkitRunnable;
 
 public class SuperThunderTask extends BukkitRunnable {
@@ -25,13 +24,14 @@ public class SuperThunderTask extends BukkitRunnable {
         0,
         Tick.fromSeconds(this.plugin.config.getInt(Config.superThunderSecondsIntervalEvents))
       );
-    Bukkit.broadcastMessage("R.I.P. Preparem os cuzes");
+    this.plugin.getServer().broadcastMessage("R.I.P. Preparem os cuzes");
     this.events.add(
         this.getWeight(Config.superThunderExplosiveLightningWeight),
         new SuperThunderEventExplosiveLightning()
       )
       .add(this.getWeight(Config.superThunderLightningWeight), new SuperThunderEventRegularLightning())
-      .add(this.getWeight(Config.superThunderLightningCreeperWeight), new SuperThunderEventLightningCreeper());
+      .add(this.getWeight(Config.superThunderLightningCreeperWeight), new SuperThunderEventLightningCreeper())
+      .add(this.getWeight(Config.superThunderGhastSwarmWeight), new SuperThunderEventGhastSwarm());
   }
 
   @Override
@@ -39,9 +39,9 @@ public class SuperThunderTask extends BukkitRunnable {
     if (!Chance.of(this.plugin.config.getInt(Config.superThunderEventChance))) {
       return;
     }
-    var randomEvent = this.events.next();
+    final var randomEvent = this.events.next();
     if (this.plugin.isDevMode) {
-      Bukkit.broadcastMessage("Super thunder event: " + randomEvent.getClass().getName());
+      this.plugin.getServer().broadcastMessage("Super thunder event: " + randomEvent.getClass().getSimpleName());
     }
     randomEvent.run(this.plugin);
   }
