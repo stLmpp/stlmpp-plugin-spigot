@@ -75,18 +75,6 @@ public class CaveInEvent implements Listener {
     return (airBlocksToTheLeft + airBlocksToTheRight) + 1;
   }
 
-  private Integer getHeight(World world, Location location) {
-    final var floorY = Util.getFloor(world, location, true, 15);
-    if (floorY == null) {
-      return null;
-    }
-    final var ceilingY = Util.getCeiling(world, location, true, 15);
-    if (ceilingY == null) {
-      return null;
-    }
-    return (ceilingY - floorY) - 1;
-  }
-
   @EventHandler(priority = EventPriority.LOWEST)
   public void onBlockBreak(BlockBreakEvent event) {
     /*if (!Chance.of(this.plugin.config.getInt(Config.caveInChance))) {
@@ -108,17 +96,46 @@ public class CaveInEvent implements Listener {
     if (!this.blocks.contains(block.getType())) {
       return;
     }
-    final var height = this.getHeight(world, playerLocation);
+    final var floorY = Util.getFloor(world, playerLocation, true, 15);
+    if (floorY == null) {
+      return;
+    }
+    final var ceilingY = Util.getCeiling(world, playerLocation, true, 15);
+    if (ceilingY == null) {
+      return;
+    }
+    final var height = ceilingY - floorY;
     Bukkit.broadcastMessage("HEIGHT = " + height);
-    if (height == null || height < this.minHeight) {
+    if (height < this.minHeight) {
       return;
     }
-    Bukkit.broadcastMessage("WIDTH = " + this.getWidth(world, player));
-    if (this.getWidth(world, player) < this.minWidth) {
+    final var width = this.getWidth(world, player);
+    Bukkit.broadcastMessage("WIDTH = " + width);
+    Bukkit.broadcastMessage("Min-width = " + this.minWidth);
+    if (width < this.minWidth) {
       return;
     }
-    final var blockAbovePlayer = world.getBlockAt(playerLocation.getBlockX(), height, playerLocation.getBlockZ());
-    world.spawnFallingBlock(blockAbovePlayer.getLocation(), blockAbovePlayer.getBlockData());
-    blockAbovePlayer.setType(Material.AIR);
+    final var blockAbovePlayer = world.getBlockAt(playerLocation.getBlockX(), ceilingY, playerLocation.getBlockZ());
+    final var blockAbovePlayerType = blockAbovePlayer.getState().getData();
+    var x = playerLocation.getBlockX();
+    int y = ceilingY;
+    var z = playerLocation.getBlockZ();
+    for (int i = 0; i < 2; i++) {
+      for (int j = 0; j < 2; j++) {
+        for (int k = 0; k < 2; k++) {
+          var blockAt = world.getBlockAt(x, y, z);
+          Bukkit.broadcastMessage(x + " " + y + " " + z + " = " + blockAt.getType().name());
+          if (blockAt.getType().isSolid()) {
+            var blockAtData = blockAt.getState().getData();
+            blockAt.setType(Material.AIR);
+            var location = new Location(world, x, y, z);
+            world.spawnFallingBlock(location, blockAtData);
+          }
+          x++;
+        }
+        z++;
+      }
+      y++;
+    }
   }
 }
