@@ -30,6 +30,7 @@ public class StlmppPluginConfig {
     config.addDefault(Config.superThunderLightningWeight, 20d);
     config.addDefault(Config.superThunderExplosiveLightningWeight, 10d);
     config.addDefault(Config.superThunderLightningCreeperWeight, 5d);
+    config.addDefault(Config.superThunderGhastSwarmWeight, 3d);
     config.addDefault(Config.world, "world");
     config.addDefault(Config.caveInEnabled, true);
     config.addDefault(Config.caveInMaxY, 30);

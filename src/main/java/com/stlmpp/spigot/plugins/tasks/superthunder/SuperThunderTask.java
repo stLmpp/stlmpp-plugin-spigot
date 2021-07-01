@@ -30,7 +30,8 @@ public class SuperThunderTask extends BukkitRunnable {
         new SuperThunderEventExplosiveLightning()
       )
       .add(this.getWeight(Config.superThunderLightningWeight), new SuperThunderEventRegularLightning())
-      .add(this.getWeight(Config.superThunderLightningCreeperWeight), new SuperThunderEventLightningCreeper());
+      .add(this.getWeight(Config.superThunderLightningCreeperWeight), new SuperThunderEventLightningCreeper())
+      .add(this.getWeight(Config.superThunderGhastSwarmWeight), new SuperThunderEventGhastSwarm());
   }
 
   @Override

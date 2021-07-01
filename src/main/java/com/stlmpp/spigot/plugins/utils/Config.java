@@ -17,6 +17,7 @@ public class Config {
   public static final String superThunderLightningWeight = "super-thunder-lightning-weight";
   public static final String superThunderExplosiveLightningWeight = "super-thunder-explosive-lightning-weight";
   public static final String superThunderLightningCreeperWeight = "super-thunder-lightning-creeper-weight";
+  public static final String superThunderGhastSwarmWeight = "super-thunder-ghast-swarm-weight";
   public static final String caveInEnabled = "cave-in-enabled";
   public static final String caveInMinHeight = "cave-in-min-height";
   public static final String caveInMinWidth = "cave-in-min-width";
