@@ -55,6 +55,9 @@ public class LightningTeleportEvent implements Listener {
 
   @EventHandler
   public void onPlayerTeleport(PlayerTeleportEvent event) {
+    if (event.getCause() != PlayerTeleportEvent.TeleportCause.COMMAND) {
+      return;
+    }
     final var player = event.getPlayer();
     final var world = player.getWorld();
     if (!player.isOp() || !Chance.of(this.chance) || !world.getName().equals(this.plugin.getWorldName())) {
