@@ -26,7 +26,7 @@ public class Util {
     var iteration = 0;
     var locationY = location.getBlockY();
     while (
-      world.getBlockAt(location.getBlockX(), locationY, location.getBlockZ()).getType().isSolid() &&
+      !world.getBlockAt(location.getBlockX(), locationY, location.getBlockZ()).getType().isSolid() &&
       iteration <= maxIterations
     ) {
       iteration++;

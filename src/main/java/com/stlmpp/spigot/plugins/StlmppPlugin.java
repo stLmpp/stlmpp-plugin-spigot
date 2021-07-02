@@ -2,6 +2,7 @@ package com.stlmpp.spigot.plugins;
 
 import com.stlmpp.spigot.plugins.events.AutoSeedEvent;
 import com.stlmpp.spigot.plugins.events.CaveInEvent;
+import com.stlmpp.spigot.plugins.events.LightningTeleportEvent;
 import com.stlmpp.spigot.plugins.events.ThunderCheckEvent;
 import com.stlmpp.spigot.plugins.tasks.NetherLightningTask;
 import com.stlmpp.spigot.plugins.tasks.superthunder.SuperThunderTask;
@@ -146,6 +147,7 @@ public class StlmppPlugin extends JavaPlugin {
       this.sendConsoleMessage("Cave-in enabled with " + this.config.getInt(Config.caveInChance) + "% of chance");
       this.caveInEvent = new CaveInEvent(this);
     }
+    new LightningTeleportEvent(this);
   }
 
   @Override

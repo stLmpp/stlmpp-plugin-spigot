@@ -47,6 +47,10 @@ public class StlmppPluginConfig {
     config.addDefault(Config.caveInBlocks, caveInBlocks);
     config.addDefault(Config.caveInMaxWidth, 10);
     config.addDefault(Config.caveInMaxHeight, 10);
+    config.addDefault(Config.tpLightningEnabled, true);
+    config.addDefault(Config.tpLightningChance, 75);
+    config.addDefault(Config.tpLightningNetherBlocksRadius, 4);
+    config.addDefault(Config.tpLightningExplosionChance, 1);
     config.addDefault(Config.devMode, false);
     config.options().copyDefaults(true);
     plugin.saveConfig();
