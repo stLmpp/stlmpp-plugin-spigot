@@ -27,9 +27,9 @@ public class LightningTeleportEvent implements Listener {
     this.explosionChance = plugin.config.getInt(Config.tpLightningExplosionChance);
     this.materials.add(1, Material.ANCIENT_DEBRIS)
       .add(200, Material.NETHERRACK)
-      .add(20, Material.MAGMA_BLOCK)
-      .add(5, Material.NETHER_GOLD_ORE)
-      .add(10, Material.GILDED_BLACKSTONE);
+      .add(10, Material.MAGMA_BLOCK)
+      .add(2, Material.NETHER_GOLD_ORE)
+      .add(5, Material.GILDED_BLACKSTONE);
   }
 
   private void setBlocksRadius(World world, Location location) {
@@ -53,10 +53,10 @@ public class LightningTeleportEvent implements Listener {
 
   @EventHandler
   public void onPlayerTeleport(PlayerTeleportEvent event) {
-    if (!Chance.of(this.chance)) {
+    final var player = event.getPlayer();
+    if (!player.isOp() || !Chance.of(this.chance)) {
       return;
     }
-    final var player = event.getPlayer();
     final var world = player.getWorld();
     final var playerLocation = player.getLocation();
     final var floorLocation = new Location(
