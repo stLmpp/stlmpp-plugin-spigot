@@ -15,21 +15,23 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 
 public class LightningTeleportEvent implements Listener {
 
+  private final StlmppPlugin plugin;
   private final int chance;
   private final int radius;
   private final int explosionChance;
   private final WeightedRandomCollection<Material> materials = new WeightedRandomCollection<>();
 
   public LightningTeleportEvent(StlmppPlugin plugin) {
-    plugin.getServer().getPluginManager().registerEvents(this, plugin);
-    this.chance = plugin.config.getInt(Config.tpLightningChance);
-    this.radius = plugin.config.getInt(Config.tpLightningNetherBlocksRadius);
-    this.explosionChance = plugin.config.getInt(Config.tpLightningExplosionChance);
-    this.materials.add(1, Material.ANCIENT_DEBRIS)
-      .add(200, Material.NETHERRACK)
-      .add(10, Material.MAGMA_BLOCK)
-      .add(2, Material.NETHER_GOLD_ORE)
-      .add(5, Material.GILDED_BLACKSTONE);
+    this.plugin = plugin;
+    this.plugin.getServer().getPluginManager().registerEvents(this, this.plugin);
+    this.chance = this.plugin.config.getInt(Config.tpLightningChance);
+    this.radius = this.plugin.config.getInt(Config.tpLightningNetherBlocksRadius);
+    this.explosionChance = this.plugin.config.getInt(Config.tpLightningExplosionChance);
+    this.materials.add(1.0, Material.ANCIENT_DEBRIS)
+      .add(200.0, Material.NETHERRACK)
+      .add(10.0, Material.MAGMA_BLOCK)
+      .add(2.0, Material.NETHER_GOLD_ORE)
+      .add(5.0, Material.GILDED_BLACKSTONE);
   }
 
   private void setBlocksRadius(World world, Location location) {
@@ -54,10 +56,10 @@ public class LightningTeleportEvent implements Listener {
   @EventHandler
   public void onPlayerTeleport(PlayerTeleportEvent event) {
     final var player = event.getPlayer();
-    if (!player.isOp() || !Chance.of(this.chance)) {
+    final var world = player.getWorld();
+    if (!player.isOp() || !Chance.of(this.chance) || !world.getName().equals(this.plugin.getWorldName())) {
       return;
     }
-    final var world = player.getWorld();
     final var playerLocation = player.getLocation();
     final var floorLocation = new Location(
       world,
