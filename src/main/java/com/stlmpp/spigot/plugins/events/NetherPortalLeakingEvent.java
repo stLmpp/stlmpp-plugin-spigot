@@ -3,6 +3,7 @@ package com.stlmpp.spigot.plugins.events;
 import com.stlmpp.spigot.plugins.StlmppPlugin;
 import java.util.Stack;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.event.EventHandler;
@@ -28,9 +29,9 @@ public class NetherPortalLeakingEvent implements Listener {
     if (initialBlock == null) {
       return;
     }
-    final var replacementBlocks = new Stack<Block>();
+    final var locations = new Stack<Location>();
     for (var x = -15; x < 15; x++) {
-      for (var y = -5; y < 5; y++) {
+      for (var y = -1; y < 2; y++) {
         for (var z = -15; z < 15; z++) {
           final var blockAt = world.getBlockAt(initialBlock.getLocation().add(x, y, z));
           if (blockAt.getType() == Material.OBSIDIAN) {
@@ -38,15 +39,15 @@ public class NetherPortalLeakingEvent implements Listener {
           }
           final var blockAtMaterial = blockAt.getType();
           if (blockAtMaterial.isSolid() && blockAtMaterial.isBlock()) {
-            replacementBlocks.add(blockAt);
+            locations.add(blockAt.getLocation());
           }
         }
       }
     }
-    Bukkit.broadcastMessage("SIZE " + replacementBlocks.size());
-    if (replacementBlocks.size() == 0) {
+    Bukkit.broadcastMessage("SIZE " + locations.size());
+    if (locations.size() == 0) {
       return;
     }
-    new NetherPortalLeakingTask(this.plugin, replacementBlocks);
+    new NetherPortalLeakingTask(this.plugin, locations, world);
   }
 }
