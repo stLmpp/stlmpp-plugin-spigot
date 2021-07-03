@@ -2,11 +2,11 @@ package com.stlmpp.spigot.plugins.utils;
 
 public class Tick {
 
-  public static int fromSeconds(int seconds) {
+  public static long fromSeconds(long seconds) {
     return seconds * 20;
   }
 
-  public static int fromMinutes(int minutes) {
+  public static long fromMinutes(long minutes) {
     return minutes * 60 * 20;
   }
 }

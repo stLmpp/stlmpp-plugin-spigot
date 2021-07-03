@@ -1,9 +1,6 @@
 package com.stlmpp.spigot.plugins;
 
-import com.stlmpp.spigot.plugins.events.AutoSeedEvent;
-import com.stlmpp.spigot.plugins.events.CaveInEvent;
-import com.stlmpp.spigot.plugins.events.LightningTeleportEvent;
-import com.stlmpp.spigot.plugins.events.ThunderCheckEvent;
+import com.stlmpp.spigot.plugins.events.*;
 import com.stlmpp.spigot.plugins.tasks.NetherLightningTask;
 import com.stlmpp.spigot.plugins.tasks.superthunder.SuperThunderTask;
 import com.stlmpp.spigot.plugins.utils.Chance;
@@ -43,6 +40,9 @@ public class StlmppPlugin extends JavaPlugin {
 
   @Nullable
   public CaveInEvent caveInEvent = null;
+
+  @Nullable
+  public LightningTeleportEvent lightningTeleportEvent = null;
 
   public StlmppPluginConfig stlmppPluginConfig;
 
@@ -147,11 +147,12 @@ public class StlmppPlugin extends JavaPlugin {
       this.sendConsoleMessage("Cave-in enabled with " + this.config.getInt(Config.caveInChance) + "% of chance");
       this.caveInEvent = new CaveInEvent(this);
     }
-    new LightningTeleportEvent(this);
-  }
-
-  @Override
-  public void onDisable() {
-    super.onDisable();
+    if (this.config.getBoolean(Config.tpLightningEnabled)) {
+      this.sendConsoleMessage(
+          "Teleport lightning enabled with " + this.config.getInt(Config.tpLightningChance) + "% of chance"
+        );
+      this.lightningTeleportEvent = new LightningTeleportEvent(this);
+    }
+    new NetherPortalLeakingEvent(this);
   }
 }
