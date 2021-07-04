@@ -6,6 +6,10 @@ public class Tick {
     return seconds * 20;
   }
 
+  public static long fromSeconds(double seconds) {
+    return Math.round(seconds * 20);
+  }
+
   public static long fromMinutes(long minutes) {
     return minutes * 60 * 20;
   }

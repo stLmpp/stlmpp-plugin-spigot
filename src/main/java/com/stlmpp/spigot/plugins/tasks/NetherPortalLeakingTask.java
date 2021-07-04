@@ -1,6 +1,7 @@
 package com.stlmpp.spigot.plugins.tasks;
 
 import com.stlmpp.spigot.plugins.StlmppPlugin;
+import com.stlmpp.spigot.plugins.utils.Tick;
 import com.stlmpp.spigot.plugins.utils.Util;
 import java.util.Deque;
 import org.bukkit.Bukkit;
@@ -17,7 +18,7 @@ public class NetherPortalLeakingTask extends BukkitRunnable {
   public NetherPortalLeakingTask(StlmppPlugin plugin, Deque<Location> locations, World world) {
     this.locations = locations;
     this.world = world;
-    this.runTaskTimer(plugin, 0, 5);
+    this.runTaskTimer(plugin, 0, Tick.fromSeconds(2));
   }
 
   @Override

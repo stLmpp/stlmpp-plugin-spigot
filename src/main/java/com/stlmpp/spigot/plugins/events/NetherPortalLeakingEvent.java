@@ -1,11 +1,12 @@
 package com.stlmpp.spigot.plugins.events;
 
 import com.stlmpp.spigot.plugins.StlmppPlugin;
+import com.stlmpp.spigot.plugins.tasks.NetherPortalLeakingTask;
 import com.stlmpp.spigot.plugins.utils.Config;
 import com.stlmpp.spigot.plugins.utils.Pair;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.List;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -41,42 +42,33 @@ public class NetherPortalLeakingEvent implements Listener {
 
   public Location getStartingLocation(World world, List<Block> blocks) {
     final var firstBlock = blocks.get(0);
-    var minY = Integer.MAX_VALUE;
-    var maxY = Integer.MIN_VALUE;
-    var minX = Integer.MAX_VALUE;
-    var maxX = Integer.MIN_VALUE;
-    var minZ = Integer.MAX_VALUE;
-    var maxZ = Integer.MIN_VALUE;
+    var minY = firstBlock.getY();
+    var maxY = minY;
+    var minX = firstBlock.getX();
+    var maxX = minX;
+    var minZ = firstBlock.getZ();
+    var maxZ = minZ;
     for (Block block : blocks) {
       final var blockY = block.getY();
       if (blockY < minY) {
         minY = blockY;
-      } else if (blockY > maxY) {
-        maxY = blockY;
       } else {
-        minY = blockY;
         maxY = blockY;
       }
       final var blockX = block.getX();
       if (blockX < minX) {
         minX = blockX;
-      } else if (blockX > maxX) {
-        maxX = blockX;
       } else {
-        minX = blockX;
         maxX = blockX;
       }
       final var blockZ = block.getZ();
       if (blockZ < minZ) {
         minZ = blockZ;
-      } else if (blockZ > maxZ) {
-        maxZ = blockZ;
       } else {
-        minZ = blockZ;
         maxZ = blockZ;
       }
     }
-    var boundingBox = new BoundingBox(minX, minY, minZ, maxX, maxY, maxZ);
+    final var boundingBox = new BoundingBox(minX, minY, minZ, maxX, maxY, maxZ);
     return new Location(world, boundingBox.getCenterX(), boundingBox.getCenterY(), boundingBox.getCenterZ());
   }
 
@@ -86,15 +78,18 @@ public class NetherPortalLeakingEvent implements Listener {
     if (!world.getName().equals(this.plugin.getWorldName())) {
       return;
     }
-    final var blocks = event.getBlocks().stream().map(BlockState::getBlock).toList();
-    final var blocksObsidian = blocks.stream().filter(block -> block.getType() == Material.OBSIDIAN).toList();
+    final var blocksObsidian = new ArrayList<Block>();
+    for (BlockState blockState : event.getBlocks()) {
+      if (blockState.getType() == Material.OBSIDIAN) {
+        blocksObsidian.add(blockState.getBlock());
+      }
+    }
     final var locations = new ArrayDeque<Pair<Double, Location>>();
     final var radius = Math.max(this.getPortalMinRadius(blocksObsidian), this.radius);
     final var initialBlockLocation = this.getStartingLocation(world, blocksObsidian);
     final var startingX = initialBlockLocation.getBlockX();
     final var startingY = initialBlockLocation.getBlockY();
     final var startingZ = initialBlockLocation.getBlockZ();
-    Bukkit.broadcastMessage("INITIAL - X " + startingX + " Y " + startingY + " Z " + startingZ);
     for (int x = startingX - radius; x <= startingX + radius; x++) {
       for (int y = startingY - radius; y <= startingY + radius; y++) {
         for (int z = startingZ - radius; z <= startingZ + radius; z++) {
@@ -137,6 +132,6 @@ public class NetherPortalLeakingEvent implements Listener {
         .map(pair -> pair.value1)
         .toList()
     );
-    // new NetherPortalLeakingTask(this.plugin, locationsSorted, world);
+    new NetherPortalLeakingTask(this.plugin, locationsSorted, world);
   }
 }
