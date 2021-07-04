@@ -1,6 +1,7 @@
 package com.stlmpp.spigot.plugins;
 
 import com.stlmpp.spigot.plugins.utils.Config;
+import org.bukkit.Location;
 import org.bukkit.Material;
 
 public class StlmppPluginConfig {
@@ -25,12 +26,14 @@ public class StlmppPluginConfig {
     config.addDefault(Config.autoSeedAllowedSeedList, autoSeedAllowedSeedList);
     config.addDefault(Config.superThunderEnabled, true);
     config.addDefault(Config.superThunderChance, 20);
-    config.addDefault(Config.superThunderSecondsIntervalEvents, 2);
+    config.addDefault(Config.superThunderSecondsIntervalEvents, 10);
     config.addDefault(Config.superThunderEventChance, 50);
     config.addDefault(Config.superThunderLightningWeight, 20d);
     config.addDefault(Config.superThunderExplosiveLightningWeight, 10d);
     config.addDefault(Config.superThunderLightningCreeperWeight, 5d);
     config.addDefault(Config.superThunderGhastSwarmWeight, 3d);
+    config.addDefault(Config.superThunderSafeCoordsRadius, 250);
+    config.addDefault(Config.superThunderSafeCoords, "0 0 0");
     config.addDefault(Config.world, "world");
     config.addDefault(Config.caveInEnabled, true);
     config.addDefault(Config.caveInMaxY, 30);
