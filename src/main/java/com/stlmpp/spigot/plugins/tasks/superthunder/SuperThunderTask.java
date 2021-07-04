@@ -30,7 +30,7 @@ public class SuperThunderTask extends BukkitRunnable {
     this.safeRadius = this.plugin.config.getInt(Config.superThunderSafeCoordsRadius);
     final String coordsString = this.plugin.config.getString(Config.superThunderSafeCoords);
     assert coordsString != null;
-    final String[] coordsArrays = coordsString.split("-");
+    final String[] coordsArrays = coordsString.split(" ");
     this.safeLocation =
       new Location(
         plugin.getWorld(),

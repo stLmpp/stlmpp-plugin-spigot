@@ -33,7 +33,7 @@ public class StlmppPluginConfig {
     config.addDefault(Config.superThunderLightningCreeperWeight, 5d);
     config.addDefault(Config.superThunderGhastSwarmWeight, 3d);
     config.addDefault(Config.superThunderSafeCoordsRadius, 250);
-    config.addDefault(Config.superThunderSafeCoords, "0-0-0");
+    config.addDefault(Config.superThunderSafeCoords, "0 0 0");
     config.addDefault(Config.world, "world");
     config.addDefault(Config.caveInEnabled, true);
     config.addDefault(Config.caveInMaxY, 30);
