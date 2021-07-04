@@ -27,22 +27,7 @@ public class StlmppPlugin extends JavaPlugin {
   public Boolean isDevMode = false;
 
   @Nullable
-  public NetherLightningTask netherLightningTask = null;
-
-  @Nullable
-  public AutoSeedEvent autoSeedEvent = null;
-
-  @Nullable
-  public ThunderCheckEvent thunderCheckEvent = null;
-
-  @Nullable
   public SuperThunderTask superThunderTask = null;
-
-  @Nullable
-  public CaveInEvent caveInEvent = null;
-
-  @Nullable
-  public LightningTeleportEvent lightningTeleportEvent = null;
 
   public StlmppPluginConfig stlmppPluginConfig;
 
@@ -129,30 +114,35 @@ public class StlmppPlugin extends JavaPlugin {
           this.config.getInt(Config.netherLightningChancePerSecond) +
           " seconds!"
         );
-      this.netherLightningTask = new NetherLightningTask(this);
+      new NetherLightningTask(this);
     }
     if (this.config.getBoolean(Config.autoSeedEnabled)) {
       this.sendConsoleMessage(
           "Auto seed activated with max of " + this.config.getInt(Config.autoSeedMaxBlocks) + " blocks!"
         );
-      this.autoSeedEvent = new AutoSeedEvent(this);
+      new AutoSeedEvent(this);
     }
     if (this.config.getBoolean(Config.superThunderEnabled)) {
       this.sendConsoleMessage(
           "Super thunder activated with " + this.config.getInt(Config.superThunderChance) + "% of chance"
         );
-      this.thunderCheckEvent = new ThunderCheckEvent(this);
+      new ThunderCheckEvent(this);
     }
     if (this.config.getBoolean(Config.caveInEnabled)) {
       this.sendConsoleMessage("Cave-in enabled with " + this.config.getInt(Config.caveInChance) + "% of chance");
-      this.caveInEvent = new CaveInEvent(this);
+      new CaveInEvent(this);
     }
     if (this.config.getBoolean(Config.tpLightningEnabled)) {
       this.sendConsoleMessage(
           "Teleport lightning enabled with " + this.config.getInt(Config.tpLightningChance) + "% of chance"
         );
-      this.lightningTeleportEvent = new LightningTeleportEvent(this);
+      new LightningTeleportEvent(this);
     }
-    new NetherPortalLeakingEvent(this);
+    if (this.config.getBoolean(Config.netherPortalLeakingEnabled)) {
+      this.sendConsoleMessage(
+          "Nether portal leaking enabled with a radius of " + this.config.getInt(Config.netherPortalLeakingRadius)
+        );
+      new NetherPortalLeakingEvent(this);
+    }
   }
 }

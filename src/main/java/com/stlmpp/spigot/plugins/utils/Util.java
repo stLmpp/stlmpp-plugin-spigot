@@ -28,6 +28,17 @@ public class Util {
     toNetherMaterialMap.put(Material.DARK_OAK_LEAVES, Material.WARPED_WART_BLOCK);
     toNetherMaterialMap.put(Material.OAK_LEAVES, Material.WARPED_WART_BLOCK);
     toNetherMaterialMap.put(Material.STONE_BRICKS, Material.NETHER_BRICK);
+    toNetherMaterialMap.put(Material.WATER, Material.LAVA);
+    toNetherMaterialMap.put(Material.COAL_ORE, Material.DEEPSLATE_COAL_ORE);
+    toNetherMaterialMap.put(Material.COPPER_ORE, Material.DEEPSLATE_COPPER_ORE);
+    toNetherMaterialMap.put(Material.DIAMOND_ORE, Material.DEEPSLATE_DIAMOND_ORE);
+    toNetherMaterialMap.put(Material.EMERALD_ORE, Material.ANCIENT_DEBRIS);
+    toNetherMaterialMap.put(Material.GOLD_ORE, Material.NETHER_GOLD_ORE);
+    toNetherMaterialMap.put(Material.IRON_ORE, Material.DEEPSLATE_IRON_ORE);
+    toNetherMaterialMap.put(Material.LAPIS_ORE, Material.DEEPSLATE_LAPIS_ORE);
+    toNetherMaterialMap.put(Material.REDSTONE_ORE, Material.DEEPSLATE_REDSTONE_ORE);
+    toNetherMaterialMap.put(Material.IRON_BLOCK, Material.COPPER_BLOCK);
+    toNetherMaterialMap.put(Material.DIAMOND_BLOCK, Material.COPPER_BLOCK);
   }
 
   public static int getFloor(World world, Location location) {
