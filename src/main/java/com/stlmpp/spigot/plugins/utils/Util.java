@@ -111,4 +111,14 @@ public class Util {
     }
     return Util.getRandomLocationAroundPlayer(players.get(ThreadLocalRandom.current().nextInt(0, playersSize)));
   }
+
+  @Nullable
+  public static Location getRandomLocationAroundRandomPlayerWithMinY(World world, int minY) {
+    final var players = world.getPlayers().stream().filter(player -> player.getLocation().getY() >= minY).toList();
+    final var playersSize = players.size();
+    if (playersSize == 0) {
+      return null;
+    }
+    return Util.getRandomLocationAroundPlayer(players.get(ThreadLocalRandom.current().nextInt(0, playersSize)));
+  }
 }

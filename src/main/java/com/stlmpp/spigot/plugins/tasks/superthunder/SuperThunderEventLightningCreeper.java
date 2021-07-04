@@ -15,7 +15,7 @@ public class SuperThunderEventLightningCreeper implements SuperThunderEvent {
     if (world == null) {
       return;
     }
-    final var location = Util.getRandomLocationAroundRandomPlayer(world);
+    final var location = Util.getRandomLocationAroundRandomPlayerWithMinY(world, 55);
     if (location == null || Util.isInRadius(location, safeLocation, safeRadius)) {
       return;
     }

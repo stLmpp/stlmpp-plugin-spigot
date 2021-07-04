@@ -17,7 +17,7 @@ public class SuperThunderEventGhastSwarm implements SuperThunderEvent {
       return;
     }
     final var playerLocation = player.getLocation();
-    if (Util.isInRadius(playerLocation, safeLocation, safeRadius)) {
+    if (Util.isInRadius(playerLocation, safeLocation, safeRadius) && playerLocation.getY() >= 55) {
       return;
     }
     final var ghasts = ThreadLocalRandom.current().nextInt(0, 4);

@@ -15,7 +15,7 @@ public class SuperThunderEventExplosiveLightning implements SuperThunderEvent {
     if (world == null) {
       return;
     }
-    final var lightningLocation = Util.getRandomLocationAroundRandomPlayer(world);
+    final var lightningLocation = Util.getRandomLocationAroundRandomPlayerWithMinY(world, 55);
     if (lightningLocation == null || Util.isInRadius(lightningLocation, safeLocation, safeRadius)) {
       return;
     }
