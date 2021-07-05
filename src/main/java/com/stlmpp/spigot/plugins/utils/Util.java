@@ -39,6 +39,7 @@ public class Util {
     toNetherMaterialMap.put(Material.SAND, Material.SOUL_SAND);
     toNetherMaterialMap.put(Material.COPPER_BLOCK, Material.COPPER_BLOCK);
     toNetherMaterialMap.put(Material.GOLD_BLOCK, Material.GOLD_BLOCK);
+    toNetherMaterialMap.put(Material.SANDSTONE, Material.SOUL_SOIL);
   }
 
   public static final Set<Material> netherMaterials = new HashSet<>();
@@ -86,6 +87,18 @@ public class Util {
     netherMaterials.add(Material.SHROOMLIGHT);
     netherMaterials.add(Material.SOUL_SAND);
     netherMaterials.add(Material.SOUL_SOIL);
+    netherMaterials.add(Material.CRIMSON_STEM);
+    netherMaterials.add(Material.WARPED_STEM);
+    netherMaterials.add(Material.CRIMSON_PLANKS);
+    netherMaterials.add(Material.WARPED_PLANKS);
+    netherMaterials.add(Material.CRIMSON_HYPHAE);
+    netherMaterials.add(Material.CRIMSON_NYLIUM);
+    netherMaterials.add(Material.CRIMSON_SLAB);
+    netherMaterials.add(Material.CRIMSON_STAIRS);
+    netherMaterials.add(Material.WARPED_HYPHAE);
+    netherMaterials.add(Material.WARPED_NYLIUM);
+    netherMaterials.add(Material.WARPED_SLAB);
+    netherMaterials.add(Material.WARPED_STAIRS);
   }
 
   public static int getFloor(World world, Location location) {

@@ -7,10 +7,10 @@ public class StlmppPluginConfig {
 
   public StlmppPluginConfig(StlmppPlugin plugin) {
     final var config = plugin.config;
-    config.addDefault(Config.netherLightningChance, 40);
+    config.addDefault(Config.netherLightningChance, 30);
     config.addDefault(Config.netherLightningEnabled, true);
-    config.addDefault(Config.netherLightningChancePerSecond, 10);
-    config.addDefault(Config.netherLightningExplosionChance, 50);
+    config.addDefault(Config.netherLightningChancePerSecond, 15);
+    config.addDefault(Config.netherLightningExplosionChance, 30);
     config.addDefault(Config.worldNether, "world_nether");
     config.addDefault(Config.autoSeedEnabled, true);
     config.addDefault(Config.autoSeedMaxBlocks, 40);
@@ -25,11 +25,11 @@ public class StlmppPluginConfig {
     config.addDefault(Config.autoSeedAllowedSeedList, autoSeedAllowedSeedList);
     config.addDefault(Config.superThunderEnabled, true);
     config.addDefault(Config.superThunderChance, 20);
-    config.addDefault(Config.superThunderSecondsIntervalEvents, 2);
-    config.addDefault(Config.superThunderEventChance, 50);
-    config.addDefault(Config.superThunderLightningWeight, 20d);
-    config.addDefault(Config.superThunderExplosiveLightningWeight, 10d);
-    config.addDefault(Config.superThunderLightningCreeperWeight, 5d);
+    config.addDefault(Config.superThunderSecondsIntervalEvents, 10);
+    config.addDefault(Config.superThunderEventChance, 40);
+    config.addDefault(Config.superThunderLightningWeight, 100d);
+    config.addDefault(Config.superThunderExplosiveLightningWeight, 15d);
+    config.addDefault(Config.superThunderLightningCreeperWeight, 3d);
     config.addDefault(Config.superThunderGhastSwarmWeight, 3d);
     config.addDefault(Config.world, "world");
     config.addDefault(Config.caveInEnabled, true);
