@@ -1,7 +1,7 @@
 package com.stlmpp.spigot.plugins.tasks;
 
-import com.stlmpp.spigot.plugins.StlmppPlugin;
-import com.stlmpp.spigot.plugins.events.NetherPortalLeakingEvent;
+import com.stlmpp.spigot.plugins.events.netherportalleaking.NetherPortal;
+import com.stlmpp.spigot.plugins.events.netherportalleaking.NetherPortalLeakingEvent;
 import com.stlmpp.spigot.plugins.utils.Tick;
 import com.stlmpp.spigot.plugins.utils.Util;
 import java.util.Deque;
@@ -13,12 +13,21 @@ import org.bukkit.scheduler.BukkitRunnable;
 public class NetherPortalLeakingTask extends BukkitRunnable {
 
   private final Deque<Location> locations;
+  private final NetherPortalLeakingEvent netherPortalLeakingEvent;
   private final World world;
+  private final NetherPortal netherPortal;
 
-  public NetherPortalLeakingTask(StlmppPlugin plugin, Deque<Location> locations, World world) {
+  public NetherPortalLeakingTask(
+    NetherPortalLeakingEvent netherPortalLeakingEvent,
+    Deque<Location> locations,
+    World world,
+    NetherPortal netherPortal
+  ) {
+    this.netherPortalLeakingEvent = netherPortalLeakingEvent;
     this.locations = locations;
     this.world = world;
-    this.runTaskTimer(plugin, 0, Tick.fromSeconds(2));
+    this.netherPortal = netherPortal;
+    this.runTaskTimer(this.netherPortalLeakingEvent.plugin, 0, Tick.fromSeconds(2));
   }
 
   @Override
@@ -31,7 +40,7 @@ public class NetherPortalLeakingTask extends BukkitRunnable {
     Bukkit.broadcastMessage("Replacing block at X " + block.getX() + " Y " + block.getY() + " Z " + block.getZ());
     block.setType(Util.convertToNetherMaterial(block.getType()));
     if (this.locations.size() == 0) {
-      this.cancel();
+      this.netherPortalLeakingEvent.tryCancelTask(this.netherPortal);
     }
   }
 }

@@ -1,23 +1,22 @@
-package com.stlmpp.spigot.plugins.events;
+package com.stlmpp.spigot.plugins.events.netherportalleaking;
 
 import com.stlmpp.spigot.plugins.StlmppPlugin;
 import com.stlmpp.spigot.plugins.tasks.NetherPortalLeakingTask;
 import com.stlmpp.spigot.plugins.utils.Config;
 import com.stlmpp.spigot.plugins.utils.Pair;
 import com.stlmpp.spigot.plugins.utils.Util;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.List;
+import io.reactivex.rxjava3.disposables.Disposable;
+import io.reactivex.rxjava3.subjects.BehaviorSubject;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.world.PortalCreateEvent;
-import org.bukkit.util.BoundingBox;
 
 public class NetherPortalLeakingEvent implements Listener {
 
@@ -29,56 +28,47 @@ public class NetherPortalLeakingEvent implements Listener {
     );
   }
 
-  private final StlmppPlugin plugin;
+  public final StlmppPlugin plugin;
   private final int radius;
+  private final BehaviorSubject<List<Block>> netherPortalBreak$ = BehaviorSubject.createDefault(new ArrayList<>());
+  private final Disposable disposable;
+
+  public final Map<NetherPortal, NetherPortalLeakingTask> netherPortals = new HashMap<>();
 
   public NetherPortalLeakingEvent(StlmppPlugin plugin) {
     this.plugin = plugin;
     this.plugin.getServer().getPluginManager().registerEvents(this, this.plugin);
     this.radius = this.plugin.config.getInt(Config.netherPortalLeakingRadius);
+    this.disposable =
+      this.netherPortalBreak$.debounce(1, TimeUnit.SECONDS)
+        .filter(value -> value.size() != 0)
+        .subscribe(
+          value -> {
+            this.netherPortalBreak$.onNext(new ArrayList<>());
+            this.checkBrokenPortal(value);
+          }
+        );
   }
 
-  public int getPortalMinRadius(List<Block> blocks) {
-    final var initialBlock = blocks.get(0);
-    var height = 1;
-    var iterations = 0;
-    while (initialBlock.getRelative(BlockFace.UP, height).getType() != Material.OBSIDIAN && iterations <= 25) {
-      height++;
-      iterations++;
+  private void checkBrokenPortal(List<Block> blocks) {
+    if (blocks.size() == 0) {
+      return;
     }
-    return ((blocks.size() - ((height - 1) * 2)) / 2) + 2;
+    final var world = blocks.get(0).getWorld();
+    final var possibleNetherPortal = new NetherPortal(world, blocks);
+    this.tryCancelTask(possibleNetherPortal);
   }
 
-  public Location getStartingLocation(World world, List<Block> blocks) {
-    final var firstBlock = blocks.get(0);
-    var minY = firstBlock.getY();
-    var maxY = minY;
-    var minX = firstBlock.getX();
-    var maxX = minX;
-    var minZ = firstBlock.getZ();
-    var maxZ = minZ;
-    for (Block block : blocks) {
-      final var blockY = block.getY();
-      if (blockY < minY) {
-        minY = blockY;
-      } else {
-        maxY = blockY;
-      }
-      final var blockX = block.getX();
-      if (blockX < minX) {
-        minX = blockX;
-      } else {
-        maxX = blockX;
-      }
-      final var blockZ = block.getZ();
-      if (blockZ < minZ) {
-        minZ = blockZ;
-      } else {
-        maxZ = blockZ;
-      }
+  public void tryCancelTask(NetherPortal netherPortal) {
+    final var possibleTask = this.netherPortals.remove(netherPortal);
+    if (possibleTask == null) {
+      return;
     }
-    final var boundingBox = new BoundingBox(minX, minY, minZ, maxX, maxY, maxZ);
-    return new Location(world, boundingBox.getCenterX(), boundingBox.getCenterY(), boundingBox.getCenterZ());
+    possibleTask.cancel();
+  }
+
+  public void destroy() {
+    this.disposable.dispose();
   }
 
   @EventHandler
@@ -87,15 +77,16 @@ public class NetherPortalLeakingEvent implements Listener {
     if (!world.getName().equals(this.plugin.getWorldName())) {
       return;
     }
-    final var blocksObsidian = new ArrayList<Block>();
+    final var netherPortalBlocks = new ArrayList<Block>();
     for (BlockState blockState : event.getBlocks()) {
-      if (blockState.getType() == Material.OBSIDIAN) {
-        blocksObsidian.add(blockState.getBlock());
+      if (blockState.getType() == Material.NETHER_PORTAL) {
+        netherPortalBlocks.add(blockState.getBlock());
       }
     }
+    final var netherPortal = new NetherPortal(world, netherPortalBlocks);
     final var locations = new ArrayDeque<Pair<Double, Location>>();
-    final var radius = Math.max(this.getPortalMinRadius(blocksObsidian), this.radius);
-    final var initialBlockLocation = this.getStartingLocation(world, blocksObsidian);
+    final var radius = Math.max(netherPortal.width, this.radius);
+    final var initialBlockLocation = netherPortal.getCenter();
     final var startingX = initialBlockLocation.getBlockX();
     final var startingY = initialBlockLocation.getBlockY();
     final var startingZ = initialBlockLocation.getBlockZ();
@@ -137,6 +128,23 @@ public class NetherPortalLeakingEvent implements Listener {
         .map(pair -> pair.value1)
         .toList()
     );
-    new NetherPortalLeakingTask(this.plugin, locationsSorted, world);
+    this.netherPortals.put(netherPortal, new NetherPortalLeakingTask(this, locationsSorted, world, netherPortal));
+  }
+
+  @EventHandler
+  public void onBlockPhysics(BlockPhysicsEvent event) {
+    final var block = event.getBlock();
+    if (
+      event.getChangedType() == Material.NETHER_PORTAL &&
+      block.getType() == Material.NETHER_PORTAL &&
+      block.getWorld().getName().equals(this.plugin.getWorldName())
+    ) {
+      final var list = this.netherPortalBreak$.getValue();
+      if (list == null) {
+        return;
+      }
+      list.add(block);
+      this.netherPortalBreak$.onNext(list);
+    }
   }
 }

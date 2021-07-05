@@ -1,6 +1,7 @@
 package com.stlmpp.spigot.plugins;
 
 import com.stlmpp.spigot.plugins.events.*;
+import com.stlmpp.spigot.plugins.events.netherportalleaking.NetherPortalLeakingEvent;
 import com.stlmpp.spigot.plugins.tasks.NetherLightningTask;
 import com.stlmpp.spigot.plugins.utils.Config;
 import org.bukkit.World;
@@ -16,6 +17,9 @@ public class StlmppPlugin extends JavaPlugin {
 
   public final FileConfiguration config = this.getConfig();
   public Boolean isDevMode = false;
+
+  @Nullable
+  private NetherPortalLeakingEvent netherPortalLeakingEvent;
 
   public String getWorldName() {
     return this.config.getString(Config.world);
@@ -74,7 +78,14 @@ public class StlmppPlugin extends JavaPlugin {
       this.sendConsoleMessage(
           "Nether portal leaking enabled with a radius of " + this.config.getInt(Config.netherPortalLeakingRadius)
         );
-      new NetherPortalLeakingEvent(this);
+      this.netherPortalLeakingEvent = new NetherPortalLeakingEvent(this);
+    }
+  }
+
+  @Override
+  public void onDisable() {
+    if (this.netherPortalLeakingEvent != null) {
+      this.netherPortalLeakingEvent.destroy();
     }
   }
 }
