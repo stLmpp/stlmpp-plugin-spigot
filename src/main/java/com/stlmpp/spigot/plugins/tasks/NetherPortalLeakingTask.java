@@ -5,7 +5,6 @@ import com.stlmpp.spigot.plugins.events.netherportalleaking.NetherPortalLeakingE
 import com.stlmpp.spigot.plugins.utils.Tick;
 import com.stlmpp.spigot.plugins.utils.Util;
 import java.util.Deque;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -37,7 +36,6 @@ public class NetherPortalLeakingTask extends BukkitRunnable {
     if (!NetherPortalLeakingEvent.isValidMaterial(blockAtMaterial)) {
       return;
     }
-    Bukkit.broadcastMessage("Replacing block at X " + block.getX() + " Y " + block.getY() + " Z " + block.getZ());
     block.setType(Util.convertToNetherMaterial(block.getType()));
     if (this.locations.size() == 0) {
       this.netherPortalLeakingEvent.tryCancelTask(this.netherPortal);

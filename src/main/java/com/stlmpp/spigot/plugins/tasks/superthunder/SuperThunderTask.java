@@ -6,6 +6,7 @@ import com.stlmpp.spigot.plugins.utils.Chance;
 import com.stlmpp.spigot.plugins.utils.Config;
 import com.stlmpp.spigot.plugins.utils.Tick;
 import com.stlmpp.spigot.plugins.utils.WeightedRandomCollection;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -41,7 +42,7 @@ public class SuperThunderTask extends BukkitRunnable {
         Integer.parseInt(coordsArrays[1]),
         Integer.parseInt(coordsArrays[2])
       );
-    this.plugin.getServer().broadcastMessage("R.I.P. Preparem os cuzes");
+    this.plugin.getServer().broadcast(Component.text("R.I.P. Preparem os cuzes"));
     this.events.add(
         this.getWeight(Config.superThunderExplosiveLightningWeight),
         new SuperThunderEventExplosiveLightning()
@@ -65,7 +66,8 @@ public class SuperThunderTask extends BukkitRunnable {
     }
     final var randomEvent = this.events.next();
     if (this.plugin.isDevMode) {
-      this.plugin.getServer().broadcastMessage("Super thunder event: " + randomEvent.getClass().getSimpleName());
+      this.plugin.getServer()
+        .broadcast(Component.text("Super thunder event: " + randomEvent.getClass().getSimpleName()));
     }
     randomEvent.run(this.plugin, this.safeRadius, this.safeLocation);
   }
