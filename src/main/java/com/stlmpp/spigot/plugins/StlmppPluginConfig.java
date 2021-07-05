@@ -10,10 +10,10 @@ public class StlmppPluginConfig {
     config.addDefault(Config.netherLightningChance, 30);
     config.addDefault(Config.netherLightningEnabled, true);
     config.addDefault(Config.netherLightningChancePerSecond, 15);
-    config.addDefault(Config.netherLightningExplosionChance, 30);
+    config.addDefault(Config.netherLightningExplosionChance, 25);
     config.addDefault(Config.worldNether, "world_nether");
     config.addDefault(Config.autoSeedEnabled, true);
-    config.addDefault(Config.autoSeedMaxBlocks, 40);
+    config.addDefault(Config.autoSeedMaxBlocks, 50);
     final var autoSeedAllowedSeedList = new String[] {
       Material.WHEAT_SEEDS.name(),
       Material.MELON_SEEDS.name(),
@@ -25,12 +25,12 @@ public class StlmppPluginConfig {
     config.addDefault(Config.autoSeedAllowedSeedList, autoSeedAllowedSeedList);
     config.addDefault(Config.superThunderEnabled, true);
     config.addDefault(Config.superThunderChance, 20);
-    config.addDefault(Config.superThunderSecondsIntervalEvents, 10);
+    config.addDefault(Config.superThunderSecondsIntervalEvents, 15);
     config.addDefault(Config.superThunderEventChance, 40);
-    config.addDefault(Config.superThunderLightningWeight, 100d);
-    config.addDefault(Config.superThunderExplosiveLightningWeight, 15d);
-    config.addDefault(Config.superThunderLightningCreeperWeight, 3d);
-    config.addDefault(Config.superThunderGhastSwarmWeight, 3d);
+    config.addDefault(Config.superThunderLightningWeight, 250d);
+    config.addDefault(Config.superThunderExplosiveLightningWeight, 5d);
+    config.addDefault(Config.superThunderLightningCreeperWeight, 2d);
+    config.addDefault(Config.superThunderGhastSwarmWeight, 2d);
     config.addDefault(Config.superThunderSafeCoordsRadius, 250);
     config.addDefault(Config.superThunderSafeCoords, "0 0 0");
     config.addDefault(Config.world, "world");
@@ -44,7 +44,7 @@ public class StlmppPluginConfig {
       Material.COMPASS.name(),
     };
     config.addDefault(Config.caveInImmunityItems, caveInImmunityItems);
-    config.addDefault(Config.caveInChance, 3);
+    config.addDefault(Config.caveInChance, 2);
     final var caveInBlocks = new String[] { Material.STONE.name(), Material.COBBLESTONE.name() };
     config.addDefault(Config.caveInBlocks, caveInBlocks);
     config.addDefault(Config.caveInMaxWidth, 10);
