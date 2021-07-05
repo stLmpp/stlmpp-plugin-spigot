@@ -35,6 +35,8 @@ public class Config {
   public static final String tpLightningExplosionChance = "tp-lightning-explosion-chance";
   public static final String netherPortalLeakingEnabled = "nether-portal-leaking-enabled";
   public static final String netherPortalLeakingRadius = "nether-portal-leaking-radius";
+  public static final String netherPortalLeakingChanceOfNetherrackFire =
+    "nether-portal-leaking-chance-of-netherrack-fire";
 
   public static final String world = "world";
 

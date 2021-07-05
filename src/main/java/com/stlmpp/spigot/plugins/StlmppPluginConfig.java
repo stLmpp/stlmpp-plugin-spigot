@@ -55,6 +55,7 @@ public class StlmppPluginConfig {
     config.addDefault(Config.tpLightningExplosionChance, 1);
     config.addDefault(Config.netherPortalLeakingEnabled, true);
     config.addDefault(Config.netherPortalLeakingRadius, 15);
+    config.addDefault(Config.netherPortalLeakingChanceOfNetherrackFire, 2);
     config.addDefault(Config.devMode, false);
     config.options().copyDefaults(true);
     plugin.saveConfig();
