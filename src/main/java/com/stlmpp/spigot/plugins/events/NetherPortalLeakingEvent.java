@@ -4,6 +4,7 @@ import com.stlmpp.spigot.plugins.StlmppPlugin;
 import com.stlmpp.spigot.plugins.tasks.NetherPortalLeakingTask;
 import com.stlmpp.spigot.plugins.utils.Config;
 import com.stlmpp.spigot.plugins.utils.Pair;
+import com.stlmpp.spigot.plugins.utils.Util;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +20,14 @@ import org.bukkit.event.world.PortalCreateEvent;
 import org.bukkit.util.BoundingBox;
 
 public class NetherPortalLeakingEvent implements Listener {
+
+  public static boolean isValidMaterial(Material material) {
+    return (
+      !Util.isFromNether(material) &&
+      material != Material.OBSIDIAN &&
+      ((material.isSolid() && material.isBlock()) || material == Material.WATER)
+    );
+  }
 
   private final StlmppPlugin plugin;
   private final int radius;
@@ -99,13 +108,9 @@ public class NetherPortalLeakingEvent implements Listener {
           if (distance <= radius) {
             final var blockAt = world.getBlockAt(x, y, z);
             final var blockAtMaterial = blockAt.getType();
-            if (
-              blockAtMaterial == Material.OBSIDIAN ||
-              ((!blockAtMaterial.isSolid() || !blockAtMaterial.isBlock()) && blockAtMaterial != Material.WATER)
-            ) {
-              continue;
+            if (NetherPortalLeakingEvent.isValidMaterial(blockAtMaterial)) {
+              locations.add(new Pair<>(distance, blockAt.getLocation()));
             }
-            locations.add(new Pair<>(distance, blockAt.getLocation()));
           }
         }
       }
