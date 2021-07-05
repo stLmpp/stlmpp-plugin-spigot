@@ -65,23 +65,9 @@ public class StlmppPlugin extends JavaPlugin {
 
   @Nullable
   public Location strikeLightningRandomPlayer(@NotNull World world) {
-    final var players = world.getPlayers();
-    final var playersSize = players.size();
-    if (playersSize == 0) {
+    final var lightningLocation = Util.getRandomLocationAroundRandomPlayer(world);
+    if (lightningLocation == null) {
       return null;
-    }
-    final var playerLocation = players.get(this.random.nextInt(playersSize)).getLocation();
-    final var playerX = playerLocation.getBlockX();
-    final var playerY = playerLocation.getBlockY();
-    final var playerZ = playerLocation.getBlockZ();
-    final var lightningX = ThreadLocalRandom.current().nextInt(playerX - 50, playerX + 51);
-    final var lightningY = ThreadLocalRandom.current().nextInt(playerY - 10, playerY + 11);
-    final var lightningZ = ThreadLocalRandom.current().nextInt(playerZ - 50, playerZ + 51);
-    final var lightningLocation = new Location(world, lightningX, lightningY, lightningZ);
-    lightningLocation.setY(Util.getFloor(world, lightningLocation));
-    if (this.isDevMode) {
-      this.getServer()
-        .broadcastMessage("Striking lightning at X=" + lightningX + ", Y=" + lightningY + ", Z=" + lightningZ);
     }
     world.strikeLightning(lightningLocation);
     return lightningLocation;

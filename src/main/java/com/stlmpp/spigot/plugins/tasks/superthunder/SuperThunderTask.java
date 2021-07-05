@@ -5,11 +5,14 @@ import com.stlmpp.spigot.plugins.utils.Chance;
 import com.stlmpp.spigot.plugins.utils.Config;
 import com.stlmpp.spigot.plugins.utils.Tick;
 import com.stlmpp.spigot.plugins.utils.WeightedRandomCollection;
+import org.bukkit.Location;
 import org.bukkit.scheduler.BukkitRunnable;
 
 public class SuperThunderTask extends BukkitRunnable {
 
   private final StlmppPlugin plugin;
+  private final int safeRadius;
+  private final Location safeLocation;
 
   private final WeightedRandomCollection<SuperThunderEvent> events = new WeightedRandomCollection<>();
 
@@ -23,6 +26,17 @@ public class SuperThunderTask extends BukkitRunnable {
         this.plugin,
         0,
         Tick.fromSeconds(this.plugin.config.getInt(Config.superThunderSecondsIntervalEvents))
+      );
+    this.safeRadius = this.plugin.config.getInt(Config.superThunderSafeCoordsRadius);
+    final String coordsString = this.plugin.config.getString(Config.superThunderSafeCoords);
+    assert coordsString != null;
+    final String[] coordsArrays = coordsString.split(" ");
+    this.safeLocation =
+      new Location(
+        plugin.getWorld(),
+        Integer.parseInt(coordsArrays[0]),
+        Integer.parseInt(coordsArrays[1]),
+        Integer.parseInt(coordsArrays[2])
       );
     this.plugin.getServer().broadcastMessage("R.I.P. Preparem os cuzes");
     this.events.add(
@@ -43,10 +57,13 @@ public class SuperThunderTask extends BukkitRunnable {
     if (world == null || world.getPlayers().size() == 0) {
       return;
     }
+    if (!world.isThundering()) {
+      this.plugin.deactivateSuperThunderEvent();
+    }
     final var randomEvent = this.events.next();
     if (this.plugin.isDevMode) {
       this.plugin.getServer().broadcastMessage("Super thunder event: " + randomEvent.getClass().getSimpleName());
     }
-    randomEvent.run(this.plugin);
+    randomEvent.run(this.plugin, this.safeRadius, this.safeLocation);
   }
 }
