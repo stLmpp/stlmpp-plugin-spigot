@@ -1,6 +1,7 @@
 package com.stlmpp.spigot.plugins.tasks.superthunder;
 
 import com.stlmpp.spigot.plugins.StlmppPlugin;
+import com.stlmpp.spigot.plugins.events.SuperThunderCheckEvent;
 import com.stlmpp.spigot.plugins.utils.Chance;
 import com.stlmpp.spigot.plugins.utils.Config;
 import com.stlmpp.spigot.plugins.utils.Tick;
@@ -10,6 +11,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 public class SuperThunderTask extends BukkitRunnable {
 
+  private final SuperThunderCheckEvent superThunderCheckEvent;
   private final StlmppPlugin plugin;
   private final int safeRadius;
   private final Location safeLocation;
@@ -20,8 +22,9 @@ public class SuperThunderTask extends BukkitRunnable {
     return this.plugin.config.getDouble(name);
   }
 
-  public SuperThunderTask(StlmppPlugin plugin) {
-    this.plugin = plugin;
+  public SuperThunderTask(SuperThunderCheckEvent superThunderCheckEvent) {
+    this.superThunderCheckEvent = superThunderCheckEvent;
+    this.plugin = this.superThunderCheckEvent.plugin;
     this.runTaskTimer(
         this.plugin,
         0,
@@ -58,7 +61,7 @@ public class SuperThunderTask extends BukkitRunnable {
       return;
     }
     if (!world.isThundering()) {
-      this.plugin.deactivateSuperThunderEvent();
+      this.superThunderCheckEvent.deactivateSuperThunderEvent();
     }
     final var randomEvent = this.events.next();
     if (this.plugin.isDevMode) {
