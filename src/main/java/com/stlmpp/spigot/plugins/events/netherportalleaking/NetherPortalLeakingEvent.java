@@ -87,11 +87,11 @@ public class NetherPortalLeakingEvent implements Listener {
     final var netherPortal = new NetherPortal(world, netherPortalBlocks);
     final var locations = new ArrayList<Pair<Double, Location>>();
     final var radius = Math.max(netherPortal.width, this.radius);
-    final var centerVector = netherPortal.getCenter().toVector();
+    final var centerVector = netherPortal.getCenter();
     final var startingX = centerVector.getBlockX();
     final var startingY = centerVector.getBlockY();
     final var startingZ = centerVector.getBlockZ();
-    final var particlesMap = new HashMap<Integer, List<Location>>();
+    final var particlesLocation = new ArrayList<Vector>();
     for (int x = startingX - radius; x <= startingX + radius; x++) {
       for (int y = startingY - radius; y <= startingY + radius; y++) {
         for (int z = startingZ - radius; z <= startingZ + radius; z++) {
@@ -99,21 +99,14 @@ public class NetherPortalLeakingEvent implements Listener {
           if (vector.isInSphere(centerVector, radius)) {
             final var blockAt = world.getBlockAt(x, y, z);
             final var blockAtMaterial = blockAt.getType();
+            final double distance = vector.distance(centerVector);
             if (NetherPortalLeakingEvent.isValidMaterial(blockAtMaterial)) {
               locations.add(new Pair<>(vector.distance(centerVector), blockAt.getLocation()));
             }
-            // TODO only store the last layer of blocks for the particles (distance == radius)
-            final int distance = (int) Math.floor(vector.distance(centerVector));
-            particlesMap.compute(
-              distance,
-              (key, list) -> {
-                if (list == null) {
-                  list = new ArrayList<>();
-                }
-                list.add(vector.toLocation(world));
-                return list;
-              }
-            );
+            final var distanceFloored = (int) Math.ceil(distance);
+            if (distanceFloored == radius) {
+              particlesLocation.add(vector);
+            }
           }
         }
       }
@@ -147,7 +140,7 @@ public class NetherPortalLeakingEvent implements Listener {
     }
     this.netherPortals.put(
         netherPortal,
-        new NetherPortalLeakingTask(this, locationsDeque, world, netherPortal, radius, particlesMap)
+        new NetherPortalLeakingTask(this, locationsDeque, world, netherPortal, radius, particlesLocation)
       );
   }
 

@@ -8,6 +8,7 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.util.BoundingBox;
+import org.bukkit.util.Vector;
 
 public class NetherPortal {
 
@@ -78,8 +79,12 @@ public class NetherPortal {
     this.width = this.calculateWidth();
   }
 
-  public Location getCenter() {
-    return new Location(world, boundingBox.getCenterX(), boundingBox.getCenterY(), boundingBox.getCenterZ());
+  public Location getCenterLocation() {
+    return this.boundingBox.getCenter().toLocation(world);
+  }
+
+  public Vector getCenter() {
+    return this.boundingBox.getCenter();
   }
 
   @Override

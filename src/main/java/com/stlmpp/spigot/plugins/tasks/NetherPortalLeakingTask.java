@@ -6,14 +6,12 @@ import com.stlmpp.spigot.plugins.utils.Chance;
 import com.stlmpp.spigot.plugins.utils.Config;
 import com.stlmpp.spigot.plugins.utils.Tick;
 import com.stlmpp.spigot.plugins.utils.Util;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import org.bukkit.*;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.Vector;
 
 public class NetherPortalLeakingTask extends BukkitRunnable {
 
@@ -24,7 +22,7 @@ public class NetherPortalLeakingTask extends BukkitRunnable {
   private final double chanceOfNetherrackFire;
   private final int radius;
   private final double knockbackPower;
-  private final Map<Integer, List<Location>> particlesMap;
+  private final ArrayList<Vector> particlesLocations;
 
   public NetherPortalLeakingTask(
     NetherPortalLeakingEvent netherPortalLeakingEvent,
@@ -32,7 +30,7 @@ public class NetherPortalLeakingTask extends BukkitRunnable {
     World world,
     NetherPortal netherPortal,
     int radius,
-    Map<Integer, List<Location>> particlesMap
+    ArrayList<Vector> particlesLocations
   ) {
     this.netherPortalLeakingEvent = netherPortalLeakingEvent;
     this.locations = locations;
@@ -43,24 +41,25 @@ public class NetherPortalLeakingTask extends BukkitRunnable {
     this.radius = radius;
     this.knockbackPower =
       this.netherPortalLeakingEvent.plugin.config.getDouble(Config.netherPortalLeakingKnockbackPower);
-    this.particlesMap = particlesMap;
+    this.particlesLocations = particlesLocations;
     this.knockBackPlayers();
     this.createParticlesEffect();
-    this.runTaskTimer(
-        this.netherPortalLeakingEvent.plugin,
-        Tick.fromSeconds((double) this.radius / 5),
-        Tick.fromSeconds(2)
-      );
+    this.runTaskTimer(this.netherPortalLeakingEvent.plugin, Tick.fromSeconds(5), Tick.fromSeconds(2));
   }
 
   private void createParticlesEffect() {
-    final var netherPortalCenterLocation = this.netherPortal.getCenter();
-    this.world.playSound(this.netherPortal.getCenter(), Sound.BLOCK_PORTAL_TRAVEL, 1, 1);
-    final var locations = this.particlesMap.getOrDefault(this.radius - 1, new ArrayList<>());
-    for (Location location : locations) {
-      final var offset = netherPortalCenterLocation.toVector().clone().subtract(location.toVector());
-      world.spawnParticle(Particle.FLAME, location, 0, offset.getX(), offset.getY(), offset.getZ());
-      // TODO set the speed of flames
+    final var netherPortalCenterLocation = this.netherPortal.getCenterLocation();
+    this.world.playSound(netherPortalCenterLocation, Sound.BLOCK_PORTAL_TRAVEL, 1, 1);
+    for (Vector vector : this.particlesLocations) {
+      final var offset = vector.clone().subtract(netherPortalCenterLocation.toVector()).normalize();
+      world.spawnParticle(
+        Particle.DRAGON_BREATH,
+        netherPortalCenterLocation,
+        0,
+        offset.getX(),
+        offset.getY(),
+        offset.getZ()
+      );
     }
   }
 
@@ -73,7 +72,7 @@ public class NetherPortalLeakingTask extends BukkitRunnable {
     if (players.size() == 0) {
       return;
     }
-    final var netherPortalCenterVector = this.netherPortal.getCenter().toVector();
+    final var netherPortalCenterVector = this.netherPortal.getCenter();
     for (Player player : players) {
       final var playerLocationVector = player.getLocation().toVector();
       if (!playerLocationVector.isInSphere(netherPortalCenterVector, this.radius)) {
