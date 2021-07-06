@@ -7,7 +7,7 @@ public class StlmppPluginConfig {
 
   public StlmppPluginConfig(StlmppPlugin plugin) {
     final var config = plugin.config;
-    config.addDefault(Config.netherLightningChance, 30d);
+    config.addDefault(Config.netherLightningChance, 10d);
     config.addDefault(Config.netherLightningEnabled, true);
     config.addDefault(Config.netherLightningChancePerSecond, 15);
     config.addDefault(Config.netherLightningExplosionChance, 25d);
@@ -24,7 +24,7 @@ public class StlmppPluginConfig {
     };
     config.addDefault(Config.autoSeedAllowedSeedList, autoSeedAllowedSeedList);
     config.addDefault(Config.superThunderEnabled, true);
-    config.addDefault(Config.superThunderChance, 20d);
+    config.addDefault(Config.superThunderChance, 5d);
     config.addDefault(Config.superThunderSecondsIntervalEvents, 15);
     config.addDefault(Config.superThunderEventChance, 40d);
     config.addDefault(Config.superThunderLightningWeight, 250d);
@@ -55,7 +55,7 @@ public class StlmppPluginConfig {
     config.addDefault(Config.tpLightningExplosionChance, 0.25d);
     config.addDefault(Config.netherPortalLeakingEnabled, true);
     config.addDefault(Config.netherPortalLeakingRadius, 15);
-    config.addDefault(Config.netherPortalLeakingChanceOfNetherrackFire, 0.5d);
+    config.addDefault(Config.netherPortalLeakingChanceOfNetherrackFire, 0.25d);
     config.addDefault(Config.netherPortalLeakingKnockbackPower, 0.5d);
     config.addDefault(Config.devMode, false);
     config.options().copyDefaults(true);
