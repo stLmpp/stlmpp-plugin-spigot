@@ -37,6 +37,7 @@ public class Config {
   public static final String netherPortalLeakingRadius = "nether-portal-leaking-radius";
   public static final String netherPortalLeakingChanceOfNetherrackFire =
     "nether-portal-leaking-chance-of-netherrack-fire";
+  public static final String netherPortalLeakingKnockbackPower = "nether-portal-leaking-knockback-power";
 
   public static final String world = "world";
 

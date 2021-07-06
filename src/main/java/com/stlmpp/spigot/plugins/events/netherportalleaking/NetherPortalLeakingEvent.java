@@ -17,6 +17,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.world.PortalCreateEvent;
+import org.bukkit.util.Vector;
 
 public class NetherPortalLeakingEvent implements Listener {
 
@@ -86,21 +87,19 @@ public class NetherPortalLeakingEvent implements Listener {
     final var netherPortal = new NetherPortal(world, netherPortalBlocks);
     final var locations = new ArrayList<Pair<Double, Location>>();
     final var radius = Math.max(netherPortal.width, this.radius);
-    final var initialBlockLocation = netherPortal.getCenter();
+    final var initialBlockLocation = netherPortal.getCenter().toVector();
     final var startingX = initialBlockLocation.getBlockX();
     final var startingY = initialBlockLocation.getBlockY();
     final var startingZ = initialBlockLocation.getBlockZ();
     for (int x = startingX - radius; x <= startingX + radius; x++) {
       for (int y = startingY - radius; y <= startingY + radius; y++) {
         for (int z = startingZ - radius; z <= startingZ + radius; z++) {
-          final var distance = Math.sqrt(
-            Math.pow(startingX - x, 2) + Math.pow(startingY - y, 2) + Math.pow(startingZ - z, 2)
-          );
-          if (distance <= radius) {
+          final var vector = new Vector(x, y, z);
+          if (vector.isInSphere(initialBlockLocation, radius)) {
             final var blockAt = world.getBlockAt(x, y, z);
             final var blockAtMaterial = blockAt.getType();
             if (NetherPortalLeakingEvent.isValidMaterial(blockAtMaterial)) {
-              locations.add(new Pair<>(distance, blockAt.getLocation()));
+              locations.add(new Pair<>(vector.distance(initialBlockLocation), blockAt.getLocation()));
             }
           }
         }
@@ -135,7 +134,10 @@ public class NetherPortalLeakingEvent implements Listener {
         locationsDeque.add(locations.get(index).value1);
       }
     }
-    this.netherPortals.put(netherPortal, new NetherPortalLeakingTask(this, locationsDeque, world, netherPortal));
+    this.netherPortals.put(
+        netherPortal,
+        new NetherPortalLeakingTask(this, locationsDeque, world, netherPortal, radius)
+      );
   }
 
   @EventHandler
