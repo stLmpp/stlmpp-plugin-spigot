@@ -33,7 +33,7 @@ public class NetherPortalLeakingTask extends BukkitRunnable {
     this.netherPortal = netherPortal;
     this.chanceOfNetherrackFire =
       this.netherPortalLeakingEvent.plugin.config.getInt(Config.netherPortalLeakingChanceOfNetherrackFire);
-    this.runTaskTimer(this.netherPortalLeakingEvent.plugin, 0, Tick.fromSeconds(2));
+    this.runTaskTimer(this.netherPortalLeakingEvent.plugin, 0, /*Tick.fromSeconds(2) TODO*/1);
   }
 
   @Override
