@@ -6,14 +6,14 @@ import com.stlmpp.spigot.plugins.utils.Chance;
 import com.stlmpp.spigot.plugins.utils.Config;
 import com.stlmpp.spigot.plugins.utils.Tick;
 import com.stlmpp.spigot.plugins.utils.Util;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.List;
+import java.util.Map;
+import org.bukkit.*;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
-
-import java.util.Deque;
 
 public class NetherPortalLeakingTask extends BukkitRunnable {
 
@@ -24,13 +24,15 @@ public class NetherPortalLeakingTask extends BukkitRunnable {
   private final double chanceOfNetherrackFire;
   private final int radius;
   private final double knockbackPower;
+  private final Map<Integer, List<Location>> particlesMap;
 
   public NetherPortalLeakingTask(
     NetherPortalLeakingEvent netherPortalLeakingEvent,
     Deque<Location> locations,
     World world,
     NetherPortal netherPortal,
-    int radius
+    int radius,
+    Map<Integer, List<Location>> particlesMap
   ) {
     this.netherPortalLeakingEvent = netherPortalLeakingEvent;
     this.locations = locations;
@@ -41,14 +43,32 @@ public class NetherPortalLeakingTask extends BukkitRunnable {
     this.radius = radius;
     this.knockbackPower =
       this.netherPortalLeakingEvent.plugin.config.getDouble(Config.netherPortalLeakingKnockbackPower);
+    this.particlesMap = particlesMap;
     this.knockBackPlayers();
-    this.runTaskTimer(this.netherPortalLeakingEvent.plugin, 0, Tick.fromSeconds(2));
+    this.createParticlesEffect();
+    this.runTaskTimer(
+        this.netherPortalLeakingEvent.plugin,
+        Tick.fromSeconds((double) this.radius / 5),
+        Tick.fromSeconds(2)
+      );
+  }
+
+  private void createParticlesEffect() {
+    final var netherPortalCenterLocation = this.netherPortal.getCenter();
+    this.world.playSound(this.netherPortal.getCenter(), Sound.BLOCK_PORTAL_TRAVEL, 1, 1);
+    final var locations = this.particlesMap.getOrDefault(this.radius - 1, new ArrayList<>());
+    for (Location location : locations) {
+      final var offset = netherPortalCenterLocation.toVector().clone().subtract(location.toVector());
+      world.spawnParticle(Particle.FLAME, location, 0, offset.getX(), offset.getY(), offset.getZ());
+      // TODO set the speed of flames
+    }
   }
 
   private void knockBackPlayers() {
     if (this.knockbackPower <= 0) {
       return;
     }
+    // TODO maybe apply this effect to all nearby entities?
     final var players = this.world.getPlayers();
     if (players.size() == 0) {
       return;
@@ -68,6 +88,7 @@ public class NetherPortalLeakingTask extends BukkitRunnable {
         .normalize()
         .multiply(multiplier * -1);
       player.setVelocity(vectorVelocity);
+      player.damage(multiplier);
     }
   }
 
