@@ -1,15 +1,18 @@
 package com.stlmpp.spigot.plugins.tasks.superthunder;
 
 import com.stlmpp.spigot.plugins.StlmppPlugin;
+import com.stlmpp.spigot.plugins.events.SuperThunderCheckEvent;
 import com.stlmpp.spigot.plugins.utils.Chance;
 import com.stlmpp.spigot.plugins.utils.Config;
 import com.stlmpp.spigot.plugins.utils.Tick;
 import com.stlmpp.spigot.plugins.utils.WeightedRandomCollection;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.scheduler.BukkitRunnable;
 
 public class SuperThunderTask extends BukkitRunnable {
 
+  private final SuperThunderCheckEvent superThunderCheckEvent;
   private final StlmppPlugin plugin;
   private final int safeRadius;
   private final Location safeLocation;
@@ -20,8 +23,9 @@ public class SuperThunderTask extends BukkitRunnable {
     return this.plugin.config.getDouble(name);
   }
 
-  public SuperThunderTask(StlmppPlugin plugin) {
-    this.plugin = plugin;
+  public SuperThunderTask(SuperThunderCheckEvent superThunderCheckEvent) {
+    this.superThunderCheckEvent = superThunderCheckEvent;
+    this.plugin = this.superThunderCheckEvent.plugin;
     this.runTaskTimer(
         this.plugin,
         0,
@@ -38,7 +42,7 @@ public class SuperThunderTask extends BukkitRunnable {
         Integer.parseInt(coordsArrays[1]),
         Integer.parseInt(coordsArrays[2])
       );
-    this.plugin.getServer().broadcastMessage("R.I.P. Preparem os cuzes");
+    this.plugin.getServer().broadcast(Component.text("R.I.P. Preparem os cuzes"));
     this.events.add(
         this.getWeight(Config.superThunderExplosiveLightningWeight),
         new SuperThunderEventExplosiveLightning()
@@ -50,19 +54,20 @@ public class SuperThunderTask extends BukkitRunnable {
 
   @Override
   public void run() {
-    if (!Chance.of(this.plugin.config.getInt(Config.superThunderEventChance))) {
+    if (!Chance.of(this.plugin.config.getDouble(Config.superThunderEventChance))) {
       return;
     }
     final var world = this.plugin.getWorld();
-    if (world == null) {
+    if (world == null || world.getPlayers().size() == 0) {
       return;
     }
     if (!world.isThundering()) {
-      this.plugin.deactivateSuperThunderEvent();
+      this.superThunderCheckEvent.deactivateSuperThunderEvent();
     }
     final var randomEvent = this.events.next();
     if (this.plugin.isDevMode) {
-      this.plugin.getServer().broadcastMessage("Super thunder event: " + randomEvent.getClass().getSimpleName());
+      this.plugin.getServer()
+        .broadcast(Component.text("Super thunder event: " + randomEvent.getClass().getSimpleName()));
     }
     randomEvent.run(this.plugin, this.safeRadius, this.safeLocation);
   }

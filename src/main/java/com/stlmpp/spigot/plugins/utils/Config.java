@@ -29,6 +29,15 @@ public class Config {
   public static final String caveInImmunityItems = "cave-in-immunity-items";
   public static final String caveInChance = "cave-in-chance";
   public static final String caveInBlocks = "cave-in-blocks";
+  public static final String tpLightningEnabled = "tp-lightning-enabled";
+  public static final String tpLightningNetherBlocksRadius = "tp-lightning-nether-blocks-radius";
+  public static final String tpLightningChance = "tp-lightning-chance";
+  public static final String tpLightningExplosionChance = "tp-lightning-explosion-chance";
+  public static final String netherPortalLeakingEnabled = "nether-portal-leaking-enabled";
+  public static final String netherPortalLeakingRadius = "nether-portal-leaking-radius";
+  public static final String netherPortalLeakingChanceOfNetherrackFire =
+    "nether-portal-leaking-chance-of-netherrack-fire";
+  public static final String netherPortalLeakingKnockbackPower = "nether-portal-leaking-knockback-power";
 
   public static final String world = "world";
 
