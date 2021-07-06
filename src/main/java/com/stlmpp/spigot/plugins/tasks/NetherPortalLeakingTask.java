@@ -19,7 +19,7 @@ public class NetherPortalLeakingTask extends BukkitRunnable {
   private final NetherPortalLeakingEvent netherPortalLeakingEvent;
   private final World world;
   private final NetherPortal netherPortal;
-  private final int chanceOfNetherrackFire;
+  private final double chanceOfNetherrackFire;
 
   public NetherPortalLeakingTask(
     NetherPortalLeakingEvent netherPortalLeakingEvent,
@@ -32,7 +32,7 @@ public class NetherPortalLeakingTask extends BukkitRunnable {
     this.world = world;
     this.netherPortal = netherPortal;
     this.chanceOfNetherrackFire =
-      this.netherPortalLeakingEvent.plugin.config.getInt(Config.netherPortalLeakingChanceOfNetherrackFire);
+      this.netherPortalLeakingEvent.plugin.config.getDouble(Config.netherPortalLeakingChanceOfNetherrackFire);
     this.runTaskTimer(this.netherPortalLeakingEvent.plugin, 0, /*Tick.fromSeconds(2) TODO*/1);
   }
 

@@ -45,7 +45,7 @@ public class StlmppPlugin extends JavaPlugin {
     if (this.config.getBoolean(Config.netherLightningEnabled)) {
       this.sendConsoleMessage(
           "Nether lightning activated with " +
-          this.config.getInt(Config.netherLightningChance) +
+          this.config.getDouble(Config.netherLightningChance) +
           "% of chance, every " +
           this.config.getInt(Config.netherLightningChancePerSecond) +
           " seconds!"
@@ -60,17 +60,17 @@ public class StlmppPlugin extends JavaPlugin {
     }
     if (this.config.getBoolean(Config.superThunderEnabled)) {
       this.sendConsoleMessage(
-          "Super thunder activated with " + this.config.getInt(Config.superThunderChance) + "% of chance"
+          "Super thunder activated with " + this.config.getDouble(Config.superThunderChance) + "% of chance"
         );
       new SuperThunderCheckEvent(this);
     }
     if (this.config.getBoolean(Config.caveInEnabled)) {
-      this.sendConsoleMessage("Cave-in enabled with " + this.config.getInt(Config.caveInChance) + "% of chance");
+      this.sendConsoleMessage("Cave-in enabled with " + this.config.getDouble(Config.caveInChance) + "% of chance");
       new CaveInEvent(this);
     }
     if (this.config.getBoolean(Config.tpLightningEnabled)) {
       this.sendConsoleMessage(
-          "Teleport lightning enabled with " + this.config.getInt(Config.tpLightningChance) + "% of chance"
+          "Teleport lightning enabled with " + this.config.getDouble(Config.tpLightningChance) + "% of chance"
         );
       new LightningTeleportEvent(this);
     }

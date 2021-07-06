@@ -23,7 +23,7 @@ public class SuperThunderCheckEvent implements Listener {
 
   public void activateSuperThunderEvent() {
     this.deactivateSuperThunderEvent();
-    if (Chance.of(this.plugin.config.getInt(Config.superThunderChance))) {
+    if (Chance.of(this.plugin.config.getDouble(Config.superThunderChance))) {
       this.superThunderTask = new SuperThunderTask(this);
     }
   }

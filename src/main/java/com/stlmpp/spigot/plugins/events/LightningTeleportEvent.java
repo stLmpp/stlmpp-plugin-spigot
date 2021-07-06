@@ -16,17 +16,17 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 public class LightningTeleportEvent implements Listener {
 
   private final StlmppPlugin plugin;
-  private final int chance;
+  private final double chance;
   private final int radius;
-  private final int explosionChance;
+  private final double explosionChance;
   private final WeightedRandomCollection<Material> materials = new WeightedRandomCollection<>();
 
   public LightningTeleportEvent(StlmppPlugin plugin) {
     this.plugin = plugin;
     this.plugin.getServer().getPluginManager().registerEvents(this, this.plugin);
-    this.chance = this.plugin.config.getInt(Config.tpLightningChance);
+    this.chance = this.plugin.config.getDouble(Config.tpLightningChance);
     this.radius = this.plugin.config.getInt(Config.tpLightningNetherBlocksRadius);
-    this.explosionChance = this.plugin.config.getInt(Config.tpLightningExplosionChance);
+    this.explosionChance = this.plugin.config.getDouble(Config.tpLightningExplosionChance);
     this.materials.add(1.0, Material.ANCIENT_DEBRIS)
       .add(200.0, Material.NETHERRACK)
       .add(10.0, Material.MAGMA_BLOCK)

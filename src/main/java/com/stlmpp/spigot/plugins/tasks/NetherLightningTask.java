@@ -23,7 +23,7 @@ public class NetherLightningTask extends BukkitRunnable {
 
   @Override
   public void run() {
-    if (Chance.of(this.plugin.config.getInt(Config.netherLightningChance))) {
+    if (Chance.of(this.plugin.config.getDouble(Config.netherLightningChance))) {
       return;
     }
     final var world = this.plugin.getWorldNether();
@@ -35,7 +35,7 @@ public class NetherLightningTask extends BukkitRunnable {
       return;
     }
     world.strikeLightning(lightningLocation);
-    if (Chance.of(this.plugin.config.getInt(Config.netherLightningExplosionChance))) {
+    if (Chance.of(this.plugin.config.getDouble(Config.netherLightningExplosionChance))) {
       final var explosionPower = ThreadLocalRandom.current().nextInt(0, 16);
       world.createExplosion(lightningLocation, (float) explosionPower, true, true);
     }

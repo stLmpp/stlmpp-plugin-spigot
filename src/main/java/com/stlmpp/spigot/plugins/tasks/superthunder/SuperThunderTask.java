@@ -54,7 +54,7 @@ public class SuperThunderTask extends BukkitRunnable {
 
   @Override
   public void run() {
-    if (!Chance.of(this.plugin.config.getInt(Config.superThunderEventChance))) {
+    if (!Chance.of(this.plugin.config.getDouble(Config.superThunderEventChance))) {
       return;
     }
     final var world = this.plugin.getWorld();

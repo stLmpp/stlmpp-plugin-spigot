@@ -87,7 +87,7 @@ public class CaveInEvent implements Listener {
 
   @EventHandler(priority = EventPriority.LOWEST)
   public void onBlockBreak(BlockBreakEvent event) {
-    if (!Chance.of(this.plugin.config.getInt(Config.caveInChance))) {
+    if (!Chance.of(this.plugin.config.getDouble(Config.caveInChance))) {
       return;
     }
     final var player = event.getPlayer();
