@@ -84,7 +84,7 @@ public class NetherPortalLeakingEvent implements Listener {
       }
     }
     final var netherPortal = new NetherPortal(world, netherPortalBlocks);
-    final var locations = new ArrayDeque<Pair<Double, Location>>();
+    final var locations = new ArrayList<Pair<Double, Location>>();
     final var radius = Math.max(netherPortal.width, this.radius);
     final var initialBlockLocation = netherPortal.getCenter();
     final var startingX = initialBlockLocation.getBlockX();
@@ -109,26 +109,22 @@ public class NetherPortalLeakingEvent implements Listener {
     if (locations.size() == 0) {
       return;
     }
-    final var locationsSorted = locations
-      .stream()
-      .sorted(
-        (pairA, pairB) -> {
-          final var distanceA = pairA.value0;
-          final var distanceB = pairB.value0;
-          if (distanceA.equals(distanceB)) {
-            return 0;
-          } else if (distanceA < distanceB) {
-            return -1;
-          } else {
-            return 1;
-          }
+    locations.sort(
+      (pairA, pairB) -> {
+        final var distanceA = pairA.value0;
+        final var distanceB = pairB.value0;
+        if (distanceA.equals(distanceB)) {
+          return 0;
+        } else if (distanceA < distanceB) {
+          return -1;
+        } else {
+          return 1;
         }
-      )
-      .map(pair -> pair.value1)
-      .toList();
-    final var locationsSortedDistributed = new ArrayDeque<Location>();
-    for (var index = 0; index < locationsSorted.size(); index++) {
-      double percent = (double) index / (double) locationsSorted.size();
+      }
+    );
+    final var locationsDeque = new ArrayDeque<Location>();
+    for (var index = 0; index < locations.size(); index++) {
+      double percent = (double) index / (double) locations.size();
       if (percent < 0.1) {
         percent = 0;
       }
@@ -136,13 +132,10 @@ public class NetherPortalLeakingEvent implements Listener {
         percent = 0.9;
       }
       if (Math.random() > percent) {
-        locationsSortedDistributed.add(locationsSorted.get(index));
+        locationsDeque.add(locations.get(index).value1);
       }
     }
-    this.netherPortals.put(
-        netherPortal,
-        new NetherPortalLeakingTask(this, locationsSortedDistributed, world, netherPortal)
-      );
+    this.netherPortals.put(netherPortal, new NetherPortalLeakingTask(this, locationsDeque, world, netherPortal));
   }
 
   @EventHandler
