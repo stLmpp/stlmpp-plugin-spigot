@@ -10,14 +10,18 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-public class SuperThunderEventGhastSwarm implements SuperThunderEvent {
+public class SuperThunderEventGhastSwarm extends SuperThunderEvent {
 
-  private void spawnGhastForPlayer(World world, Player player, int safeRadius, @NotNull Location safeLocation) {
+  public SuperThunderEventGhastSwarm(@NotNull StlmppPlugin plugin, int safeRadius, @NotNull Location safeLocation) {
+    super(plugin, safeRadius, safeLocation);
+  }
+
+  private void spawnGhastForPlayer(World world, Player player) {
     if (Chance.of(50)) {
       return;
     }
     final var playerLocation = player.getLocation();
-    if (Util.isInRadius(playerLocation, safeLocation, safeRadius) && playerLocation.getY() >= 55) {
+    if (Util.isInRadius(playerLocation, this.safeLocation, this.safeRadius) && playerLocation.getY() >= 55) {
       return;
     }
     final var ghasts = ThreadLocalRandom.current().nextInt(0, 4);
@@ -30,11 +34,11 @@ public class SuperThunderEventGhastSwarm implements SuperThunderEvent {
   }
 
   @Override
-  public void run(@NotNull StlmppPlugin plugin, int safeRadius, @NotNull Location safeLocation) {
-    final var world = plugin.getWorld();
+  public void run() {
+    final var world = this.plugin.getWorld();
     if (world == null) {
       return;
     }
-    world.getPlayers().forEach(player -> this.spawnGhastForPlayer(world, player, safeRadius, safeLocation));
+    world.getPlayers().forEach(player -> this.spawnGhastForPlayer(world, player));
   }
 }

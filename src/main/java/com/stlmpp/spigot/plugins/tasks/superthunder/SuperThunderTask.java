@@ -14,8 +14,6 @@ public class SuperThunderTask extends BukkitRunnable {
 
   private final SuperThunderCheckEvent superThunderCheckEvent;
   private final StlmppPlugin plugin;
-  private final int safeRadius;
-  private final Location safeLocation;
 
   private final WeightedRandomCollection<SuperThunderEvent> events = new WeightedRandomCollection<>();
 
@@ -31,28 +29,32 @@ public class SuperThunderTask extends BukkitRunnable {
         0,
         Tick.fromSeconds(this.plugin.config.getInt(StlmppPluginConfig.superThunderSecondsIntervalEvents))
       );
-    this.safeRadius = this.plugin.config.getInt(StlmppPluginConfig.superThunderSafeCoordsRadius);
-    final String coordsString = this.plugin.config.getString(StlmppPluginConfig.superThunderSafeCoords);
-    assert coordsString != null;
+    int safeRadius = this.plugin.config.getInt(StlmppPluginConfig.superThunderSafeCoordsRadius);
+    final String coordsString = this.plugin.config.getString(StlmppPluginConfig.superThunderSafeCoords, "0 0 0");
     final String[] coordsArrays = coordsString.split(" ");
-    this.safeLocation =
-      new Location(
-        plugin.getWorld(),
-        Integer.parseInt(coordsArrays[0]),
-        Integer.parseInt(coordsArrays[1]),
-        Integer.parseInt(coordsArrays[2])
-      );
+    Location safeLocation = new Location(
+      plugin.getWorld(),
+      Integer.parseInt(coordsArrays[0]),
+      Integer.parseInt(coordsArrays[1]),
+      Integer.parseInt(coordsArrays[2])
+    );
     this.plugin.getServer().broadcast(Component.text("R.I.P. Preparem os cuzes"));
     this.events.add(
         this.getWeight(StlmppPluginConfig.superThunderExplosiveLightningWeight),
-        new SuperThunderEventExplosiveLightning()
+        new SuperThunderEventExplosiveLightning(this.plugin, safeRadius, safeLocation)
       )
-      .add(this.getWeight(StlmppPluginConfig.superThunderLightningWeight), new SuperThunderEventRegularLightning())
+      .add(
+        this.getWeight(StlmppPluginConfig.superThunderLightningWeight),
+        new SuperThunderEventRegularLightning(this.plugin, safeRadius, safeLocation)
+      )
       .add(
         this.getWeight(StlmppPluginConfig.superThunderLightningCreeperWeight),
-        new SuperThunderEventLightningCreeper()
+        new SuperThunderEventLightningCreeper(this.plugin, safeRadius, safeLocation)
       )
-      .add(this.getWeight(StlmppPluginConfig.superThunderGhastSwarmWeight), new SuperThunderEventGhastSwarm());
+      .add(
+        this.getWeight(StlmppPluginConfig.superThunderGhastSwarmWeight),
+        new SuperThunderEventGhastSwarm(this.plugin, safeRadius, safeLocation)
+      );
   }
 
   @Override
@@ -72,6 +74,6 @@ public class SuperThunderTask extends BukkitRunnable {
       this.plugin.getServer()
         .broadcast(Component.text("Super thunder event: " + randomEvent.getClass().getSimpleName()));
     }
-    randomEvent.run(this.plugin, this.safeRadius, this.safeLocation);
+    randomEvent.run();
   }
 }
