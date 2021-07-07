@@ -11,6 +11,8 @@ public class StlmppPluginConfig {
     config.addDefault(Config.netherLightningEnabled, true);
     config.addDefault(Config.netherLightningChancePerSecond, 15);
     config.addDefault(Config.netherLightningExplosionChance, 25d);
+    config.addDefault(Config.netherLightningExplosionMinPower, 0f);
+    config.addDefault(Config.netherLightningExplosionMaxPower, 16f);
     config.addDefault(Config.worldNether, "world_nether");
     config.addDefault(Config.autoSeedEnabled, true);
     config.addDefault(Config.autoSeedMaxBlocks, 60);
