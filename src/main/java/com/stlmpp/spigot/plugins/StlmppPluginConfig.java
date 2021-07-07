@@ -56,15 +56,17 @@ public class StlmppPluginConfig {
     config.addDefault(StlmppPluginConfig.worldNether, "world_nether");
     config.addDefault(StlmppPluginConfig.autoSeedEnabled, true);
     config.addDefault(StlmppPluginConfig.autoSeedMaxBlocks, 60);
-    final var autoSeedAllowedSeedList = new String[] {
-      Material.WHEAT_SEEDS.name(),
-      Material.MELON_SEEDS.name(),
-      Material.BEETROOT_SEEDS.name(),
-      Material.PUMPKIN_SEEDS.name(),
-      Material.POTATO.name(),
-      Material.CARROT.name(),
-    };
-    config.addDefault(StlmppPluginConfig.autoSeedAllowedSeedList, autoSeedAllowedSeedList);
+    config.addDefault(
+      StlmppPluginConfig.autoSeedAllowedSeedList,
+      new String[] {
+        Material.WHEAT_SEEDS.name(),
+        Material.MELON_SEEDS.name(),
+        Material.BEETROOT_SEEDS.name(),
+        Material.PUMPKIN_SEEDS.name(),
+        Material.POTATO.name(),
+        Material.CARROT.name(),
+      }
+    );
     config.addDefault(StlmppPluginConfig.superThunderEnabled, true);
     config.addDefault(StlmppPluginConfig.superThunderChance, 5d);
     config.addDefault(StlmppPluginConfig.superThunderSecondsIntervalEvents, 15);
@@ -80,15 +82,15 @@ public class StlmppPluginConfig {
     config.addDefault(StlmppPluginConfig.caveInMaxY, 30);
     config.addDefault(StlmppPluginConfig.caveInMinHeight, 4);
     config.addDefault(StlmppPluginConfig.caveInMinWidth, 4);
-    final var caveInImmunityItems = new String[] {
-      Material.RABBIT_FOOT.name(),
-      Material.CLOCK.name(),
-      Material.COMPASS.name(),
-    };
-    config.addDefault(StlmppPluginConfig.caveInImmunityItems, caveInImmunityItems);
+    config.addDefault(
+      StlmppPluginConfig.caveInImmunityItems,
+      new String[] { Material.RABBIT_FOOT.name(), Material.CLOCK.name(), Material.COMPASS.name() }
+    );
     config.addDefault(StlmppPluginConfig.caveInChance, 2d);
-    final var caveInBlocks = new String[] { Material.STONE.name(), Material.COBBLESTONE.name() };
-    config.addDefault(StlmppPluginConfig.caveInBlocks, caveInBlocks);
+    config.addDefault(
+      StlmppPluginConfig.caveInBlocks,
+      new String[] { Material.STONE.name(), Material.COBBLESTONE.name() }
+    );
     config.addDefault(StlmppPluginConfig.caveInMaxWidth, 10);
     config.addDefault(StlmppPluginConfig.caveInMaxHeight, 10);
     config.addDefault(StlmppPluginConfig.tpLightningEnabled, true);
