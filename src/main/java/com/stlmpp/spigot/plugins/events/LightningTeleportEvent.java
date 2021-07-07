@@ -1,8 +1,8 @@
 package com.stlmpp.spigot.plugins.events;
 
 import com.stlmpp.spigot.plugins.StlmppPlugin;
+import com.stlmpp.spigot.plugins.StlmppPluginConfig;
 import com.stlmpp.spigot.plugins.utils.Chance;
-import com.stlmpp.spigot.plugins.utils.Config;
 import com.stlmpp.spigot.plugins.utils.Util;
 import com.stlmpp.spigot.plugins.utils.WeightedRandomCollection;
 import java.util.concurrent.ThreadLocalRandom;
@@ -24,9 +24,9 @@ public class LightningTeleportEvent implements Listener {
   public LightningTeleportEvent(StlmppPlugin plugin) {
     this.plugin = plugin;
     this.plugin.getServer().getPluginManager().registerEvents(this, this.plugin);
-    this.chance = this.plugin.config.getDouble(Config.tpLightningChance);
-    this.radius = this.plugin.config.getInt(Config.tpLightningNetherBlocksRadius);
-    this.explosionChance = this.plugin.config.getDouble(Config.tpLightningExplosionChance);
+    this.chance = this.plugin.config.getDouble(StlmppPluginConfig.tpLightningChance);
+    this.radius = this.plugin.config.getInt(StlmppPluginConfig.tpLightningNetherBlocksRadius);
+    this.explosionChance = this.plugin.config.getDouble(StlmppPluginConfig.tpLightningExplosionChance);
     this.materials.add(1.0, Material.ANCIENT_DEBRIS)
       .add(200.0, Material.NETHERRACK)
       .add(10.0, Material.MAGMA_BLOCK)

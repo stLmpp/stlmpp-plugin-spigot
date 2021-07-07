@@ -1,9 +1,9 @@
 package com.stlmpp.spigot.plugins.tasks.superthunder;
 
 import com.stlmpp.spigot.plugins.StlmppPlugin;
+import com.stlmpp.spigot.plugins.StlmppPluginConfig;
 import com.stlmpp.spigot.plugins.events.SuperThunderCheckEvent;
 import com.stlmpp.spigot.plugins.utils.Chance;
-import com.stlmpp.spigot.plugins.utils.Config;
 import com.stlmpp.spigot.plugins.utils.Tick;
 import com.stlmpp.spigot.plugins.utils.WeightedRandomCollection;
 import net.kyori.adventure.text.Component;
@@ -29,10 +29,10 @@ public class SuperThunderTask extends BukkitRunnable {
     this.runTaskTimer(
         this.plugin,
         0,
-        Tick.fromSeconds(this.plugin.config.getInt(Config.superThunderSecondsIntervalEvents))
+        Tick.fromSeconds(this.plugin.config.getInt(StlmppPluginConfig.superThunderSecondsIntervalEvents))
       );
-    this.safeRadius = this.plugin.config.getInt(Config.superThunderSafeCoordsRadius);
-    final String coordsString = this.plugin.config.getString(Config.superThunderSafeCoords);
+    this.safeRadius = this.plugin.config.getInt(StlmppPluginConfig.superThunderSafeCoordsRadius);
+    final String coordsString = this.plugin.config.getString(StlmppPluginConfig.superThunderSafeCoords);
     assert coordsString != null;
     final String[] coordsArrays = coordsString.split(" ");
     this.safeLocation =
@@ -44,17 +44,20 @@ public class SuperThunderTask extends BukkitRunnable {
       );
     this.plugin.getServer().broadcast(Component.text("R.I.P. Preparem os cuzes"));
     this.events.add(
-        this.getWeight(Config.superThunderExplosiveLightningWeight),
+        this.getWeight(StlmppPluginConfig.superThunderExplosiveLightningWeight),
         new SuperThunderEventExplosiveLightning()
       )
-      .add(this.getWeight(Config.superThunderLightningWeight), new SuperThunderEventRegularLightning())
-      .add(this.getWeight(Config.superThunderLightningCreeperWeight), new SuperThunderEventLightningCreeper())
-      .add(this.getWeight(Config.superThunderGhastSwarmWeight), new SuperThunderEventGhastSwarm());
+      .add(this.getWeight(StlmppPluginConfig.superThunderLightningWeight), new SuperThunderEventRegularLightning())
+      .add(
+        this.getWeight(StlmppPluginConfig.superThunderLightningCreeperWeight),
+        new SuperThunderEventLightningCreeper()
+      )
+      .add(this.getWeight(StlmppPluginConfig.superThunderGhastSwarmWeight), new SuperThunderEventGhastSwarm());
   }
 
   @Override
   public void run() {
-    if (!Chance.of(this.plugin.config.getDouble(Config.superThunderEventChance))) {
+    if (!Chance.of(this.plugin.config.getDouble(StlmppPluginConfig.superThunderEventChance))) {
       return;
     }
     final var world = this.plugin.getWorld();

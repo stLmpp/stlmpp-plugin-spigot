@@ -1,8 +1,8 @@
 package com.stlmpp.spigot.plugins.events.netherportalleaking;
 
 import com.stlmpp.spigot.plugins.StlmppPlugin;
+import com.stlmpp.spigot.plugins.StlmppPluginConfig;
 import com.stlmpp.spigot.plugins.tasks.NetherPortalLeakingTask;
-import com.stlmpp.spigot.plugins.utils.Config;
 import com.stlmpp.spigot.plugins.utils.Pair;
 import com.stlmpp.spigot.plugins.utils.Util;
 import io.reactivex.rxjava3.disposables.Disposable;
@@ -39,7 +39,7 @@ public class NetherPortalLeakingEvent implements Listener {
   public NetherPortalLeakingEvent(StlmppPlugin plugin) {
     this.plugin = plugin;
     this.plugin.getServer().getPluginManager().registerEvents(this, this.plugin);
-    this.radius = this.plugin.config.getInt(Config.netherPortalLeakingRadius);
+    this.radius = this.plugin.config.getInt(StlmppPluginConfig.netherPortalLeakingRadius);
     this.disposable =
       this.netherPortalBreak$.debounce(1, TimeUnit.SECONDS)
         .filter(value -> value.size() != 0)
