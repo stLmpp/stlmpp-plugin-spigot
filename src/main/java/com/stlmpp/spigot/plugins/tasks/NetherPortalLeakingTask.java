@@ -1,9 +1,9 @@
 package com.stlmpp.spigot.plugins.tasks;
 
+import com.stlmpp.spigot.plugins.StlmppPluginConfig;
 import com.stlmpp.spigot.plugins.events.netherportalleaking.NetherPortal;
 import com.stlmpp.spigot.plugins.events.netherportalleaking.NetherPortalLeakingEvent;
 import com.stlmpp.spigot.plugins.utils.Chance;
-import com.stlmpp.spigot.plugins.utils.Config;
 import com.stlmpp.spigot.plugins.utils.Tick;
 import com.stlmpp.spigot.plugins.utils.Util;
 import java.util.*;
@@ -37,10 +37,12 @@ public class NetherPortalLeakingTask extends BukkitRunnable {
     this.world = world;
     this.netherPortal = netherPortal;
     this.chanceOfNetherrackFire =
-      this.netherPortalLeakingEvent.plugin.config.getDouble(Config.netherPortalLeakingChanceOfNetherrackFire);
+      this.netherPortalLeakingEvent.plugin.config.getDouble(
+          StlmppPluginConfig.netherPortalLeakingChanceOfNetherrackFire
+        );
     this.radius = radius;
     this.knockbackPower =
-      this.netherPortalLeakingEvent.plugin.config.getDouble(Config.netherPortalLeakingKnockbackPower);
+      this.netherPortalLeakingEvent.plugin.config.getDouble(StlmppPluginConfig.netherPortalLeakingKnockbackPower);
     this.particlesLocations = particlesLocations;
     this.knockBackPlayers();
     this.createParticlesEffect();

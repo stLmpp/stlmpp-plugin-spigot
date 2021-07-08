@@ -1,8 +1,8 @@
 package com.stlmpp.spigot.plugins.events;
 
 import com.stlmpp.spigot.plugins.StlmppPlugin;
+import com.stlmpp.spigot.plugins.StlmppPluginConfig;
 import com.stlmpp.spigot.plugins.utils.Chance;
-import com.stlmpp.spigot.plugins.utils.Config;
 import com.stlmpp.spigot.plugins.utils.Util;
 import java.util.HashSet;
 import java.util.Set;
@@ -31,12 +31,12 @@ public class CaveInEvent implements Listener {
   public CaveInEvent(StlmppPlugin plugin) {
     this.plugin = plugin;
     this.plugin.getServer().getPluginManager().registerEvents(this, this.plugin);
-    this.maxY = this.plugin.config.getInt(Config.caveInMaxY);
-    this.minHeight = this.plugin.config.getInt(Config.caveInMinHeight);
-    this.maxHeight = this.plugin.config.getInt(Config.caveInMaxHeight);
-    this.minWidth = this.plugin.config.getInt(Config.caveInMinWidth);
-    this.maxWidth = this.plugin.config.getInt(Config.caveInMaxWidth);
-    final var materialNames = this.plugin.config.getList(Config.caveInBlocks);
+    this.maxY = this.plugin.config.getInt(StlmppPluginConfig.caveInMaxY);
+    this.minHeight = this.plugin.config.getInt(StlmppPluginConfig.caveInMinHeight);
+    this.maxHeight = this.plugin.config.getInt(StlmppPluginConfig.caveInMaxHeight);
+    this.minWidth = this.plugin.config.getInt(StlmppPluginConfig.caveInMinWidth);
+    this.maxWidth = this.plugin.config.getInt(StlmppPluginConfig.caveInMaxWidth);
+    final var materialNames = this.plugin.config.getList(StlmppPluginConfig.caveInBlocks);
     if (materialNames != null) {
       Util.setMaterialsFromNames(this.blocks, materialNames);
     }
@@ -87,7 +87,7 @@ public class CaveInEvent implements Listener {
 
   @EventHandler(priority = EventPriority.LOWEST)
   public void onBlockBreak(BlockBreakEvent event) {
-    if (!Chance.of(this.plugin.config.getDouble(Config.caveInChance))) {
+    if (!Chance.of(this.plugin.config.getDouble(StlmppPluginConfig.caveInChance))) {
       return;
     }
     final var player = event.getPlayer();

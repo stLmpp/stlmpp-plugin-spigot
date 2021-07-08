@@ -1,9 +1,9 @@
 package com.stlmpp.spigot.plugins.tasks.superthunder;
 
 import com.stlmpp.spigot.plugins.StlmppPlugin;
+import com.stlmpp.spigot.plugins.StlmppPluginConfig;
 import com.stlmpp.spigot.plugins.events.SuperThunderCheckEvent;
 import com.stlmpp.spigot.plugins.utils.Chance;
-import com.stlmpp.spigot.plugins.utils.Config;
 import com.stlmpp.spigot.plugins.utils.Tick;
 import com.stlmpp.spigot.plugins.utils.WeightedRandomCollection;
 import net.kyori.adventure.text.Component;
@@ -14,8 +14,6 @@ public class SuperThunderTask extends BukkitRunnable {
 
   private final SuperThunderCheckEvent superThunderCheckEvent;
   private final StlmppPlugin plugin;
-  private final int safeRadius;
-  private final Location safeLocation;
 
   private final WeightedRandomCollection<SuperThunderEvent> events = new WeightedRandomCollection<>();
 
@@ -29,32 +27,39 @@ public class SuperThunderTask extends BukkitRunnable {
     this.runTaskTimer(
         this.plugin,
         0,
-        Tick.fromSeconds(this.plugin.config.getInt(Config.superThunderSecondsIntervalEvents))
+        Tick.fromSeconds(this.plugin.config.getInt(StlmppPluginConfig.superThunderSecondsIntervalEvents))
       );
-    this.safeRadius = this.plugin.config.getInt(Config.superThunderSafeCoordsRadius);
-    final String coordsString = this.plugin.config.getString(Config.superThunderSafeCoords);
-    assert coordsString != null;
+    int safeRadius = this.plugin.config.getInt(StlmppPluginConfig.superThunderSafeCoordsRadius);
+    final String coordsString = this.plugin.config.getString(StlmppPluginConfig.superThunderSafeCoords, "0 0 0");
     final String[] coordsArrays = coordsString.split(" ");
-    this.safeLocation =
-      new Location(
-        plugin.getWorld(),
-        Integer.parseInt(coordsArrays[0]),
-        Integer.parseInt(coordsArrays[1]),
-        Integer.parseInt(coordsArrays[2])
-      );
+    Location safeLocation = new Location(
+      plugin.getWorld(),
+      Integer.parseInt(coordsArrays[0]),
+      Integer.parseInt(coordsArrays[1]),
+      Integer.parseInt(coordsArrays[2])
+    );
     this.plugin.getServer().broadcast(Component.text("R.I.P. Preparem os cuzes"));
     this.events.add(
-        this.getWeight(Config.superThunderExplosiveLightningWeight),
-        new SuperThunderEventExplosiveLightning()
+        this.getWeight(StlmppPluginConfig.superThunderExplosiveLightningWeight),
+        new SuperThunderEventExplosiveLightning(this.plugin, safeRadius, safeLocation)
       )
-      .add(this.getWeight(Config.superThunderLightningWeight), new SuperThunderEventRegularLightning())
-      .add(this.getWeight(Config.superThunderLightningCreeperWeight), new SuperThunderEventLightningCreeper())
-      .add(this.getWeight(Config.superThunderGhastSwarmWeight), new SuperThunderEventGhastSwarm());
+      .add(
+        this.getWeight(StlmppPluginConfig.superThunderLightningWeight),
+        new SuperThunderEventRegularLightning(this.plugin, safeRadius, safeLocation)
+      )
+      .add(
+        this.getWeight(StlmppPluginConfig.superThunderLightningCreeperWeight),
+        new SuperThunderEventLightningCreeper(this.plugin, safeRadius, safeLocation)
+      )
+      .add(
+        this.getWeight(StlmppPluginConfig.superThunderGhastSwarmWeight),
+        new SuperThunderEventGhastSwarm(this.plugin, safeRadius, safeLocation)
+      );
   }
 
   @Override
   public void run() {
-    if (!Chance.of(this.plugin.config.getDouble(Config.superThunderEventChance))) {
+    if (!Chance.of(this.plugin.config.getDouble(StlmppPluginConfig.superThunderEventChance))) {
       return;
     }
     final var world = this.plugin.getWorld();
@@ -69,6 +74,6 @@ public class SuperThunderTask extends BukkitRunnable {
       this.plugin.getServer()
         .broadcast(Component.text("Super thunder event: " + randomEvent.getClass().getSimpleName()));
     }
-    randomEvent.run(this.plugin, this.safeRadius, this.safeLocation);
+    randomEvent.run();
   }
 }

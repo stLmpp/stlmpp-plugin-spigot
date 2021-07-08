@@ -225,4 +225,11 @@ public class Util {
   public static boolean isFromNether(Material material) {
     return Util.netherMaterials.contains(material);
   }
+
+  public static float randomFloat(float startInclusive, float endExclusive) {
+    if (startInclusive == endExclusive) {
+      return startInclusive;
+    }
+    return startInclusive + ((endExclusive - startInclusive) * ThreadLocalRandom.current().nextFloat());
+  }
 }

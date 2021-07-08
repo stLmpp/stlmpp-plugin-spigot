@@ -7,16 +7,24 @@ import org.bukkit.entity.Creeper;
 import org.bukkit.entity.EntityType;
 import org.jetbrains.annotations.NotNull;
 
-public class SuperThunderEventLightningCreeper implements SuperThunderEvent {
+public class SuperThunderEventLightningCreeper extends SuperThunderEvent {
+
+  public SuperThunderEventLightningCreeper(
+    @NotNull StlmppPlugin plugin,
+    int safeRadius,
+    @NotNull Location safeLocation
+  ) {
+    super(plugin, safeRadius, safeLocation);
+  }
 
   @Override
-  public void run(@NotNull StlmppPlugin plugin, int safeRadius, @NotNull Location safeLocation) {
-    final var world = plugin.getWorld();
+  public void run() {
+    final var world = this.plugin.getWorld();
     if (world == null) {
       return;
     }
     final var location = Util.getRandomLocationAroundRandomPlayerWithMinY(world, 55);
-    if (location == null || Util.isInRadius(location, safeLocation, safeRadius)) {
+    if (location == null || Util.isInRadius(location, this.safeLocation, this.safeRadius)) {
       return;
     }
     world.strikeLightning(location);
