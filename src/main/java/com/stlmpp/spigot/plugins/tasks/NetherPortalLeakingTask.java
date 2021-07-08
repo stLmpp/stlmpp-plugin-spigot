@@ -79,7 +79,7 @@ public class NetherPortalLeakingTask extends BukkitRunnable {
         continue;
       }
       final var distance = playerLocationVector.distance(netherPortalCenterVector);
-      final var percent = distance / radius;
+      final var percent = distance / this.radius;
       final var multiplier = this.knockbackPower - (this.knockbackPower * percent);
       final var vectorVelocity = netherPortalCenterVector
         .clone()
