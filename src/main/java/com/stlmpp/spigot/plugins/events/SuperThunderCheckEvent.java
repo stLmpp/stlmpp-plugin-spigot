@@ -1,9 +1,9 @@
 package com.stlmpp.spigot.plugins.events;
 
 import com.stlmpp.spigot.plugins.StlmppPlugin;
+import com.stlmpp.spigot.plugins.StlmppPluginConfig;
 import com.stlmpp.spigot.plugins.tasks.superthunder.SuperThunderTask;
 import com.stlmpp.spigot.plugins.utils.Chance;
-import com.stlmpp.spigot.plugins.utils.Config;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.weather.ThunderChangeEvent;
@@ -23,7 +23,7 @@ public class SuperThunderCheckEvent implements Listener {
 
   public void activateSuperThunderEvent() {
     this.deactivateSuperThunderEvent();
-    if (Chance.of(this.plugin.config.getDouble(Config.superThunderChance))) {
+    if (Chance.of(this.plugin.config.getDouble(StlmppPluginConfig.superThunderChance))) {
       this.superThunderTask = new SuperThunderTask(this);
     }
   }

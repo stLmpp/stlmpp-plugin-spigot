@@ -1,7 +1,7 @@
 package com.stlmpp.spigot.plugins.events;
 
 import com.stlmpp.spigot.plugins.StlmppPlugin;
-import com.stlmpp.spigot.plugins.utils.Config;
+import com.stlmpp.spigot.plugins.StlmppPluginConfig;
 import com.stlmpp.spigot.plugins.utils.Util;
 import java.util.*;
 import org.bukkit.GameMode;
@@ -25,7 +25,7 @@ public class AutoSeedEvent implements Listener {
     this.fromSeed.put(Material.BEETROOT_SEEDS, Material.BEETROOTS);
     this.fromSeed.put(Material.POTATO, Material.POTATOES);
     this.fromSeed.put(Material.CARROT, Material.CARROTS);
-    final var allowedSeedNames = this.plugin.config.getList(Config.autoSeedAllowedSeedList);
+    final var allowedSeedNames = this.plugin.config.getList(StlmppPluginConfig.autoSeedAllowedSeedList);
     if (allowedSeedNames != null) {
       Util.setMaterialsFromNames(this.allowedSeeds, allowedSeedNames);
     }
@@ -122,7 +122,7 @@ public class AutoSeedEvent implements Listener {
     if (items.size() == 0) {
       return;
     }
-    final var configAutoSeedMaxBlocks = this.plugin.config.getInt(Config.autoSeedMaxBlocks);
+    final var configAutoSeedMaxBlocks = this.plugin.config.getInt(StlmppPluginConfig.autoSeedMaxBlocks);
     final var isCreativeGameMode = player.getGameMode() == GameMode.CREATIVE;
     final var itemsAmount = isCreativeGameMode
       ? configAutoSeedMaxBlocks
