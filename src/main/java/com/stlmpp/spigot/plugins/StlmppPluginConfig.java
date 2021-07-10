@@ -47,10 +47,10 @@ public class StlmppPluginConfig {
 
   public StlmppPluginConfig(StlmppPlugin plugin) {
     final var config = plugin.config;
-    config.addDefault(StlmppPluginConfig.netherLightningChance, 10d);
+    config.addDefault(StlmppPluginConfig.netherLightningChance, 1d);
     config.addDefault(StlmppPluginConfig.netherLightningEnabled, true);
-    config.addDefault(StlmppPluginConfig.netherLightningChancePerSecond, 15);
-    config.addDefault(StlmppPluginConfig.netherLightningExplosionChance, 25d);
+    config.addDefault(StlmppPluginConfig.netherLightningChancePerSecond, 30);
+    config.addDefault(StlmppPluginConfig.netherLightningExplosionChance, 5d);
     config.addDefault(StlmppPluginConfig.netherLightningExplosionMinPower, 0f);
     config.addDefault(StlmppPluginConfig.netherLightningExplosionMaxPower, 16f);
     config.addDefault(StlmppPluginConfig.worldNether, "world_nether");
@@ -69,8 +69,8 @@ public class StlmppPluginConfig {
     );
     config.addDefault(StlmppPluginConfig.superThunderEnabled, true);
     config.addDefault(StlmppPluginConfig.superThunderChance, 5d);
-    config.addDefault(StlmppPluginConfig.superThunderSecondsIntervalEvents, 15);
-    config.addDefault(StlmppPluginConfig.superThunderEventChance, 40d);
+    config.addDefault(StlmppPluginConfig.superThunderSecondsIntervalEvents, 30);
+    config.addDefault(StlmppPluginConfig.superThunderEventChance, 25d);
     config.addDefault(StlmppPluginConfig.superThunderLightningWeight, 250d);
     config.addDefault(StlmppPluginConfig.superThunderExplosiveLightningWeight, 5d);
     config.addDefault(StlmppPluginConfig.superThunderLightningCreeperWeight, 2d);
@@ -86,7 +86,7 @@ public class StlmppPluginConfig {
       StlmppPluginConfig.caveInImmunityItems,
       new String[] { Material.RABBIT_FOOT.name(), Material.CLOCK.name(), Material.COMPASS.name() }
     );
-    config.addDefault(StlmppPluginConfig.caveInChance, 2d);
+    config.addDefault(StlmppPluginConfig.caveInChance, 0.05d);
     config.addDefault(
       StlmppPluginConfig.caveInBlocks,
       new String[] { Material.STONE.name(), Material.COBBLESTONE.name() }
