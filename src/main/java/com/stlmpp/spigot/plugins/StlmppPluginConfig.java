@@ -10,6 +10,7 @@ public class StlmppPluginConfig {
   public static final String netherLightningExplosionChance = "nether-lightning-explosion-chance";
   public static final String netherLightningExplosionMinPower = "nether-lightning-explosion-min-power";
   public static final String netherLightningExplosionMaxPower = "nether-lightning-explosion-max-power";
+  public static final String netherLightningRealChance = "nether-lightning-real-chance";
   public static final String worldNether = "world-nether";
   public static final String autoSeedMaxBlocks = "auto-seed-max-blocks";
   public static final String autoSeedEnabled = "auto-seed-enabled";
@@ -47,12 +48,13 @@ public class StlmppPluginConfig {
 
   public StlmppPluginConfig(StlmppPlugin plugin) {
     final var config = plugin.config;
-    config.addDefault(StlmppPluginConfig.netherLightningChance, 1d);
+    config.addDefault(StlmppPluginConfig.netherLightningChance, 50d);
     config.addDefault(StlmppPluginConfig.netherLightningEnabled, true);
-    config.addDefault(StlmppPluginConfig.netherLightningChancePerSecond, 30);
+    config.addDefault(StlmppPluginConfig.netherLightningChancePerSecond, 15);
     config.addDefault(StlmppPluginConfig.netherLightningExplosionChance, 5d);
     config.addDefault(StlmppPluginConfig.netherLightningExplosionMinPower, 0f);
     config.addDefault(StlmppPluginConfig.netherLightningExplosionMaxPower, 16f);
+    config.addDefault(StlmppPluginConfig.netherLightningRealChance, 0.1d);
     config.addDefault(StlmppPluginConfig.worldNether, "world_nether");
     config.addDefault(StlmppPluginConfig.autoSeedEnabled, true);
     config.addDefault(StlmppPluginConfig.autoSeedMaxBlocks, 60);

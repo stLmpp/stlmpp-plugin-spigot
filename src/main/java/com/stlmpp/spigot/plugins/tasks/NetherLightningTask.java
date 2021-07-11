@@ -11,6 +11,7 @@ public class NetherLightningTask extends BukkitRunnable {
 
   private final StlmppPlugin plugin;
   private final double chance;
+  private final double realChance;
   private final double explosionChance;
   private final float explosionMinPower;
   private final float explosionMaxPower;
@@ -21,6 +22,7 @@ public class NetherLightningTask extends BukkitRunnable {
     this.explosionChance = this.plugin.config.getDouble(StlmppPluginConfig.netherLightningExplosionChance);
     this.explosionMinPower = (float) this.plugin.config.getDouble(StlmppPluginConfig.netherLightningExplosionMinPower);
     this.explosionMaxPower = (float) this.plugin.config.getDouble(StlmppPluginConfig.netherLightningExplosionMaxPower);
+    this.realChance = this.plugin.config.getDouble(StlmppPluginConfig.netherLightningRealChance);
     this.runTaskTimer(
         this.plugin,
         0,
@@ -41,10 +43,14 @@ public class NetherLightningTask extends BukkitRunnable {
     if (lightningLocation == null) {
       return;
     }
-    world.strikeLightning(lightningLocation);
-    if (Chance.of(this.explosionChance)) {
-      final var explosionPower = Util.randomFloat(this.explosionMinPower, this.explosionMaxPower);
-      world.createExplosion(lightningLocation, explosionPower, true, true);
+    if (Chance.of(this.realChance)) {
+      world.strikeLightning(lightningLocation);
+      if (Chance.of(this.explosionChance)) {
+        final var explosionPower = Util.randomFloat(this.explosionMinPower, this.explosionMaxPower);
+        world.createExplosion(lightningLocation, explosionPower, true, true);
+      }
+    } else {
+      world.strikeLightningEffect(lightningLocation);
     }
   }
 }
