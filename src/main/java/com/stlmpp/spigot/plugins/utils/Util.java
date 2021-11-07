@@ -43,6 +43,7 @@ public class Util {
     toNetherMaterialMap.put(Material.COPPER_BLOCK, Material.COPPER_BLOCK);
     toNetherMaterialMap.put(Material.GOLD_BLOCK, Material.GOLD_BLOCK);
     toNetherMaterialMap.put(Material.SANDSTONE, Material.SOUL_SOIL);
+    toNetherMaterialMap.put(Material.PUMPKIN, Material.JACK_O_LANTERN);
   }
 
   public static final Set<Material> netherMaterials = new HashSet<>();

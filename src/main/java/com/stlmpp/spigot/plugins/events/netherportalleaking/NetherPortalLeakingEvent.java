@@ -21,8 +21,31 @@ import org.bukkit.util.Vector;
 
 public class NetherPortalLeakingEvent implements Listener {
 
+  public static Set<Material> notAllowedMaterials = new HashSet<>();
+
+  static {
+    notAllowedMaterials.add(Material.CHEST);
+    notAllowedMaterials.add(Material.SPONGE);
+    notAllowedMaterials.add(Material.CHAIN);
+    notAllowedMaterials.add(Material.MELON);
+    notAllowedMaterials.add(Material.CAKE);
+    notAllowedMaterials.add(Material.END_PORTAL);
+    notAllowedMaterials.add(Material.END_PORTAL_FRAME);
+    notAllowedMaterials.add(Material.WET_SPONGE);
+    notAllowedMaterials.add(Material.GRINDSTONE);
+    notAllowedMaterials.add(Material.FURNACE);
+    notAllowedMaterials.add(Material.FURNACE_MINECART);
+    notAllowedMaterials.add(Material.BLAST_FURNACE);
+    notAllowedMaterials.add(Material.ENCHANTING_TABLE);
+    notAllowedMaterials.add(Material.BOOKSHELF);
+    notAllowedMaterials.add(Material.CUT_SANDSTONE);
+    notAllowedMaterials.add(Material.ENDER_CHEST);
+    notAllowedMaterials.add(Material.TRAPPED_CHEST);
+  }
+
   public static boolean isValidMaterial(Material material) {
     return (
+      !notAllowedMaterials.contains(material) &&
       !Util.isFromNether(material) &&
       material != Material.OBSIDIAN &&
       ((material.isSolid() && material.isBlock()) || material == Material.WATER)
@@ -83,6 +106,9 @@ public class NetherPortalLeakingEvent implements Listener {
       if (blockState.getType() == Material.NETHER_PORTAL) {
         netherPortalBlocks.add(blockState.getBlock());
       }
+    }
+    if (netherPortalBlocks.size() == 0) {
+      return;
     }
     final var netherPortal = new NetherPortal(world, netherPortalBlocks);
     final var locations = new ArrayList<Pair<Double, Location>>();

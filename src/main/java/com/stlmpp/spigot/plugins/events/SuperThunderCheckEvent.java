@@ -37,6 +37,9 @@ public class SuperThunderCheckEvent implements Listener {
 
   @EventHandler
   public void onThunderChange(ThunderChangeEvent event) {
+    if (event.getWorld().getPlayers().size() == 0) {
+      return;
+    }
     if (event.toThunderState()) {
       this.activateSuperThunderEvent();
     } else {
