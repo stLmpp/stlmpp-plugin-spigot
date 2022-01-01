@@ -21,7 +21,7 @@ import org.bukkit.util.Vector;
 
 public class NetherPortalLeakingEvent implements Listener {
 
-  public static Set<Material> notAllowedMaterials = new HashSet<>();
+  public static final Set<Material> notAllowedMaterials = new HashSet<>();
 
   static {
     notAllowedMaterials.add(Material.CHEST);
