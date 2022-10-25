@@ -67,7 +67,7 @@ public class SuperThunderTask extends BukkitRunnable {
       return;
     }
     if (!world.isThundering()) {
-      this.superThunderCheckEvent.deactivateSuperThunderEvent();
+      this.superThunderCheckEvent.activateSuperThunderEvent();
     }
     final var randomEvent = this.events.next();
     if (this.plugin.isDevMode) {
