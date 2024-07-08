@@ -41,7 +41,7 @@ public class StlmppPluginConfig {
   public static final String netherPortalLeakingEnabled = "nether-portal-leaking-enabled";
   public static final String netherPortalLeakingRadius = "nether-portal-leaking-radius";
   public static final String netherPortalLeakingChanceOfNetherrackFire =
-    "nether-portal-leaking-chance-of-netherrack-fire";
+      "nether-portal-leaking-chance-of-netherrack-fire";
   public static final String netherPortalLeakingKnockbackPower = "nether-portal-leaking-knockback-power";
   public static final String world = "world";
   public static final String devMode = "dev-mode";
@@ -59,17 +59,17 @@ public class StlmppPluginConfig {
     config.addDefault(StlmppPluginConfig.autoSeedEnabled, true);
     config.addDefault(StlmppPluginConfig.autoSeedMaxBlocks, 60);
     config.addDefault(
-      StlmppPluginConfig.autoSeedAllowedSeedList,
-      new String[] {
-        Material.WHEAT_SEEDS.name(),
-        Material.MELON_SEEDS.name(),
-        Material.BEETROOT_SEEDS.name(),
-        Material.PUMPKIN_SEEDS.name(),
-        Material.POTATO.name(),
-        Material.CARROT.name(),
-      }
+        StlmppPluginConfig.autoSeedAllowedSeedList,
+        new String[]{
+            Material.WHEAT_SEEDS.name(),
+            Material.MELON_SEEDS.name(),
+            Material.BEETROOT_SEEDS.name(),
+            Material.PUMPKIN_SEEDS.name(),
+            Material.POTATO.name(),
+            Material.CARROT.name(),
+        }
     );
-    config.addDefault(StlmppPluginConfig.superThunderEnabled, true);
+    config.addDefault(StlmppPluginConfig.superThunderEnabled, false);
     config.addDefault(StlmppPluginConfig.superThunderChance, 5d);
     config.addDefault(StlmppPluginConfig.superThunderSecondsIntervalEvents, 30);
     config.addDefault(StlmppPluginConfig.superThunderEventChance, 25d);
@@ -81,17 +81,17 @@ public class StlmppPluginConfig {
     config.addDefault(StlmppPluginConfig.superThunderSafeCoords, "0 0 0");
     config.addDefault(StlmppPluginConfig.world, "world");
     config.addDefault(StlmppPluginConfig.caveInEnabled, true);
-    config.addDefault(StlmppPluginConfig.caveInMaxY, 30);
+    config.addDefault(StlmppPluginConfig.caveInMaxY, 8);
     config.addDefault(StlmppPluginConfig.caveInMinHeight, 4);
     config.addDefault(StlmppPluginConfig.caveInMinWidth, 4);
     config.addDefault(
-      StlmppPluginConfig.caveInImmunityItems,
-      new String[] { Material.RABBIT_FOOT.name(), Material.CLOCK.name(), Material.COMPASS.name() }
+        StlmppPluginConfig.caveInImmunityItems,
+        new String[]{Material.RABBIT_FOOT.name(), Material.CLOCK.name(), Material.COMPASS.name()}
     );
     config.addDefault(StlmppPluginConfig.caveInChance, 0.05d);
     config.addDefault(
-      StlmppPluginConfig.caveInBlocks,
-      new String[] { Material.STONE.name(), Material.COBBLESTONE.name() }
+        StlmppPluginConfig.caveInBlocks,
+        new String[]{Material.STONE.name(), Material.COBBLESTONE.name()}
     );
     config.addDefault(StlmppPluginConfig.caveInMaxWidth, 10);
     config.addDefault(StlmppPluginConfig.caveInMaxHeight, 10);

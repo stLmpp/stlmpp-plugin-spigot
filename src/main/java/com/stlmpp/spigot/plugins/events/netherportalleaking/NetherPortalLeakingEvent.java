@@ -7,8 +7,10 @@ import com.stlmpp.spigot.plugins.utils.Pair;
 import com.stlmpp.spigot.plugins.utils.Util;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.subjects.BehaviorSubject;
+
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -41,14 +43,16 @@ public class NetherPortalLeakingEvent implements Listener {
     notAllowedMaterials.add(Material.CUT_SANDSTONE);
     notAllowedMaterials.add(Material.ENDER_CHEST);
     notAllowedMaterials.add(Material.TRAPPED_CHEST);
+    notAllowedMaterials.add(Material.BEEHIVE);
+    notAllowedMaterials.add(Material.CAMPFIRE);
   }
 
   public static boolean isValidMaterial(Material material) {
     return (
-      !notAllowedMaterials.contains(material) &&
-      !Util.isFromNether(material) &&
-      material != Material.OBSIDIAN &&
-      ((material.isSolid() && material.isBlock()) || material == Material.WATER)
+        !notAllowedMaterials.contains(material) &&
+            !Util.isFromNether(material) &&
+            material != Material.OBSIDIAN &&
+            ((material.isSolid() && material.isBlock()) || material == Material.WATER)
     );
   }
 
@@ -64,21 +68,21 @@ public class NetherPortalLeakingEvent implements Listener {
     this.plugin.getServer().getPluginManager().registerEvents(this, this.plugin);
     this.radius = this.plugin.config.getInt(StlmppPluginConfig.netherPortalLeakingRadius);
     this.disposable =
-      this.netherPortalBreak$.debounce(1, TimeUnit.SECONDS)
-        .filter(value -> value.size() != 0)
-        .subscribe(
-          value -> {
-            this.netherPortalBreak$.onNext(new ArrayList<>());
-            this.checkBrokenPortal(value);
-          }
-        );
+        this.netherPortalBreak$.debounce(1, TimeUnit.SECONDS)
+            .filter(value -> !value.isEmpty())
+            .subscribe(
+                value -> {
+                  this.netherPortalBreak$.onNext(new ArrayList<>());
+                  this.checkBrokenPortal(value);
+                }
+            );
   }
 
   private void checkBrokenPortal(List<Block> blocks) {
-    if (blocks.size() == 0) {
+    if (blocks.isEmpty()) {
       return;
     }
-    final var world = blocks.get(0).getWorld();
+    final var world = blocks.getFirst().getWorld();
     final var possibleNetherPortal = new NetherPortal(world, blocks);
     this.tryCancelTask(possibleNetherPortal);
   }
@@ -107,7 +111,7 @@ public class NetherPortalLeakingEvent implements Listener {
         netherPortalBlocks.add(blockState.getBlock());
       }
     }
-    if (netherPortalBlocks.size() == 0) {
+    if (netherPortalBlocks.isEmpty()) {
       return;
     }
     final var netherPortal = new NetherPortal(world, netherPortalBlocks);
@@ -138,17 +142,17 @@ public class NetherPortalLeakingEvent implements Listener {
       }
     }
     locations.sort(
-      (pairA, pairB) -> {
-        final var distanceA = pairA.value0;
-        final var distanceB = pairB.value0;
-        if (distanceA.equals(distanceB)) {
-          return 0;
-        } else if (distanceA < distanceB) {
-          return -1;
-        } else {
-          return 1;
+        (pairA, pairB) -> {
+          final var distanceA = pairA.value0;
+          final var distanceB = pairB.value0;
+          if (distanceA.equals(distanceB)) {
+            return 0;
+          } else if (distanceA < distanceB) {
+            return -1;
+          } else {
+            return 1;
+          }
         }
-      }
     );
     final var locationsSize = locations.size();
     final var locationsDeque = new ArrayDeque<Location>();
@@ -167,16 +171,16 @@ public class NetherPortalLeakingEvent implements Listener {
     this.netherPortals.put(
         netherPortal,
         new NetherPortalLeakingTask(this, locationsDeque, world, netherPortal, radius, particlesLocation)
-      );
+    );
   }
 
   @EventHandler
   public void onBlockPhysics(BlockPhysicsEvent event) {
     final var block = event.getBlock();
     if (
-      event.getChangedType() == Material.NETHER_PORTAL &&
-      block.getType() == Material.NETHER_PORTAL &&
-      block.getWorld().getName().equals(this.plugin.getWorldName())
+        event.getChangedType() == Material.NETHER_PORTAL &&
+            block.getType() == Material.NETHER_PORTAL &&
+            block.getWorld().getName().equals(this.plugin.getWorldName())
     ) {
       final var list = this.netherPortalBreak$.getValue();
       if (list == null) {

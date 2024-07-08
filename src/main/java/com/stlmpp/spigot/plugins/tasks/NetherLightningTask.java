@@ -27,7 +27,7 @@ public class NetherLightningTask extends BukkitRunnable {
         this.plugin,
         0,
         Tick.fromSeconds(this.plugin.config.getInt(StlmppPluginConfig.netherLightningChancePerSecond))
-      );
+    );
   }
 
   @Override
@@ -36,7 +36,7 @@ public class NetherLightningTask extends BukkitRunnable {
       return;
     }
     final var world = this.plugin.getWorldNether();
-    if (world == null || world.getPlayers().size() == 0) {
+    if (world == null || world.getPlayers().isEmpty()) {
       return;
     }
     final var lightningLocation = Util.getRandomLocationAroundRandomPlayer(world);

@@ -28,33 +28,33 @@ public class SuperThunderTask extends BukkitRunnable {
         this.plugin,
         0,
         Tick.fromSeconds(this.plugin.config.getInt(StlmppPluginConfig.superThunderSecondsIntervalEvents))
-      );
+    );
     int safeRadius = this.plugin.config.getInt(StlmppPluginConfig.superThunderSafeCoordsRadius);
     final String coordsString = this.plugin.config.getString(StlmppPluginConfig.superThunderSafeCoords, "0 0 0");
     final String[] coordsArrays = coordsString.split(" ");
     Location safeLocation = new Location(
-      plugin.getWorld(),
-      Integer.parseInt(coordsArrays[0]),
-      Integer.parseInt(coordsArrays[1]),
-      Integer.parseInt(coordsArrays[2])
+        plugin.getWorld(),
+        Integer.parseInt(coordsArrays[0]),
+        Integer.parseInt(coordsArrays[1]),
+        Integer.parseInt(coordsArrays[2])
     );
     this.plugin.getServer().broadcast(Component.text("R.I.P. Preparem os cuzes"));
     this.events.add(
-        this.getWeight(StlmppPluginConfig.superThunderExplosiveLightningWeight),
-        new SuperThunderEventExplosiveLightning(this.plugin, safeRadius, safeLocation)
-      )
-      .add(
-        this.getWeight(StlmppPluginConfig.superThunderLightningWeight),
-        new SuperThunderEventRegularLightning(this.plugin, safeRadius, safeLocation)
-      )
-      .add(
-        this.getWeight(StlmppPluginConfig.superThunderLightningCreeperWeight),
-        new SuperThunderEventLightningCreeper(this.plugin, safeRadius, safeLocation)
-      )
-      .add(
-        this.getWeight(StlmppPluginConfig.superThunderGhastSwarmWeight),
-        new SuperThunderEventGhastSwarm(this.plugin, safeRadius, safeLocation)
-      );
+            this.getWeight(StlmppPluginConfig.superThunderExplosiveLightningWeight),
+            new SuperThunderEventExplosiveLightning(this.plugin, safeRadius, safeLocation)
+        )
+        .add(
+            this.getWeight(StlmppPluginConfig.superThunderLightningWeight),
+            new SuperThunderEventRegularLightning(this.plugin, safeRadius, safeLocation)
+        )
+        .add(
+            this.getWeight(StlmppPluginConfig.superThunderLightningCreeperWeight),
+            new SuperThunderEventLightningCreeper(this.plugin, safeRadius, safeLocation)
+        )
+        .add(
+            this.getWeight(StlmppPluginConfig.superThunderGhastSwarmWeight),
+            new SuperThunderEventGhastSwarm(this.plugin, safeRadius, safeLocation)
+        );
   }
 
   @Override
@@ -63,7 +63,7 @@ public class SuperThunderTask extends BukkitRunnable {
       return;
     }
     final var world = this.plugin.getWorld();
-    if (world == null || world.getPlayers().size() == 0) {
+    if (world == null || world.getPlayers().isEmpty()) {
       return;
     }
     if (!world.isThundering()) {
@@ -72,7 +72,7 @@ public class SuperThunderTask extends BukkitRunnable {
     final var randomEvent = this.events.next();
     if (this.plugin.isDevMode) {
       this.plugin.getServer()
-        .broadcast(Component.text("Super thunder event: " + randomEvent.getClass().getSimpleName()));
+          .broadcast(Component.text("Super thunder event: " + randomEvent.getClass().getSimpleName()));
     }
     randomEvent.run();
   }

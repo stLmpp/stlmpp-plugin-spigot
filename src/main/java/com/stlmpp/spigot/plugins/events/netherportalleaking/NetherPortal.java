@@ -18,7 +18,7 @@ public class NetherPortal {
   public final int width;
 
   private BoundingBox createBoundingBox() {
-    final var firstBlock = this.blocks.get(0);
+    final var firstBlock = this.blocks.getFirst();
     var minY = firstBlock.getY();
     var maxY = minY;
     var minX = firstBlock.getX();
@@ -49,7 +49,7 @@ public class NetherPortal {
   }
 
   private int calculateWidth() {
-    final var initialBlock = blocks.get(0);
+    final var initialBlock = blocks.getFirst();
     var height = 1;
     var iterations = 0;
     while (initialBlock.getRelative(BlockFace.UP, height).getType() != Material.OBSIDIAN && iterations <= 25) {

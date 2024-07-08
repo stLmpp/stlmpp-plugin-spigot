@@ -67,13 +67,13 @@ public class AutoSeedEvent implements Listener {
   }
 
   private void removeOneFromStackList(List<ItemStack> items) {
-    if (items.size() == 0) {
+    if (items.isEmpty()) {
       return;
     }
-    final var first = items.get(0);
+    final var first = items.getFirst();
     first.setAmount(first.getAmount() - 1);
     if (first.getAmount() <= 0) {
-      items.remove(0);
+      items.removeFirst();
     }
   }
 
@@ -119,7 +119,7 @@ public class AutoSeedEvent implements Listener {
         items.add(itemStack);
       }
     }
-    if (items.size() == 0) {
+    if (items.isEmpty()) {
       return;
     }
     final var configAutoSeedMaxBlocks = this.plugin.config.getInt(StlmppPluginConfig.autoSeedMaxBlocks);

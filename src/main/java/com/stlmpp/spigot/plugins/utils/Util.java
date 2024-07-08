@@ -2,6 +2,7 @@ package com.stlmpp.spigot.plugins.utils;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -122,8 +123,8 @@ public class Util {
     var iteration = 0;
     var locationY = location.getBlockY();
     while (
-      !world.getBlockAt(location.getBlockX(), locationY, location.getBlockZ()).getType().isSolid() &&
-      iteration <= maxIterations
+        !world.getBlockAt(location.getBlockX(), locationY, location.getBlockZ()).getType().isSolid() &&
+            iteration <= maxIterations
     ) {
       iteration++;
       locationY--;
@@ -145,16 +146,16 @@ public class Util {
   }
 
   public static Integer getCeiling(
-    World world,
-    Location location,
-    boolean returnNullOnMaxIterations,
-    int maxIterations
+      World world,
+      Location location,
+      boolean returnNullOnMaxIterations,
+      int maxIterations
   ) {
     var iteration = 0;
     var locationY = location.getBlockY();
     while (
-      !world.getBlockAt(location.getBlockX(), locationY, location.getBlockZ()).getType().isSolid() &&
-      iteration <= maxIterations
+        !world.getBlockAt(location.getBlockX(), locationY, location.getBlockZ()).getType().isSolid() &&
+            iteration <= maxIterations
     ) {
       iteration++;
       locationY++;
@@ -176,9 +177,9 @@ public class Util {
 
   public static boolean isInRadius(Location check, Location start, int radius) {
     return (
-      Math.abs(check.getX() - start.getX()) <= radius &&
-      Math.abs(check.getY() - start.getY()) <= radius &&
-      Math.abs(check.getZ() - start.getZ()) <= radius
+        Math.abs(check.getX() - start.getX()) <= radius &&
+            Math.abs(check.getY() - start.getY()) <= radius &&
+            Math.abs(check.getZ() - start.getZ()) <= radius
     );
   }
 
@@ -190,9 +191,9 @@ public class Util {
     final var lightningX = ThreadLocalRandom.current().nextInt(playerX - 50, playerX + 51);
     final var lightningY = ThreadLocalRandom.current().nextInt(playerY - 10, playerY + 11);
     final var lightningZ = ThreadLocalRandom.current().nextInt(playerZ - 50, playerZ + 51);
-    final var lightningLocation = new Location(player.getWorld(), lightningX, lightningY, lightningZ);
-    lightningLocation.setY(Util.getFloor(player.getWorld(), lightningLocation));
-    return lightningLocation;
+    final var location = new Location(player.getWorld(), lightningX, lightningY, lightningZ);
+    location.setY(Util.getFloor(player.getWorld(), location));
+    return location;
   }
 
   @Nullable
