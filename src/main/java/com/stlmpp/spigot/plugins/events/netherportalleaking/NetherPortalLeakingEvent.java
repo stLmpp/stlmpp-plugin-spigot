@@ -48,17 +48,16 @@ public class NetherPortalLeakingEvent implements Listener {
   }
 
   public static boolean isValidMaterial(Material material) {
-    return (
-        !notAllowedMaterials.contains(material) &&
-            !Util.isFromNether(material) &&
-            material != Material.OBSIDIAN &&
-            ((material.isSolid() && material.isBlock()) || material == Material.WATER)
-    );
+    return (!notAllowedMaterials.contains(material)
+        && !Util.isFromNether(material)
+        && material != Material.OBSIDIAN
+        && ((material.isSolid() && material.isBlock()) || material == Material.WATER));
   }
 
   public final StlmppPlugin plugin;
   private final int radius;
-  private final BehaviorSubject<List<Block>> netherPortalBreak$ = BehaviorSubject.createDefault(new ArrayList<>());
+  private final BehaviorSubject<List<Block>> netherPortalBreak$ =
+      BehaviorSubject.createDefault(new ArrayList<>());
   private final Disposable disposable;
 
   public final Map<NetherPortal, NetherPortalLeakingTask> netherPortals = new HashMap<>();
@@ -68,14 +67,14 @@ public class NetherPortalLeakingEvent implements Listener {
     this.plugin.getServer().getPluginManager().registerEvents(this, this.plugin);
     this.radius = this.plugin.config.getInt(StlmppPluginConfig.netherPortalLeakingRadius);
     this.disposable =
-        this.netherPortalBreak$.debounce(1, TimeUnit.SECONDS)
+        this.netherPortalBreak$
+            .debounce(1, TimeUnit.SECONDS)
             .filter(value -> !value.isEmpty())
             .subscribe(
                 value -> {
                   this.netherPortalBreak$.onNext(new ArrayList<>());
                   this.checkBrokenPortal(value);
-                }
-            );
+                });
   }
 
   private void checkBrokenPortal(List<Block> blocks) {
@@ -152,8 +151,7 @@ public class NetherPortalLeakingEvent implements Listener {
           } else {
             return 1;
           }
-        }
-    );
+        });
     final var locationsSize = locations.size();
     final var locationsDeque = new ArrayDeque<Location>();
     for (var index = 0; index < locationsSize; index++) {
@@ -170,18 +168,16 @@ public class NetherPortalLeakingEvent implements Listener {
     }
     this.netherPortals.put(
         netherPortal,
-        new NetherPortalLeakingTask(this, locationsDeque, world, netherPortal, radius, particlesLocation)
-    );
+        new NetherPortalLeakingTask(
+            this, locationsDeque, world, netherPortal, radius, particlesLocation));
   }
 
   @EventHandler
   public void onBlockPhysics(BlockPhysicsEvent event) {
     final var block = event.getBlock();
-    if (
-        event.getChangedType() == Material.NETHER_PORTAL &&
-            block.getType() == Material.NETHER_PORTAL &&
-            block.getWorld().getName().equals(this.plugin.getWorldName())
-    ) {
+    if (event.getChangedType() == Material.NETHER_PORTAL
+        && block.getType() == Material.NETHER_PORTAL
+        && block.getWorld().getName().equals(this.plugin.getWorldName())) {
       final var list = this.netherPortalBreak$.getValue();
       if (list == null) {
         return;

@@ -48,17 +48,6 @@ public class NetherPortal {
     return new BoundingBox(minX, minY, minZ, maxX, maxY, maxZ);
   }
 
-  private int calculateWidth() {
-    final var initialBlock = blocks.getFirst();
-    var height = 1;
-    var iterations = 0;
-    while (initialBlock.getRelative(BlockFace.UP, height).getType() != Material.OBSIDIAN && iterations <= 25) {
-      height++;
-      iterations++;
-    }
-    return ((blocks.size() - ((height - 1) * 2)) / 2) + 2;
-  }
-
   public NetherPortal(World world, List<Block> blocks) {
     this.world = world;
     this.blocks = blocks;
@@ -73,10 +62,10 @@ public class NetherPortal {
           } else {
             return 0;
           }
-        }
-      );
+        });
     this.boundingBox = this.createBoundingBox();
-    this.width = this.calculateWidth();
+    this.width =
+        (int) Math.ceil(Math.max(this.boundingBox.getWidthX(), this.boundingBox.getWidthZ()));
   }
 
   public Location getCenterLocation() {
