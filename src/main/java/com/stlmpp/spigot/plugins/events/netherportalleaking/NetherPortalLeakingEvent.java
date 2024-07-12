@@ -26,25 +26,27 @@ public class NetherPortalLeakingEvent implements Listener {
   public static final Set<Material> notAllowedMaterials = new HashSet<>();
 
   static {
-    notAllowedMaterials.add(Material.CHEST);
-    notAllowedMaterials.add(Material.SPONGE);
-    notAllowedMaterials.add(Material.CHAIN);
-    notAllowedMaterials.add(Material.MELON);
-    notAllowedMaterials.add(Material.CAKE);
-    notAllowedMaterials.add(Material.END_PORTAL);
-    notAllowedMaterials.add(Material.END_PORTAL_FRAME);
-    notAllowedMaterials.add(Material.WET_SPONGE);
-    notAllowedMaterials.add(Material.GRINDSTONE);
-    notAllowedMaterials.add(Material.FURNACE);
-    notAllowedMaterials.add(Material.FURNACE_MINECART);
-    notAllowedMaterials.add(Material.BLAST_FURNACE);
-    notAllowedMaterials.add(Material.ENCHANTING_TABLE);
-    notAllowedMaterials.add(Material.BOOKSHELF);
-    notAllowedMaterials.add(Material.CUT_SANDSTONE);
-    notAllowedMaterials.add(Material.ENDER_CHEST);
-    notAllowedMaterials.add(Material.TRAPPED_CHEST);
-    notAllowedMaterials.add(Material.BEEHIVE);
-    notAllowedMaterials.add(Material.CAMPFIRE);
+    notAllowedMaterials.addAll(
+        List.of(
+            Material.CHEST,
+            Material.SPONGE,
+            Material.CHAIN,
+            Material.MELON,
+            Material.CAKE,
+            Material.END_PORTAL,
+            Material.END_PORTAL_FRAME,
+            Material.WET_SPONGE,
+            Material.GRINDSTONE,
+            Material.FURNACE,
+            Material.FURNACE_MINECART,
+            Material.BLAST_FURNACE,
+            Material.ENCHANTING_TABLE,
+            Material.BOOKSHELF,
+            Material.CUT_SANDSTONE,
+            Material.ENDER_CHEST,
+            Material.TRAPPED_CHEST,
+            Material.BEEHIVE,
+            Material.CAMPFIRE));
   }
 
   public static boolean isValidMaterial(Material material) {
@@ -104,18 +106,25 @@ public class NetherPortalLeakingEvent implements Listener {
     if (!world.getName().equals(this.plugin.getWorldName())) {
       return;
     }
-    final var netherPortalBlocks = new ArrayList<Block>();
-    for (BlockState blockState : event.getBlocks()) {
-      if (blockState.getType() == Material.NETHER_PORTAL) {
-        netherPortalBlocks.add(blockState.getBlock());
-      }
-    }
+    final var netherPortalBlocks = event.getBlocks().stream().map(BlockState::getBlock).toList();
     if (netherPortalBlocks.isEmpty()) {
       return;
     }
     final var netherPortal = new NetherPortal(world, netherPortalBlocks);
     final var locations = new ArrayList<Pair<Double, Location>>();
     final var radius = Math.max(netherPortal.width, this.radius);
+    if (this.plugin.isDevMode) {
+      this.plugin
+          .getLogger()
+          .info(String.format("width = %s, radius = %s", netherPortal.width, this.radius));
+      this.plugin
+          .getLogger()
+          .info(
+              String.format(
+                  "widthZ = %s, widthX = %s",
+                  netherPortal.boundingBox.getWidthZ(), netherPortal.boundingBox.getWidthX()));
+      this.plugin.getLogger().info(String.format("boundingBox = %s", netherPortal.boundingBox));
+    }
     final var centerVector = netherPortal.getCenter();
     final var startingX = centerVector.getBlockX();
     final var startingY = centerVector.getBlockY();

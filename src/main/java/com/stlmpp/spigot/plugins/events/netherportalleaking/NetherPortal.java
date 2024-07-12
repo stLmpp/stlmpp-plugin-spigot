@@ -3,10 +3,8 @@ package com.stlmpp.spigot.plugins.events.netherportalleaking;
 import java.util.List;
 import java.util.Objects;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Vector;
 
@@ -27,23 +25,14 @@ public class NetherPortal {
     var maxZ = minZ;
     for (Block block : this.blocks) {
       final var blockY = block.getY();
-      if (blockY < minY) {
-        minY = blockY;
-      } else {
-        maxY = blockY;
-      }
       final var blockX = block.getX();
-      if (blockX < minX) {
-        minX = blockX;
-      } else {
-        maxX = blockX;
-      }
       final var blockZ = block.getZ();
-      if (blockZ < minZ) {
-        minZ = blockZ;
-      } else {
-        maxZ = blockZ;
-      }
+      minY = Math.min(blockY, minY);
+      maxY = Math.max(blockY, maxY);
+      minX = Math.min(blockX, minX);
+      maxX = Math.max(blockX, maxX);
+      minZ = Math.min(blockZ, minZ);
+      maxZ = Math.max(blockZ, maxZ);
     }
     return new BoundingBox(minX, minY, minZ, maxX, maxY, maxZ);
   }
@@ -65,7 +54,7 @@ public class NetherPortal {
         });
     this.boundingBox = this.createBoundingBox();
     this.width =
-        (int) Math.ceil(Math.max(this.boundingBox.getWidthX(), this.boundingBox.getWidthZ()));
+        (int) Math.ceil(Math.max(this.boundingBox.getWidthX(), this.boundingBox.getWidthZ())) + 1;
   }
 
   public Location getCenterLocation() {
