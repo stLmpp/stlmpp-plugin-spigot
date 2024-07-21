@@ -20,8 +20,16 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.world.PortalCreateEvent;
 import org.bukkit.util.Vector;
+import org.jetbrains.annotations.Nullable;
 
 public class NetherPortalLeakingEvent implements Listener {
+
+  public static @Nullable NetherPortalLeakingEvent register(StlmppPlugin plugin) {
+    if (!plugin.config.getBoolean(StlmppPluginConfig.netherPortalLeakingEnabled)) {
+      return null;
+    }
+    return new NetherPortalLeakingEvent(plugin);
+  }
 
   public static final Set<Material> notAllowedMaterials = new HashSet<>();
 
@@ -64,10 +72,12 @@ public class NetherPortalLeakingEvent implements Listener {
 
   public final Map<NetherPortal, NetherPortalLeakingTask> netherPortals = new HashMap<>();
 
-  public NetherPortalLeakingEvent(StlmppPlugin plugin) {
+  private NetherPortalLeakingEvent(StlmppPlugin plugin) {
     this.plugin = plugin;
     this.plugin.getServer().getPluginManager().registerEvents(this, this.plugin);
     this.radius = this.plugin.config.getInt(StlmppPluginConfig.netherPortalLeakingRadius);
+    this.plugin.log(
+        String.format("Nether portal leaking enabled with a radius of %s", this.radius));
     this.disposable =
         this.netherPortalBreak$
             .debounce(1, TimeUnit.SECONDS)
@@ -113,18 +123,13 @@ public class NetherPortalLeakingEvent implements Listener {
     final var netherPortal = new NetherPortal(world, netherPortalBlocks);
     final var locations = new ArrayList<Pair<Double, Location>>();
     final var radius = Math.max(netherPortal.width, this.radius);
-    if (this.plugin.isDevMode) {
-      this.plugin
-          .getLogger()
-          .info(String.format("width = %s, radius = %s", netherPortal.width, this.radius));
-      this.plugin
-          .getLogger()
-          .info(
-              String.format(
-                  "widthZ = %s, widthX = %s",
-                  netherPortal.boundingBox.getWidthZ(), netherPortal.boundingBox.getWidthX()));
-      this.plugin.getLogger().info(String.format("boundingBox = %s", netherPortal.boundingBox));
-    }
+    this.plugin.log(
+        String.format("width = %s, radius = %s", netherPortal.width, this.radius), true);
+    this.plugin.log(
+        String.format(
+            "widthZ = %s, widthX = %s",
+            netherPortal.boundingBox.getWidthZ(), netherPortal.boundingBox.getWidthX()));
+    this.plugin.log(String.format("boundingBox = %s", netherPortal.boundingBox));
     final var centerVector = netherPortal.getCenter();
     final var startingX = centerVector.getBlockX();
     final var startingY = centerVector.getBlockY();
@@ -134,17 +139,18 @@ public class NetherPortalLeakingEvent implements Listener {
       for (int y = startingY - radius; y <= startingY + radius; y++) {
         for (int z = startingZ - radius; z <= startingZ + radius; z++) {
           final var vector = new Vector(x, y, z);
-          if (vector.isInSphere(centerVector, radius)) {
-            final var blockAt = world.getBlockAt(x, y, z);
-            final var blockAtMaterial = blockAt.getType();
-            final double distance = vector.distance(centerVector);
-            if (NetherPortalLeakingEvent.isValidMaterial(blockAtMaterial)) {
-              locations.add(new Pair<>(vector.distance(centerVector), blockAt.getLocation()));
-            }
-            final var distanceFloored = (int) Math.ceil(distance);
-            if (distanceFloored == radius) {
-              particlesLocation.add(vector);
-            }
+          if (!vector.isInSphere(centerVector, radius)) {
+            continue;
+          }
+          final var blockAt = world.getBlockAt(x, y, z);
+          final var blockAtMaterial = blockAt.getType();
+          final double distance = vector.distance(centerVector);
+          if (NetherPortalLeakingEvent.isValidMaterial(blockAtMaterial)) {
+            locations.add(new Pair<>(vector.distance(centerVector), blockAt.getLocation()));
+          }
+          final var distanceFloored = (int) Math.ceil(distance);
+          if (distanceFloored == radius) {
+            particlesLocation.add(vector);
           }
         }
       }

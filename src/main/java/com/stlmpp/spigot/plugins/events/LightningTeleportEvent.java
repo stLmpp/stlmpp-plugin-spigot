@@ -14,8 +14,16 @@ import org.bukkit.World;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.jetbrains.annotations.Nullable;
 
 public class LightningTeleportEvent implements Listener {
+
+  public static @Nullable LightningTeleportEvent register(StlmppPlugin plugin) {
+    if (!plugin.config.getBoolean(StlmppPluginConfig.tpLightningEnabled)) {
+      return null;
+    }
+    return new LightningTeleportEvent(plugin);
+  }
 
   private final StlmppPlugin plugin;
   private final int radius;
@@ -24,12 +32,13 @@ public class LightningTeleportEvent implements Listener {
   private final Set<Material> allowedMaterialsToReplace = new HashSet<>();
   private final Map<Material, ArrayList<Material>> specialReplacements = new HashMap<>();
 
-  public LightningTeleportEvent(StlmppPlugin plugin) {
+  private LightningTeleportEvent(StlmppPlugin plugin) {
     this.plugin = plugin;
     this.plugin.getServer().getPluginManager().registerEvents(this, this.plugin);
     this.radius = this.plugin.config.getInt(StlmppPluginConfig.tpLightningNetherBlocksRadius);
     this.explosionChance =
         this.plugin.config.getDouble(StlmppPluginConfig.tpLightningExplosionChance);
+    this.plugin.log("Teleport lightning enabled");
     this.materials
         .add(1.0, Material.ANCIENT_DEBRIS)
         .add(200.0, Material.NETHERRACK)

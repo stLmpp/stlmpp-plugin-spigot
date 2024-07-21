@@ -115,55 +115,21 @@ public class Util {
     return floor;
   }
 
-  public static Integer getFloor(World world, Location location, boolean returnNullOnMaxIterations) {
-    return Util.getFloor(world, location, returnNullOnMaxIterations, 64);
-  }
-
-  public static Integer getFloor(World world, Location location, boolean returnNullOnMaxIterations, int maxIterations) {
-    var iteration = 0;
+  public static Integer getFloor(
+      World world, Location location, boolean returnNullOnMaxIterations, int maxIterations) {
+    var iteration = -1;
     var locationY = location.getBlockY();
-    while (
-        !world.getBlockAt(location.getBlockX(), locationY, location.getBlockZ()).getType().isSolid() &&
-            iteration <= maxIterations
-    ) {
+    Material block;
+    do {
+      block = world.getBlockAt(location.getBlockX(), locationY, location.getBlockZ()).getType();
       iteration++;
       locationY--;
-    }
+    } while (!block.isSolid() && iteration <= maxIterations);
     return iteration > maxIterations && returnNullOnMaxIterations ? null : locationY;
   }
 
-  public static int getCeiling(World world, Location location) {
-    Integer floor = Util.getCeiling(world, location, false, 64);
-    if (floor == null) {
-      // This is never going to happen
-      floor = -1;
-    }
-    return floor;
-  }
-
-  public static Integer getCeiling(World world, Location location, boolean returnNullOnMaxIterations) {
-    return Util.getCeiling(world, location, returnNullOnMaxIterations, 64);
-  }
-
-  public static Integer getCeiling(
-      World world,
-      Location location,
-      boolean returnNullOnMaxIterations,
-      int maxIterations
-  ) {
-    var iteration = 0;
-    var locationY = location.getBlockY();
-    while (
-        !world.getBlockAt(location.getBlockX(), locationY, location.getBlockZ()).getType().isSolid() &&
-            iteration <= maxIterations
-    ) {
-      iteration++;
-      locationY++;
-    }
-    return iteration > maxIterations && returnNullOnMaxIterations ? null : locationY;
-  }
-
-  public static void setMaterialsFromNames(@NotNull Set<Material> materialSet, @NotNull List<?> materialNames) {
+  public static void setMaterialsFromNames(
+      @NotNull Set<Material> materialSet, @NotNull List<?> materialNames) {
     for (Object materialName : materialNames) {
       if (!(materialName instanceof String materialNameString)) {
         continue;
@@ -173,14 +139,6 @@ public class Util {
         materialSet.add(material);
       }
     }
-  }
-
-  public static boolean isInRadius(Location check, Location start, int radius) {
-    return (
-        Math.abs(check.getX() - start.getX()) <= radius &&
-            Math.abs(check.getY() - start.getY()) <= radius &&
-            Math.abs(check.getZ() - start.getZ()) <= radius
-    );
   }
 
   public static Location getRandomLocationAroundPlayer(Player player) {
@@ -203,17 +161,8 @@ public class Util {
     if (playersSize == 0) {
       return null;
     }
-    return Util.getRandomLocationAroundPlayer(players.get(ThreadLocalRandom.current().nextInt(0, playersSize)));
-  }
-
-  @Nullable
-  public static Location getRandomLocationAroundRandomPlayerWithMinY(World world, int minY) {
-    final var players = world.getPlayers().stream().filter(player -> player.getLocation().getY() >= minY).toList();
-    final var playersSize = players.size();
-    if (playersSize == 0) {
-      return null;
-    }
-    return Util.getRandomLocationAroundPlayer(players.get(ThreadLocalRandom.current().nextInt(0, playersSize)));
+    return Util.getRandomLocationAroundPlayer(
+        players.get(ThreadLocalRandom.current().nextInt(0, playersSize)));
   }
 
   public static Material convertToNetherMaterial(Material material) {
@@ -232,6 +181,7 @@ public class Util {
     if (startInclusive == endExclusive) {
       return startInclusive;
     }
-    return startInclusive + ((endExclusive - startInclusive) * ThreadLocalRandom.current().nextFloat());
+    return startInclusive
+        + ((endExclusive - startInclusive) * ThreadLocalRandom.current().nextFloat());
   }
 }

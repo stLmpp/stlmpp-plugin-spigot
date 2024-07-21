@@ -80,16 +80,12 @@ public class NetherPortalLeakingTask extends BukkitRunnable {
       return;
     }
     final var netherPortalCenterVector = this.netherPortal.getCenter();
-    if (this.netherPortalLeakingEvent.plugin.isDevMode) {
-      this.netherPortalLeakingEvent
-          .plugin
-          .getLogger()
-          .info(
-              "Entities = "
-                  + entities.stream()
-                      .map(item -> item.getType().name())
-                      .collect(Collectors.joining(", ")));
-    }
+    this.netherPortalLeakingEvent.plugin.log(
+        String.format(
+            "Entities = %s",
+            entities.stream()
+                .map(item -> item.getType().name())
+                .collect(Collectors.joining(", "))));
     for (Entity anyEntity : entities) {
       if (!(anyEntity instanceof LivingEntity entity)) {
         continue;

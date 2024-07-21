@@ -6,8 +6,16 @@ import com.stlmpp.spigot.plugins.utils.Chance;
 import com.stlmpp.spigot.plugins.utils.Tick;
 import com.stlmpp.spigot.plugins.utils.Util;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.jetbrains.annotations.Nullable;
 
 public class NetherLightningTask extends BukkitRunnable {
+
+  public static @Nullable NetherLightningTask register(StlmppPlugin plugin) {
+    if (!plugin.config.getBoolean(StlmppPluginConfig.netherLightningEnabled)) {
+      return null;
+    }
+    return new NetherLightningTask(plugin);
+  }
 
   private final StlmppPlugin plugin;
   private final double chance;
@@ -16,18 +24,23 @@ public class NetherLightningTask extends BukkitRunnable {
   private final float explosionMinPower;
   private final float explosionMaxPower;
 
-  public NetherLightningTask(StlmppPlugin plugin) {
+  private NetherLightningTask(StlmppPlugin plugin) {
     this.plugin = plugin;
     this.chance = this.plugin.config.getDouble(StlmppPluginConfig.netherLightningChance);
-    this.explosionChance = this.plugin.config.getDouble(StlmppPluginConfig.netherLightningExplosionChance);
-    this.explosionMinPower = (float) this.plugin.config.getDouble(StlmppPluginConfig.netherLightningExplosionMinPower);
-    this.explosionMaxPower = (float) this.plugin.config.getDouble(StlmppPluginConfig.netherLightningExplosionMaxPower);
+    this.explosionChance =
+        this.plugin.config.getDouble(StlmppPluginConfig.netherLightningExplosionChance);
+    this.explosionMinPower =
+        (float) this.plugin.config.getDouble(StlmppPluginConfig.netherLightningExplosionMinPower);
+    this.explosionMaxPower =
+        (float) this.plugin.config.getDouble(StlmppPluginConfig.netherLightningExplosionMaxPower);
     this.realChance = this.plugin.config.getDouble(StlmppPluginConfig.netherLightningRealChance);
-    this.runTaskTimer(
-        this.plugin,
-        0,
-        Tick.fromSeconds(this.plugin.config.getInt(StlmppPluginConfig.netherLightningChancePerSecond))
-    );
+    final var netherLightningChancePerSecond =
+        this.plugin.config.getInt(StlmppPluginConfig.netherLightningChancePerSecond);
+    this.plugin.log(
+        String.format(
+            "Nether lightning activated with %s%% of chance, every %s seconds!",
+            this.chance, netherLightningChancePerSecond));
+    this.runTaskTimer(this.plugin, 0, Tick.fromSeconds(netherLightningChancePerSecond));
   }
 
   @Override
@@ -43,14 +56,15 @@ public class NetherLightningTask extends BukkitRunnable {
     if (lightningLocation == null) {
       return;
     }
-    if (Chance.of(this.realChance)) {
-      world.strikeLightning(lightningLocation);
-      if (Chance.of(this.explosionChance)) {
-        final var explosionPower = Util.randomFloat(this.explosionMinPower, this.explosionMaxPower);
-        world.createExplosion(lightningLocation, explosionPower, true, true);
-      }
-    } else {
+    if (!Chance.of(this.realChance)) {
       world.strikeLightningEffect(lightningLocation);
+      return;
     }
+    world.strikeLightning(lightningLocation);
+    if (!Chance.of(this.explosionChance)) {
+      return;
+    }
+    final var explosionPower = Util.randomFloat(this.explosionMinPower, this.explosionMaxPower);
+    world.createExplosion(lightningLocation, explosionPower, true, true);
   }
 }
