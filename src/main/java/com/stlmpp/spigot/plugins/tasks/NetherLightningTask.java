@@ -6,7 +6,10 @@ import com.stlmpp.spigot.plugins.utils.Chance;
 import com.stlmpp.spigot.plugins.utils.Tick;
 import com.stlmpp.spigot.plugins.utils.Util;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.concurrent.ThreadLocalRandom;
 
 public class NetherLightningTask extends BukkitRunnable {
 
@@ -23,6 +26,10 @@ public class NetherLightningTask extends BukkitRunnable {
   private final double explosionChance;
   private final float explosionMinPower;
   private final float explosionMaxPower;
+  private final int maxSeconds;
+  private final int minSeconds;
+
+  @Nullable private BukkitTask lastTask;
 
   private NetherLightningTask(StlmppPlugin plugin) {
     this.plugin = plugin;
@@ -34,13 +41,19 @@ public class NetherLightningTask extends BukkitRunnable {
     this.explosionMaxPower =
         (float) this.plugin.config.getDouble(StlmppPluginConfig.netherLightningExplosionMaxPower);
     this.realChance = this.plugin.config.getDouble(StlmppPluginConfig.netherLightningRealChance);
-    final var netherLightningChancePerSecond =
-        this.plugin.config.getInt(StlmppPluginConfig.netherLightningChancePerSecond);
+    this.maxSeconds = this.plugin.config.getInt(StlmppPluginConfig.netherLightningMaxSeconds);
+    this.minSeconds = this.plugin.config.getInt(StlmppPluginConfig.netherLightningMinSeconds);
     this.plugin.log(
         String.format(
-            "Nether lightning activated with %s%% of chance, every %s seconds!",
-            this.chance, netherLightningChancePerSecond));
-    this.runTaskTimer(this.plugin, 0, Tick.fromSeconds(netherLightningChancePerSecond));
+            "Nether lightning activated with %s%% of chance, every %s to %s seconds!",
+            this.chance, this.minSeconds, this.maxSeconds));
+    this.runTaskLater(this.plugin, Tick.fromSeconds(2));
+  }
+
+  public void stopLastTask() {
+    if (this.lastTask != null) {
+      this.lastTask.cancel();
+    }
   }
 
   @Override
@@ -66,5 +79,7 @@ public class NetherLightningTask extends BukkitRunnable {
     }
     final var explosionPower = Util.randomFloat(this.explosionMinPower, this.explosionMaxPower);
     world.createExplosion(lightningLocation, explosionPower, true, true);
+    final var secondsLater = ThreadLocalRandom.current().nextInt(this.minSeconds, this.maxSeconds);
+    this.lastTask = this.runTaskLater(this.plugin, Tick.fromSeconds(secondsLater));
   }
 }

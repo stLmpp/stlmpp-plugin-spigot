@@ -24,6 +24,7 @@ public class StlmppPlugin extends JavaPlugin {
   public Boolean isDevMode = false;
 
   @Nullable private NetherPortalLeakingEvent netherPortalLeakingEvent;
+  @Nullable private NetherLightningTask netherLightningTask;
 
   public String getWorldName() {
     return this.config.getString(StlmppPluginConfig.world);
@@ -53,6 +54,9 @@ public class StlmppPlugin extends JavaPlugin {
   public void onDisable() {
     if (this.netherPortalLeakingEvent != null) {
       this.netherPortalLeakingEvent.destroy();
+    }
+    if (this.netherLightningTask != null) {
+      this.netherLightningTask.stopLastTask();
     }
   }
 }

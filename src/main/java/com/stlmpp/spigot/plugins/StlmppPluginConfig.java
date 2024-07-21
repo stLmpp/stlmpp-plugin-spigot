@@ -6,7 +6,8 @@ public class StlmppPluginConfig {
 
   public static final String netherLightningEnabled = "nether-lightning-enabled";
   public static final String netherLightningChance = "nether-lightning-chance";
-  public static final String netherLightningChancePerSecond = "nether-lightning-chance-per-second";
+  public static final String netherLightningMinSeconds = "nether-lightning-min-seconds";
+  public static final String netherLightningMaxSeconds = "nether-lightning-max-seconds";
   public static final String netherLightningExplosionChance = "nether-lightning-explosion-chance";
   public static final String netherLightningExplosionMinPower =
       "nether-lightning-explosion-min-power";
@@ -39,7 +40,8 @@ public class StlmppPluginConfig {
     final var config = plugin.config;
     config.addDefault(StlmppPluginConfig.netherLightningChance, 50d);
     config.addDefault(StlmppPluginConfig.netherLightningEnabled, true);
-    config.addDefault(StlmppPluginConfig.netherLightningChancePerSecond, 15);
+    config.addDefault(StlmppPluginConfig.netherLightningMaxSeconds, 15);
+    config.addDefault(StlmppPluginConfig.netherLightningMinSeconds, 5);
     config.addDefault(StlmppPluginConfig.netherLightningExplosionChance, 5d);
     config.addDefault(StlmppPluginConfig.netherLightningExplosionMinPower, 0f);
     config.addDefault(StlmppPluginConfig.netherLightningExplosionMaxPower, 16f);
