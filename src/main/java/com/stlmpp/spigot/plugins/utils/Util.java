@@ -6,8 +6,6 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
 import org.bukkit.util.BoundingBox;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -108,8 +106,8 @@ public class Util {
     netherMaterials.add(Material.WARPED_STAIRS);
   }
 
-  public static int getFloor(World world, Location location) {
-    Integer floor = Util.getFloor(world, location, false, 64);
+  public static int getFloor(Location location) {
+    Integer floor = Util.getFloor(location, false, 128);
     if (floor == null) {
       // This is never going to happen
       floor = -1;
@@ -118,15 +116,18 @@ public class Util {
   }
 
   public static Integer getFloor(
-      World world, Location location, boolean returnNullOnMaxIterations, int maxIterations) {
-    var iteration = -1;
+      Location location, boolean returnNullOnMaxIterations, int maxIterations) {
+    var iteration = 0;
     var locationY = location.getBlockY();
-    Material block;
-    do {
-      block = world.getBlockAt(location.getBlockX(), locationY, location.getBlockZ()).getType();
+    while (!location
+            .getWorld()
+            .getBlockAt(location.getBlockX(), locationY, location.getBlockZ())
+            .getType()
+            .isSolid()
+        && iteration <= maxIterations) {
       iteration++;
       locationY--;
-    } while (!block.isSolid() && iteration <= maxIterations);
+    }
     return iteration > maxIterations && returnNullOnMaxIterations ? null : locationY;
   }
 
@@ -143,25 +144,28 @@ public class Util {
     }
   }
 
-  public static Location getRandomLocationAroundEntity(Entity entity, BoundingBox distance) {
-    final var playerLocation = entity.getLocation();
-    final var playerX = playerLocation.getBlockX();
-    final var playerY = playerLocation.getBlockY();
-    final var playerZ = playerLocation.getBlockZ();
-    final var lightningX =
+  public static Location getRandomLocationAroundLocation(Location location, BoundingBox distance) {
+    final var newLocation = location.clone();
+    newLocation.setX(
         ThreadLocalRandom.current()
-            .nextInt(playerX + (int) distance.getMinX(), playerX + (int) distance.getMaxX());
-    final var lightningY =
+            .nextInt(
+                location.getBlockX() + (int) distance.getMinX(),
+                location.getBlockX() + (int) distance.getMaxX()));
+    newLocation.setY(
         ThreadLocalRandom.current()
-            .nextInt(playerY + (int) distance.getMinY(), playerY + (int) distance.getMaxY());
-    final var lightningZ =
+            .nextInt(
+                location.getBlockY() + (int) distance.getMinY(),
+                location.getBlockY() + (int) distance.getMaxY()));
+    newLocation.setZ(
         ThreadLocalRandom.current()
-            .nextInt(playerZ + (int) distance.getMinZ(), playerZ + (int) distance.getMaxZ());
-    return new Location(entity.getWorld(), lightningX, lightningY, lightningZ);
+            .nextInt(
+                location.getBlockZ() + (int) distance.getMinZ(),
+                location.getBlockZ() + (int) distance.getMaxZ()));
+    return newLocation;
   }
 
-  public static Location getRandomLocationAroundEntity(Player player) {
-    return getRandomLocationAroundEntity(player, new BoundingBox(-50, -10, -50, 51, 11, 51));
+  public static Location getRandomLocationAroundLocation(Location location) {
+    return getRandomLocationAroundLocation(location, new BoundingBox(-50, -10, -50, 51, 11, 51));
   }
 
   @Nullable
@@ -171,8 +175,8 @@ public class Util {
     if (playersSize == 0) {
       return null;
     }
-    return Util.getRandomLocationAroundEntity(
-        players.get(ThreadLocalRandom.current().nextInt(0, playersSize)));
+    return Util.getRandomLocationAroundLocation(
+        players.get(ThreadLocalRandom.current().nextInt(0, playersSize)).getLocation());
   }
 
   public static Material convertToNetherMaterial(Material material) {

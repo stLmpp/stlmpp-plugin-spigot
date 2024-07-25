@@ -97,7 +97,7 @@ public class LightningTeleportEvent implements Listener {
         if (dist >= radiusSquared) {
           continue;
         }
-        final var floorY = Util.getFloor(world, new Location(world, x, startingY, z));
+        final var floorY = Util.getFloor(new Location(world, x, startingY, z));
         final var block = world.getBlockAt(x, floorY, z);
 
         if (!this.allowedMaterialsToReplace.contains(block.getType())
@@ -127,9 +127,9 @@ public class LightningTeleportEvent implements Listener {
       return;
     }
     final var from = event.getFrom().clone();
-    from.setY(Util.getFloor(world, from));
+    from.setY(Util.getFloor(from));
     final var to = event.getTo().clone();
-    to.setY(Util.getFloor(world, to));
+    to.setY(Util.getFloor(to));
     world.strikeLightning(from);
     world.strikeLightning(to);
     this.setBlocksRadius(world, from);

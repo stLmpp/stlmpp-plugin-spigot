@@ -47,7 +47,7 @@ public class StlmppPlugin extends JavaPlugin {
     LightningTeleportEvent.register(this);
     this.netherPortalLeakingEvent = NetherPortalLeakingEvent.register(this);
     EggRandomEffectEvent.register(this);
-    OpDeathEvent.register(this);
+    DeathEvent.register(this);
   }
 
   @Override

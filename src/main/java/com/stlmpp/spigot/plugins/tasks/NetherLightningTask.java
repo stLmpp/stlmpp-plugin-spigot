@@ -98,7 +98,7 @@ public class NetherLightningTask extends BukkitRunnable {
             if (lightningLocation == null) {
               return;
             }
-            lightningLocation.setY(Util.getFloor(world, lightningLocation));
+            lightningLocation.setY(Util.getFloor(lightningLocation));
             final var isReal = Chance.of(realChance + increasedRealChance);
             plugin.log(
                 String.format(

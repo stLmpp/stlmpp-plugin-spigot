@@ -74,9 +74,9 @@ public class EggRandomEffectEvent implements Listener {
     for (int index = 0; index < spawnQuantity; index++) {
       final var entityToSpawn = this.entitiesToSpawn.next();
       final var randomLocation =
-          Util.getRandomLocationAroundEntity(
-              livingEntity, new BoundingBox(-10, 0, -10, 11, 30, 11));
-      randomLocation.setY(Util.getFloor(event.getEntity().getWorld(), randomLocation));
+          Util.getRandomLocationAroundLocation(
+              livingEntity.getLocation(), new BoundingBox(-10, 0, -10, 11, 30, 11));
+      randomLocation.setY(Util.getFloor(randomLocation));
       final var spawnLocation = randomLocation.clone();
       spawnLocation.add(0, 5, 0);
       final var plugin = this.plugin;
