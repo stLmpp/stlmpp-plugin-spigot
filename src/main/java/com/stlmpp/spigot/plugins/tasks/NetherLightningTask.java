@@ -29,6 +29,11 @@ public class NetherLightningTask extends BukkitRunnable {
   private final int maxSeconds;
   private final int minSeconds;
 
+  private double increasedRealChance = 0.0d;
+  private double realRound = 1.0d;
+  private double increasedExplosionChance = 0.0d;
+  private double explosionRound = 1.0d;
+
   @Nullable private BukkitTask lastTask;
 
   private NetherLightningTask(StlmppPlugin plugin) {
@@ -47,7 +52,7 @@ public class NetherLightningTask extends BukkitRunnable {
         String.format(
             "Nether lightning activated with %s%% of chance, every %s to %s seconds!",
             this.chance, this.minSeconds, this.maxSeconds));
-    this.runTaskLater(this.plugin, Tick.fromSeconds(2));
+    this.run();
   }
 
   public void stopLastTask() {
@@ -58,28 +63,66 @@ public class NetherLightningTask extends BukkitRunnable {
 
   @Override
   public void run() {
-    if (Chance.of(this.chance)) {
-      return;
-    }
-    final var world = this.plugin.getWorldNether();
-    if (world == null || world.getPlayers().isEmpty()) {
-      return;
-    }
-    final var lightningLocation = Util.getRandomLocationAroundRandomPlayer(world);
-    if (lightningLocation == null) {
-      return;
-    }
-    if (!Chance.of(this.realChance)) {
-      world.strikeLightningEffect(lightningLocation);
-      return;
-    }
-    world.strikeLightning(lightningLocation);
-    if (!Chance.of(this.explosionChance)) {
-      return;
-    }
-    final var explosionPower = Util.randomFloat(this.explosionMinPower, this.explosionMaxPower);
-    world.createExplosion(lightningLocation, explosionPower, true, true);
+    this.startTask(0);
+  }
+
+  private void startTask() {
     final var secondsLater = ThreadLocalRandom.current().nextInt(this.minSeconds, this.maxSeconds);
-    this.lastTask = this.runTaskLater(this.plugin, Tick.fromSeconds(secondsLater));
+    this.plugin.log(String.format("Next lightning in %s seconds", secondsLater), true);
+    this.startTask(secondsLater);
+  }
+
+  private void startTask(int seconds) {
+    this.lastTask =
+        new BukkitRunnable() {
+          @Override
+          public void run() {
+            this.execute();
+            startTask();
+          }
+
+          private void execute() {
+            final var willRun = Chance.of(chance);
+            plugin.log(
+                String.format("Running task Nether Lightning | willRun = %s", willRun), true);
+            if (!willRun) {
+              return;
+            }
+            final var world = plugin.getWorldNether();
+            if (world == null || world.getPlayers().isEmpty()) {
+              increasedRealChance = 0;
+              increasedExplosionChance = 0;
+              return;
+            }
+            final var lightningLocation = Util.getRandomLocationAroundRandomPlayer(world);
+            if (lightningLocation == null) {
+              return;
+            }
+            lightningLocation.setY(Util.getFloor(world, lightningLocation));
+            final var isReal = Chance.of(realChance + increasedRealChance);
+            plugin.log(
+                String.format(
+                    "Strike lightning at %s | isReal = %s | increasedRealChance = %s | increasedExplosionChance = %s",
+                    lightningLocation, isReal, increasedRealChance, increasedExplosionChance),
+                true);
+            if (!isReal) {
+              increasedRealChance = increasedRealChance + (1 * realRound);
+              increasedExplosionChance = increasedExplosionChance + (0.05 * explosionRound);
+              world.strikeLightningEffect(lightningLocation);
+              return;
+            }
+            increasedRealChance = 0;
+            realRound = Math.min(realRound + 0.1, 5.0);
+            world.strikeLightning(lightningLocation);
+            if (!Chance.of(explosionChance + increasedExplosionChance)) {
+              increasedExplosionChance += 0.1;
+              return;
+            }
+            increasedExplosionChance = 0;
+            explosionRound = Math.min(explosionRound + 0.05, 5.0);
+            final var explosionPower = Util.randomFloat(explosionMinPower, explosionMaxPower);
+            world.createExplosion(lightningLocation, explosionPower, true, true);
+          }
+        }.runTaskLater(plugin, Tick.fromSeconds(seconds));
   }
 }

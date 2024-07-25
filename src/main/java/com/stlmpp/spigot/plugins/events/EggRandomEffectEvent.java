@@ -6,20 +6,19 @@ import com.stlmpp.spigot.plugins.utils.Chance;
 import com.stlmpp.spigot.plugins.utils.Tick;
 import com.stlmpp.spigot.plugins.utils.Util;
 import com.stlmpp.spigot.plugins.utils.WeightedRandomCollection;
-import org.bukkit.entity.Egg;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.BoundingBox;
 import org.jetbrains.annotations.Nullable;
 
 public class EggRandomEffectEvent implements Listener {
 
   public static @Nullable EggRandomEffectEvent register(StlmppPlugin plugin) {
-    if (!plugin.config.getBoolean(StlmppPluginConfig.eggRandomEventChance)) {
+    if (!plugin.config.getBoolean(StlmppPluginConfig.eggRandomEventEnabled)) {
       return null;
     }
     return new EggRandomEffectEvent(plugin);
@@ -40,15 +39,15 @@ public class EggRandomEffectEvent implements Listener {
     this.entitiesToSpawn.add(16.0, EntityType.VEX);
     this.entitiesToSpawn.add(16.0, EntityType.VINDICATOR);
     this.entitiesToSpawn.add(16.0, EntityType.GHAST);
-    this.entitiesToSpawn.add(64.0, EntityType.WITHER_SKELETON);
-    this.entitiesToSpawn.add(64.0, EntityType.PILLAGER);
+    this.entitiesToSpawn.add(32.0, EntityType.WITHER_SKELETON);
+    this.entitiesToSpawn.add(32.0, EntityType.PILLAGER);
 
     this.quantitiesToSpawn.add(1.0, 8);
     this.quantitiesToSpawn.add(2.0, 7);
     this.quantitiesToSpawn.add(4.0, 6);
-    this.quantitiesToSpawn.add(8.0, 5);
-    this.quantitiesToSpawn.add(64.0, 4);
-    this.quantitiesToSpawn.add(64.0, 3);
+    this.quantitiesToSpawn.add(16.0, 5);
+    this.quantitiesToSpawn.add(32.0, 4);
+    this.quantitiesToSpawn.add(32.0, 3);
     this.quantitiesToSpawn.add(64.0, 2);
     this.quantitiesToSpawn.add(64.0, 1);
   }
@@ -66,23 +65,46 @@ public class EggRandomEffectEvent implements Listener {
     final var damager = event.getDamager();
     final var entity = event.getEntity();
     if (!(damager instanceof Egg)
-        || !(entity instanceof Player player)
+        || !(entity instanceof LivingEntity livingEntity)
+        || entity.getLocation().getY() < 62
         || !Chance.of(this.chance)) {
       return;
     }
     final var spawnQuantity = this.quantitiesToSpawn.next();
     for (int index = 0; index < spawnQuantity; index++) {
       final var entityToSpawn = this.entitiesToSpawn.next();
+      final var randomLocation =
+          Util.getRandomLocationAroundEntity(
+              livingEntity, new BoundingBox(-10, 0, -10, 11, 30, 11));
+      randomLocation.setY(Util.getFloor(event.getEntity().getWorld(), randomLocation));
+      final var spawnLocation = randomLocation.clone();
+      spawnLocation.add(0, 5, 0);
+      final var plugin = this.plugin;
+      final var seconds = (index + 0.1) * index * 0.50;
       new BukkitRunnable() {
         @Override
         public void run() {
-          final var randomLocation = Util.getRandomLocationAroundPlayer(player);
-          final var lightningLocation = randomLocation.clone();
-          lightningLocation.setY(Util.getFloor(event.getEntity().getWorld(), lightningLocation));
-          event.getEntity().getWorld().strikeLightning(lightningLocation);
-          event.getEntity().getWorld().spawnEntity(damager.getLocation(), entityToSpawn);
+          plugin.log(String.format("Spawning lightning at %s", randomLocation), true);
+          event.getEntity().getWorld().strikeLightning(randomLocation);
         }
-      }.runTaskLater(this.plugin, Tick.fromSeconds((index + 0.1) * index * 0.15));
+      }.runTaskLater(this.plugin, Tick.fromSeconds(seconds));
+      new BukkitRunnable() {
+        @Override
+        public void run() {
+          plugin.log(String.format("Spawning %s at %s", entityToSpawn, spawnLocation), true);
+          final var entitySpawned =
+              event.getEntity().getWorld().spawnEntity(spawnLocation, entityToSpawn);
+          try {
+            final var source = event.getDamageSource().getCausingEntity();
+            if (entitySpawned instanceof Monster monster
+                && source instanceof LivingEntity damagerEntity) {
+              monster.setTarget(damagerEntity);
+            }
+          } catch (Exception ignored) {
+
+          }
+        }
+      }.runTaskLater(this.plugin, Tick.fromSeconds(seconds + 0.5));
     }
   }
 }

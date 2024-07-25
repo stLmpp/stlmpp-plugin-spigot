@@ -38,7 +38,7 @@ public class StlmppPluginConfig {
 
   public StlmppPluginConfig(StlmppPlugin plugin) {
     final var config = plugin.config;
-    config.addDefault(StlmppPluginConfig.netherLightningChance, 50d);
+    config.addDefault(StlmppPluginConfig.netherLightningChance, 90d);
     config.addDefault(StlmppPluginConfig.netherLightningEnabled, true);
     config.addDefault(StlmppPluginConfig.netherLightningMaxSeconds, 15);
     config.addDefault(StlmppPluginConfig.netherLightningMinSeconds, 5);

@@ -6,7 +6,9 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.util.BoundingBox;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -141,17 +143,25 @@ public class Util {
     }
   }
 
-  public static Location getRandomLocationAroundPlayer(Player player) {
-    final var playerLocation = player.getLocation();
+  public static Location getRandomLocationAroundEntity(Entity entity, BoundingBox distance) {
+    final var playerLocation = entity.getLocation();
     final var playerX = playerLocation.getBlockX();
     final var playerY = playerLocation.getBlockY();
     final var playerZ = playerLocation.getBlockZ();
-    final var lightningX = ThreadLocalRandom.current().nextInt(playerX - 50, playerX + 51);
-    final var lightningY = ThreadLocalRandom.current().nextInt(playerY - 10, playerY + 11);
-    final var lightningZ = ThreadLocalRandom.current().nextInt(playerZ - 50, playerZ + 51);
-    final var location = new Location(player.getWorld(), lightningX, lightningY, lightningZ);
-    location.setY(Util.getFloor(player.getWorld(), location));
-    return location;
+    final var lightningX =
+        ThreadLocalRandom.current()
+            .nextInt(playerX + (int) distance.getMinX(), playerX + (int) distance.getMaxX());
+    final var lightningY =
+        ThreadLocalRandom.current()
+            .nextInt(playerY + (int) distance.getMinY(), playerY + (int) distance.getMaxY());
+    final var lightningZ =
+        ThreadLocalRandom.current()
+            .nextInt(playerZ + (int) distance.getMinZ(), playerZ + (int) distance.getMaxZ());
+    return new Location(entity.getWorld(), lightningX, lightningY, lightningZ);
+  }
+
+  public static Location getRandomLocationAroundEntity(Player player) {
+    return getRandomLocationAroundEntity(player, new BoundingBox(-50, -10, -50, 51, 11, 51));
   }
 
   @Nullable
@@ -161,7 +171,7 @@ public class Util {
     if (playersSize == 0) {
       return null;
     }
-    return Util.getRandomLocationAroundPlayer(
+    return Util.getRandomLocationAroundEntity(
         players.get(ThreadLocalRandom.current().nextInt(0, playersSize)));
   }
 
