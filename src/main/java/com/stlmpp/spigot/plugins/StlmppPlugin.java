@@ -35,6 +35,11 @@ public class StlmppPlugin extends JavaPlugin {
   }
 
   @Nullable
+  public World getWorld() {
+    return this.getServer().getWorld(this.getWorldName());
+  }
+
+  @Nullable
   public World getWorldNether() {
     return this.getServer().getWorld(this.getWorldNetherName());
   }
@@ -42,7 +47,7 @@ public class StlmppPlugin extends JavaPlugin {
   @Override
   public void onEnable() {
     new StlmppPluginConfig(this);
-    NetherLightningTask.register(this);
+    this.netherLightningTask = NetherLightningTask.register(this);
     AutoSeedEvent.register(this);
     LightningTeleportEvent.register(this);
     this.netherPortalLeakingEvent = NetherPortalLeakingEvent.register(this);

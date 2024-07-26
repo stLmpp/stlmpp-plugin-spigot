@@ -33,9 +33,6 @@ public class StlmppPluginConfig {
   public static final String eggRandomEventEnabled = "egg-random-event-enabled";
   public static final String eggRandomEventChance = "egg-random-event-chance";
   public static final String deathEventEnabled = "death-event-enabled";
-  public static final String deathEventChance = "death-event-chance";
-  public static final String deathEventLightningChance = "death-event-lightning-chance";
-  public static final String deathEventExplosionChance = "death-event-explosion-chance";
 
   public StlmppPluginConfig(StlmppPlugin plugin) {
     final var config = plugin.config;
@@ -73,9 +70,6 @@ public class StlmppPluginConfig {
     config.addDefault(StlmppPluginConfig.eggRandomEventEnabled, true);
     config.addDefault(StlmppPluginConfig.eggRandomEventChance, 10.0d);
     config.addDefault(StlmppPluginConfig.deathEventEnabled, true);
-    config.addDefault(StlmppPluginConfig.deathEventExplosionChance, 5.0d);
-    config.addDefault(StlmppPluginConfig.deathEventLightningChance, 10.0d);
-    config.addDefault(StlmppPluginConfig.deathEventChance, 50.0d);
     config.options().copyDefaults(true);
     plugin.saveConfig();
     plugin.isDevMode = config.getBoolean(devMode);
