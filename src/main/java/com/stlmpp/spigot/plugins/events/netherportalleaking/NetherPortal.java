@@ -3,10 +3,8 @@ package com.stlmpp.spigot.plugins.events.netherportalleaking;
 import java.util.List;
 import java.util.Objects;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Vector;
 
@@ -18,7 +16,7 @@ public class NetherPortal {
   public final int width;
 
   private BoundingBox createBoundingBox() {
-    final var firstBlock = this.blocks.get(0);
+    final var firstBlock = this.blocks.getFirst();
     var minY = firstBlock.getY();
     var maxY = minY;
     var minX = firstBlock.getX();
@@ -27,36 +25,16 @@ public class NetherPortal {
     var maxZ = minZ;
     for (Block block : this.blocks) {
       final var blockY = block.getY();
-      if (blockY < minY) {
-        minY = blockY;
-      } else {
-        maxY = blockY;
-      }
       final var blockX = block.getX();
-      if (blockX < minX) {
-        minX = blockX;
-      } else {
-        maxX = blockX;
-      }
       final var blockZ = block.getZ();
-      if (blockZ < minZ) {
-        minZ = blockZ;
-      } else {
-        maxZ = blockZ;
-      }
+      minY = Math.min(blockY, minY);
+      maxY = Math.max(blockY, maxY);
+      minX = Math.min(blockX, minX);
+      maxX = Math.max(blockX, maxX);
+      minZ = Math.min(blockZ, minZ);
+      maxZ = Math.max(blockZ, maxZ);
     }
     return new BoundingBox(minX, minY, minZ, maxX, maxY, maxZ);
-  }
-
-  private int calculateWidth() {
-    final var initialBlock = blocks.get(0);
-    var height = 1;
-    var iterations = 0;
-    while (initialBlock.getRelative(BlockFace.UP, height).getType() != Material.OBSIDIAN && iterations <= 25) {
-      height++;
-      iterations++;
-    }
-    return ((blocks.size() - ((height - 1) * 2)) / 2) + 2;
   }
 
   public NetherPortal(World world, List<Block> blocks) {
@@ -73,10 +51,10 @@ public class NetherPortal {
           } else {
             return 0;
           }
-        }
-      );
+        });
     this.boundingBox = this.createBoundingBox();
-    this.width = this.calculateWidth();
+    this.width =
+        (int) Math.ceil(Math.max(this.boundingBox.getWidthX(), this.boundingBox.getWidthZ())) + 1;
   }
 
   public Location getCenterLocation() {

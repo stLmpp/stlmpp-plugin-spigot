@@ -2,10 +2,11 @@ package com.stlmpp.spigot.plugins.utils;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.entity.Player;
+import org.bukkit.util.BoundingBox;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -105,8 +106,8 @@ public class Util {
     netherMaterials.add(Material.WARPED_STAIRS);
   }
 
-  public static int getFloor(World world, Location location) {
-    Integer floor = Util.getFloor(world, location, false, 64);
+  public static int getFloor(Location location) {
+    Integer floor = Util.getFloor(location, false, 128);
     if (floor == null) {
       // This is never going to happen
       floor = -1;
@@ -114,55 +115,24 @@ public class Util {
     return floor;
   }
 
-  public static Integer getFloor(World world, Location location, boolean returnNullOnMaxIterations) {
-    return Util.getFloor(world, location, returnNullOnMaxIterations, 64);
-  }
-
-  public static Integer getFloor(World world, Location location, boolean returnNullOnMaxIterations, int maxIterations) {
+  public static Integer getFloor(
+      Location location, boolean returnNullOnMaxIterations, int maxIterations) {
     var iteration = 0;
     var locationY = location.getBlockY();
-    while (
-      !world.getBlockAt(location.getBlockX(), locationY, location.getBlockZ()).getType().isSolid() &&
-      iteration <= maxIterations
-    ) {
+    while (!location
+            .getWorld()
+            .getBlockAt(location.getBlockX(), locationY, location.getBlockZ())
+            .getType()
+            .isSolid()
+        && iteration <= maxIterations) {
       iteration++;
       locationY--;
     }
     return iteration > maxIterations && returnNullOnMaxIterations ? null : locationY;
   }
 
-  public static int getCeiling(World world, Location location) {
-    Integer floor = Util.getCeiling(world, location, false, 64);
-    if (floor == null) {
-      // This is never going to happen
-      floor = -1;
-    }
-    return floor;
-  }
-
-  public static Integer getCeiling(World world, Location location, boolean returnNullOnMaxIterations) {
-    return Util.getCeiling(world, location, returnNullOnMaxIterations, 64);
-  }
-
-  public static Integer getCeiling(
-    World world,
-    Location location,
-    boolean returnNullOnMaxIterations,
-    int maxIterations
-  ) {
-    var iteration = 0;
-    var locationY = location.getBlockY();
-    while (
-      !world.getBlockAt(location.getBlockX(), locationY, location.getBlockZ()).getType().isSolid() &&
-      iteration <= maxIterations
-    ) {
-      iteration++;
-      locationY++;
-    }
-    return iteration > maxIterations && returnNullOnMaxIterations ? null : locationY;
-  }
-
-  public static void setMaterialsFromNames(@NotNull Set<Material> materialSet, @NotNull List<?> materialNames) {
+  public static void setMaterialsFromNames(
+      @NotNull Set<Material> materialSet, @NotNull List<?> materialNames) {
     for (Object materialName : materialNames) {
       if (!(materialName instanceof String materialNameString)) {
         continue;
@@ -174,25 +144,28 @@ public class Util {
     }
   }
 
-  public static boolean isInRadius(Location check, Location start, int radius) {
-    return (
-      Math.abs(check.getX() - start.getX()) <= radius &&
-      Math.abs(check.getY() - start.getY()) <= radius &&
-      Math.abs(check.getZ() - start.getZ()) <= radius
-    );
+  public static Location getRandomLocationAroundLocation(Location location, BoundingBox distance) {
+    final var newLocation = location.clone();
+    newLocation.setX(
+        ThreadLocalRandom.current()
+            .nextInt(
+                location.getBlockX() + (int) distance.getMinX(),
+                location.getBlockX() + (int) distance.getMaxX()));
+    newLocation.setY(
+        ThreadLocalRandom.current()
+            .nextInt(
+                location.getBlockY() + (int) distance.getMinY(),
+                location.getBlockY() + (int) distance.getMaxY()));
+    newLocation.setZ(
+        ThreadLocalRandom.current()
+            .nextInt(
+                location.getBlockZ() + (int) distance.getMinZ(),
+                location.getBlockZ() + (int) distance.getMaxZ()));
+    return newLocation;
   }
 
-  public static Location getRandomLocationAroundPlayer(Player player) {
-    final var playerLocation = player.getLocation();
-    final var playerX = playerLocation.getBlockX();
-    final var playerY = playerLocation.getBlockY();
-    final var playerZ = playerLocation.getBlockZ();
-    final var lightningX = ThreadLocalRandom.current().nextInt(playerX - 50, playerX + 51);
-    final var lightningY = ThreadLocalRandom.current().nextInt(playerY - 10, playerY + 11);
-    final var lightningZ = ThreadLocalRandom.current().nextInt(playerZ - 50, playerZ + 51);
-    final var lightningLocation = new Location(player.getWorld(), lightningX, lightningY, lightningZ);
-    lightningLocation.setY(Util.getFloor(player.getWorld(), lightningLocation));
-    return lightningLocation;
+  public static Location getRandomLocationAroundLocation(Location location) {
+    return getRandomLocationAroundLocation(location, new BoundingBox(-50, -10, -50, 51, 11, 51));
   }
 
   @Nullable
@@ -202,17 +175,8 @@ public class Util {
     if (playersSize == 0) {
       return null;
     }
-    return Util.getRandomLocationAroundPlayer(players.get(ThreadLocalRandom.current().nextInt(0, playersSize)));
-  }
-
-  @Nullable
-  public static Location getRandomLocationAroundRandomPlayerWithMinY(World world, int minY) {
-    final var players = world.getPlayers().stream().filter(player -> player.getLocation().getY() >= minY).toList();
-    final var playersSize = players.size();
-    if (playersSize == 0) {
-      return null;
-    }
-    return Util.getRandomLocationAroundPlayer(players.get(ThreadLocalRandom.current().nextInt(0, playersSize)));
+    return Util.getRandomLocationAroundLocation(
+        players.get(ThreadLocalRandom.current().nextInt(0, playersSize)).getLocation());
   }
 
   public static Material convertToNetherMaterial(Material material) {
@@ -231,6 +195,7 @@ public class Util {
     if (startInclusive == endExclusive) {
       return startInclusive;
     }
-    return startInclusive + ((endExclusive - startInclusive) * ThreadLocalRandom.current().nextFloat());
+    return startInclusive
+        + ((endExclusive - startInclusive) * ThreadLocalRandom.current().nextFloat());
   }
 }

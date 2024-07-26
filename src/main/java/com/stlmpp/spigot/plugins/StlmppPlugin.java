@@ -10,15 +10,21 @@ import org.jetbrains.annotations.Nullable;
 
 public class StlmppPlugin extends JavaPlugin {
 
-  public void sendConsoleMessage(String message) {
-    this.getServer().getConsoleSender().sendMessage("[StlmppPlugin] " + message);
+  public void log(String message) {
+    this.log(message, false);
+  }
+
+  public void log(String message, boolean onlyDevMode) {
+    if (!onlyDevMode || this.isDevMode) {
+      this.getLogger().info(String.format("[StlmppPlugin] %s", message));
+    }
   }
 
   public final FileConfiguration config = this.getConfig();
   public Boolean isDevMode = false;
 
-  @Nullable
-  private NetherPortalLeakingEvent netherPortalLeakingEvent;
+  @Nullable private NetherPortalLeakingEvent netherPortalLeakingEvent;
+  @Nullable private NetherLightningTask netherLightningTask;
 
   public String getWorldName() {
     return this.config.getString(StlmppPluginConfig.world);
@@ -29,11 +35,6 @@ public class StlmppPlugin extends JavaPlugin {
   }
 
   @Nullable
-  public World getWorld() {
-    return this.getServer().getWorld(this.getWorldName());
-  }
-
-  @Nullable
   public World getWorldNether() {
     return this.getServer().getWorld(this.getWorldNetherName());
   }
@@ -41,55 +42,21 @@ public class StlmppPlugin extends JavaPlugin {
   @Override
   public void onEnable() {
     new StlmppPluginConfig(this);
-    if (this.config.getBoolean(StlmppPluginConfig.netherLightningEnabled)) {
-      this.sendConsoleMessage(
-          "Nether lightning activated with " +
-          this.config.getDouble(StlmppPluginConfig.netherLightningChance) +
-          "% of chance, every " +
-          this.config.getInt(StlmppPluginConfig.netherLightningChancePerSecond) +
-          " seconds!"
-        );
-      new NetherLightningTask(this);
-    }
-    if (this.config.getBoolean(StlmppPluginConfig.autoSeedEnabled)) {
-      this.sendConsoleMessage(
-          "Auto seed activated with max of " + this.config.getInt(StlmppPluginConfig.autoSeedMaxBlocks) + " blocks!"
-        );
-      new AutoSeedEvent(this);
-    }
-    if (this.config.getBoolean(StlmppPluginConfig.superThunderEnabled)) {
-      this.sendConsoleMessage(
-          "Super thunder activated with " + this.config.getDouble(StlmppPluginConfig.superThunderChance) + "% of chance"
-        );
-      new SuperThunderCheckEvent(this);
-    }
-    if (this.config.getBoolean(StlmppPluginConfig.caveInEnabled)) {
-      this.sendConsoleMessage(
-          "Cave-in enabled with " + this.config.getDouble(StlmppPluginConfig.caveInChance) + "% of chance"
-        );
-      new CaveInEvent(this);
-    }
-    if (this.config.getBoolean(StlmppPluginConfig.tpLightningEnabled)) {
-      this.sendConsoleMessage(
-          "Teleport lightning enabled with " +
-          this.config.getDouble(StlmppPluginConfig.tpLightningChance) +
-          "% of chance"
-        );
-      new LightningTeleportEvent(this);
-    }
-    if (this.config.getBoolean(StlmppPluginConfig.netherPortalLeakingEnabled)) {
-      this.sendConsoleMessage(
-          "Nether portal leaking enabled with a radius of " +
-          this.config.getInt(StlmppPluginConfig.netherPortalLeakingRadius)
-        );
-      this.netherPortalLeakingEvent = new NetherPortalLeakingEvent(this);
-    }
+    NetherLightningTask.register(this);
+    AutoSeedEvent.register(this);
+    LightningTeleportEvent.register(this);
+    this.netherPortalLeakingEvent = NetherPortalLeakingEvent.register(this);
+    EggRandomEffectEvent.register(this);
+    DeathEvent.register(this);
   }
 
   @Override
   public void onDisable() {
     if (this.netherPortalLeakingEvent != null) {
       this.netherPortalLeakingEvent.destroy();
+    }
+    if (this.netherLightningTask != null) {
+      this.netherLightningTask.stopLastTask();
     }
   }
 }

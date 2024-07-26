@@ -7,9 +7,11 @@ import com.stlmpp.spigot.plugins.utils.Chance;
 import com.stlmpp.spigot.plugins.utils.Tick;
 import com.stlmpp.spigot.plugins.utils.Util;
 import java.util.*;
+import java.util.stream.Collectors;
 import org.bukkit.*;
 import org.bukkit.block.BlockFace;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
@@ -25,28 +27,32 @@ public class NetherPortalLeakingTask extends BukkitRunnable {
   private final ArrayList<Vector> particlesLocations;
 
   public NetherPortalLeakingTask(
-    NetherPortalLeakingEvent netherPortalLeakingEvent,
-    Deque<Location> locations,
-    World world,
-    NetherPortal netherPortal,
-    int radius,
-    ArrayList<Vector> particlesLocations
-  ) {
+      NetherPortalLeakingEvent netherPortalLeakingEvent,
+      Deque<Location> locations,
+      World world,
+      NetherPortal netherPortal,
+      int radius,
+      ArrayList<Vector> particlesLocations) {
     this.netherPortalLeakingEvent = netherPortalLeakingEvent;
     this.locations = locations;
     this.world = world;
     this.netherPortal = netherPortal;
     this.chanceOfNetherrackFire =
-      this.netherPortalLeakingEvent.plugin.config.getDouble(
-          StlmppPluginConfig.netherPortalLeakingChanceOfNetherrackFire
-        );
+        this.netherPortalLeakingEvent.plugin.config.getDouble(
+            StlmppPluginConfig.netherPortalLeakingChanceOfNetherrackFire);
     this.radius = radius;
-    this.knockbackPower =
-      this.netherPortalLeakingEvent.plugin.config.getDouble(StlmppPluginConfig.netherPortalLeakingKnockbackPower);
+
+    this.knockbackPower = this.calculateKnockbackPower();
     this.particlesLocations = particlesLocations;
-    this.knockBackPlayers();
+    this.knockbackEntities();
     this.createParticlesEffect();
-    this.runTaskTimer(this.netherPortalLeakingEvent.plugin, Tick.fromSeconds(5), Tick.fromSeconds(2));
+    this.runTaskTimer(
+        this.netherPortalLeakingEvent.plugin, Tick.fromSeconds(5), Tick.fromSeconds(2));
+  }
+
+  private double calculateKnockbackPower() {
+    final var height = this.netherPortal.boundingBox.getHeight();
+    return (height + this.netherPortal.width) / 2;
   }
 
   private void createParticlesEffect() {
@@ -55,47 +61,56 @@ public class NetherPortalLeakingTask extends BukkitRunnable {
     for (Vector vector : this.particlesLocations) {
       final var offset = vector.clone().subtract(netherPortalCenterLocation.toVector()).normalize();
       world.spawnParticle(
-        Particle.DRAGON_BREATH,
-        netherPortalCenterLocation,
-        0,
-        offset.getX(),
-        offset.getY(),
-        offset.getZ()
-      );
+          Particle.DRAGON_BREATH,
+          netherPortalCenterLocation,
+          0,
+          offset.getX(),
+          offset.getY(),
+          offset.getZ());
     }
   }
 
-  private void knockBackPlayers() {
+  private void knockbackEntities() {
     if (this.knockbackPower <= 0) {
       return;
     }
-    // TODO maybe apply this effect to all nearby entities?
-    final var players = this.world.getPlayers();
-    if (players.size() == 0) {
+    final var boundingBox = this.netherPortal.boundingBox.clone().expand(this.radius);
+    final var entities = this.world.getNearbyEntities(boundingBox);
+    if (entities.isEmpty()) {
       return;
     }
     final var netherPortalCenterVector = this.netherPortal.getCenter();
-    for (Player player : players) {
-      final var playerLocationVector = player.getLocation().toVector();
-      if (!playerLocationVector.isInSphere(netherPortalCenterVector, this.radius)) {
+    this.netherPortalLeakingEvent.plugin.log(
+        String.format(
+            "Entities = %s",
+            entities.stream()
+                .map(item -> item.getType().name())
+                .collect(Collectors.joining(", "))));
+    for (Entity anyEntity : entities) {
+      if (!(anyEntity instanceof LivingEntity entity)) {
         continue;
       }
-      final var distance = playerLocationVector.distance(netherPortalCenterVector);
+      final var entityLocation = entity.getLocation().toVector();
+      if (!entityLocation.isInSphere(netherPortalCenterVector, this.radius)) {
+        continue;
+      }
+      final var distance = entityLocation.distance(netherPortalCenterVector);
       final var percent = distance / this.radius;
       final var multiplier = this.knockbackPower - (this.knockbackPower * percent);
-      final var vectorVelocity = netherPortalCenterVector
-        .clone()
-        .subtract(playerLocationVector)
-        .normalize()
-        .multiply(multiplier * -1);
-      player.setVelocity(vectorVelocity);
-      player.damage(multiplier);
+      final var vectorVelocity =
+          netherPortalCenterVector
+              .clone()
+              .subtract(entityLocation)
+              .normalize()
+              .multiply(multiplier * -1);
+      entity.setVelocity(vectorVelocity);
+      entity.damage(multiplier);
     }
   }
 
   @Override
   public void run() {
-    if (this.locations.size() == 0) {
+    if (this.locations.isEmpty()) {
       this.netherPortalLeakingEvent.tryCancelTask(this.netherPortal);
       return;
     }
