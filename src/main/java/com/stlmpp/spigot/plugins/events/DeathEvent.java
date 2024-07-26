@@ -2,9 +2,10 @@ package com.stlmpp.spigot.plugins.events;
 
 import com.stlmpp.spigot.plugins.StlmppPlugin;
 import com.stlmpp.spigot.plugins.StlmppPluginConfig;
-import com.stlmpp.spigot.plugins.utils.Chance;
 import com.stlmpp.spigot.plugins.utils.RandomList;
 import com.stlmpp.spigot.plugins.utils.Util;
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -20,9 +21,6 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.BoundingBox;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
-
 public class DeathEvent implements Listener {
 
   public static @Nullable DeathEvent register(StlmppPlugin plugin) {
@@ -35,13 +33,7 @@ public class DeathEvent implements Listener {
   private DeathEvent(StlmppPlugin plugin) {
     this.plugin = plugin;
     plugin.getServer().getPluginManager().registerEvents(this, plugin);
-    this.chance = plugin.config.getDouble(StlmppPluginConfig.deathEventChance);
-    this.lightningChance = plugin.config.getDouble(StlmppPluginConfig.deathEventLightningChance);
-    this.explosionChance = plugin.config.getDouble(StlmppPluginConfig.deathEventExplosionChance);
-    plugin.log(
-        String.format(
-            "Op Death Event activated with %s chance of lightning and %s chance of explosion",
-            this.chance, this.explosionChance));
+    plugin.log("Death Event activated");
     this.structures =
         new RandomList<>(
             List.of(
@@ -75,25 +67,30 @@ public class DeathEvent implements Listener {
                 Structure.ANCIENT_CITY,
                 Structure.TRAIL_RUINS,
                 Structure.TRIAL_CHAMBERS));
+    // TODO add structure description, perto da estrutura tal
     this.messages =
         new RandomList<>(
             List.of(
-                "%s morreu e seus itens foram parar na coordenada %s %s %s ... espero que um dia voce consiga recuperar",
-                "%s esta morto... Seus itens estao na coordenada %s %s %s"));
+                "%s morreu e seus itens foram duplicados para a coordenada %s %s %s ... espero que um dia voce consiga recuperar",
+                "%s esta morto... Seus itens estao na coordenada %s %s %s",
+                "%s anota essas coordenadas: %s %s %s, seus itens estao la",
+                "%s nao se preocupe, seu itens foram armazenados e estao na coordenada %s %s %s",
+                "%s soh morre ein, vai pegar seus itens na coordenada %s %s %s"));
   }
 
   private final StlmppPlugin plugin;
-  private final double chance;
-  private final double lightningChance;
-  private final double explosionChance;
   private final RandomList<Structure> structures;
   private final RandomList<String> messages;
 
   @EventHandler(priority = EventPriority.LOWEST)
   public void onPlayerDeathEvent(PlayerDeathEvent event) {
-    if (event.getDrops().isEmpty()
-        || !event.getPlayer().getWorld().getName().equals(this.plugin.getWorldName())
-        || !Chance.of(this.chance)) {
+    if (event.getDrops().isEmpty()) {
+      return;
+    }
+
+    final var overworld = this.plugin.getWorld();
+
+    if (overworld == null) {
       return;
     }
 
@@ -105,18 +102,20 @@ public class DeathEvent implements Listener {
         Structure structure = null;
         int attempt = 0;
 
+        var playerLocation = event.getPlayer().getLocation();
+
+        if (!playerLocation.getWorld().getName().equals(plugin.getWorldName())) {
+          playerLocation = playerLocation.clone();
+          playerLocation.multiply(8);
+          playerLocation.setY(62);
+        }
+
         while (location == null && attempt < 8) {
           attempt++;
           structure = structures.next();
           final var structureSearch =
-              event
-                  .getPlayer()
-                  .getWorld()
-                  .locateNearestStructure(
-                      event.getPlayer().getLocation(),
-                      structure,
-                      2048,
-                      ThreadLocalRandom.current().nextBoolean());
+              overworld.locateNearestStructure(
+                  playerLocation, structure, 2048, ThreadLocalRandom.current().nextBoolean());
           if (structureSearch != null) {
             location = structureSearch.getLocation();
           }
@@ -131,6 +130,8 @@ public class DeathEvent implements Listener {
         final var itemsLocation =
             Util.getRandomLocationAroundLocation(
                 location, new BoundingBox(-30, 0, -30, 30, 90, 30));
+        final var y = ThreadLocalRandom.current().nextInt(-60, 128);
+        itemsLocation.setY(y);
         itemsLocation.setY(Util.getFloor(itemsLocation));
 
         final var chest1 = itemsLocation.getBlock();
@@ -177,21 +178,6 @@ public class DeathEvent implements Listener {
                         itemsLocation.getBlockX(),
                         itemsLocation.getBlockY(),
                         itemsLocation.getBlockZ())));
-
-        if (!Chance.of(lightningChance)) {
-          return;
-        }
-
-        final var lightiningLocation = event.getPlayer().getLocation().clone();
-        lightiningLocation.setY(Util.getFloor(event.getPlayer().getLocation()));
-        event.getPlayer().getWorld().strikeLightning(lightiningLocation);
-        if (!Chance.of(explosionChance)) {
-          return;
-        }
-        event
-            .getPlayer()
-            .getWorld()
-            .createExplosion(lightiningLocation, Util.randomFloat(0.0f, 16.0f), true, true);
       }
     }.runTask(this.plugin);
   }
