@@ -98,56 +98,72 @@ public class AutoSeedEvent implements Listener {
 
   @EventHandler
   public void onBlockClick(PlayerInteractEvent event) {
+    this.plugin.log(String.format("action = %s", event.getAction()), true);
     if (event.getAction() != Action.RIGHT_CLICK_BLOCK) {
       return;
     }
     final var itemInHand = event.getItem();
+    this.plugin.log(String.format("itemInHand = %s", itemInHand), true);
     if (itemInHand == null) {
       return;
     }
     final var itemInHandType = itemInHand.getType();
+    this.plugin.log(String.format("itemInHandType = %s", itemInHandType), true);
     if (!this.allowedSeeds.contains(itemInHandType)) {
       return;
     }
     final var plant = this.fromSeed.get(itemInHandType);
+    this.plugin.log(String.format("plant = %s", plant), true);
     if (plant == null) {
       return;
     }
     final var block = event.getClickedBlock();
+    this.plugin.log(String.format("block = %s", block), true);
     if (block == null) {
       return;
     }
+    this.plugin.log(String.format("getBlockFace = %s", event.getBlockFace()), true);
     if (event.getBlockFace() != BlockFace.UP) {
       return;
     }
     final var blockType = block.getType();
+    this.plugin.log(String.format("blockType = %s", blockType), true);
     if (blockType != Material.FARMLAND) {
       return;
     }
     final var player = event.getPlayer();
+    this.plugin.log(String.format("player.isSneaking = %s", player.isSneaking()), true);
     if (!player.isSneaking()) {
       return;
     }
     final var playerInventory = player.getInventory();
+    this.plugin.log(
+        String.format(
+            "playerInventory.contains(itemInHandType) = %s",
+            playerInventory.contains(itemInHandType)),
+        true);
     if (!playerInventory.contains(itemInHandType)) {
       return;
     }
     final var items = new ArrayList<ItemStack>();
     for (ItemStack itemStack : playerInventory) {
-      if (itemStack != null && itemStack.getType() == itemInHandType) {
+      if (itemStack != null && itemStack.getType().equals(itemInHandType)) {
         items.add(itemStack);
       }
     }
+    this.plugin.log(String.format("items.isEmpty() = %s", items.isEmpty()), true);
     if (items.isEmpty()) {
       return;
     }
-    final var isCreativeGameMode = player.getGameMode() == GameMode.CREATIVE;
+    final var isCreativeGameMode = player.getGameMode().equals(GameMode.CREATIVE);
     final var itemsAmount =
         isCreativeGameMode
             ? configAutoSeedMaxBlocks
             : items.stream().mapToInt(ItemStack::getAmount).sum();
+    this.plugin.log(String.format("itemsAmount = %s", itemsAmount), true);
     final var maxBlocks = Math.min(configAutoSeedMaxBlocks, itemsAmount);
     final var blocks = this.getBlocks(block, maxBlocks);
+    this.plugin.log(String.format("blocks.size() = %s", blocks.size()), true);
     for (Block _block : blocks) {
       if (!isCreativeGameMode) {
         this.removeOneFromStackList(items);
