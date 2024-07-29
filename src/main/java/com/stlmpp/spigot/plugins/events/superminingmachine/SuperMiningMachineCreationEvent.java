@@ -3,27 +3,19 @@ package com.stlmpp.spigot.plugins.events.superminingmachine;
 import com.stlmpp.spigot.plugins.StlmppPlugin;
 import com.stlmpp.spigot.plugins.StlmppPluginConfig;
 import com.stlmpp.spigot.plugins.utils.Pair;
-import com.stlmpp.spigot.plugins.utils.RandomList;
+import java.util.*;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.block.Chest;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
-
 public class SuperMiningMachineCreationEvent implements Listener {
 
-  @Nullable
   public static SuperMiningMachineCreationEvent register(@NotNull StlmppPlugin plugin) {
-    if (!plugin.config.getBoolean(StlmppPluginConfig.superMiningMachineEnabled)) {
-      return null;
-    }
     return new SuperMiningMachineCreationEvent(plugin);
   }
 
@@ -31,17 +23,11 @@ public class SuperMiningMachineCreationEvent implements Listener {
     this.plugin = plugin;
     this.maxSize = plugin.config.getInt(StlmppPluginConfig.superMiningMachineMaxSize);
     this.plugin.getServer().getPluginManager().registerEvents(this, plugin);
-    this.allowedWorlds =
-        new HashSet<>(List.of(this.plugin.getWorldName(), this.plugin.getWorldNetherName()));
-    this.onEnable();
   }
 
   private final int maxSize;
 
   private final StlmppPlugin plugin;
-  private final Set<Material> blockTypes =
-      new HashSet<>(List.of(Material.NETHERITE_BLOCK, Material.OBSIDIAN));
-  private final Set<String> allowedWorlds;
   private final BlockFace[] blockFaces = {
     BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST
   };
@@ -51,15 +37,18 @@ public class SuperMiningMachineCreationEvent implements Listener {
   }
 
   @EventHandler
-  public void onSuperMachineCreation(BlockPlaceEvent event) {
-    if (!this.blockTypes.contains(event.getBlock().getType())
-        || !this.allowedWorlds.contains(event.getBlock().getWorld().getName())) {
+  public void onBlockPlaceEvent(BlockPlaceEvent event) {
+    assert this.plugin.superMiningMachineManager != null;
+    if (!this.plugin.superMiningMachineManager.isBlockTypeValid(event.getBlock().getType())
+        || !this.plugin.superMiningMachineManager.isWorldValid(event.getBlock().getWorld())) {
       return;
     }
     final var blocksWithFaces =
         Arrays.stream(this.blockFaces)
             .map(face -> new Pair<>(event.getBlock().getRelative(face), face))
-            .filter(pair -> this.blockTypes.contains(pair.value0.getType()))
+            .filter(
+                pair ->
+                    this.plugin.superMiningMachineManager.isBlockTypeValid(pair.value0.getType()))
             .toList();
     if (blocksWithFaces.isEmpty()) {
       this.log("{1} No blocks found while searching for faces");
@@ -79,7 +68,9 @@ public class SuperMiningMachineCreationEvent implements Listener {
     final var netheriteFaces =
         Arrays.stream(this.blockFaces)
             .map(face -> new Pair<>(netheriteBlock.getRelative(face), face))
-            .filter(pair -> this.blockTypes.contains(pair.value0.getType()))
+            .filter(
+                pair ->
+                    this.plugin.superMiningMachineManager.isBlockTypeValid(pair.value0.getType()))
             .toList();
 
     if (netheriteFaces.isEmpty()) {
@@ -127,7 +118,7 @@ public class SuperMiningMachineCreationEvent implements Listener {
         if (remaining == null) {
           return;
         }
-        final HashSet<Block> allBlocks = new HashSet<>();
+        final List<Block> allBlocks = new ArrayList<>();
         allBlocks.add(netheriteBlock);
         allBlocks.add(bottomRight.value0);
         allBlocks.add(topLeft.value0);
@@ -138,7 +129,12 @@ public class SuperMiningMachineCreationEvent implements Listener {
         allBlocks.addAll(topRight.value1);
         superMiningMachine =
             new SuperMiningMachine(
-                allBlocks, netheriteBlock, bottomRight.value0, topLeft.value0, topRight.value0);
+                this.plugin,
+                allBlocks,
+                netheriteBlock,
+                bottomRight.value0,
+                topLeft.value0,
+                topRight.value0);
       } else {
         final var bottomLeft = this.findNextNetheriteAndObsidians(netheriteBlock, BlockFace.WEST);
         if (bottomLeft == null) {
@@ -156,7 +152,7 @@ public class SuperMiningMachineCreationEvent implements Listener {
         if (remaining == null) {
           return;
         }
-        final HashSet<Block> allBlocks = new HashSet<>();
+        final List<Block> allBlocks = new ArrayList<>();
         allBlocks.add(bottomLeft.value0);
         allBlocks.add(netheriteBlock);
         allBlocks.add(topLeft.value0);
@@ -167,7 +163,12 @@ public class SuperMiningMachineCreationEvent implements Listener {
         allBlocks.addAll(topRight.value1);
         superMiningMachine =
             new SuperMiningMachine(
-                allBlocks, bottomLeft.value0, remaining.value0, topLeft.value0, topRight.value0);
+                this.plugin,
+                allBlocks,
+                bottomLeft.value0,
+                remaining.value0,
+                topLeft.value0,
+                topRight.value0);
       }
     } else if (face1.equals(BlockFace.SOUTH)) {
       if (face2.equals(BlockFace.NORTH)) {
@@ -193,7 +194,7 @@ public class SuperMiningMachineCreationEvent implements Listener {
         if (remaining == null) {
           return;
         }
-        final HashSet<Block> allBlocks = new HashSet<>();
+        final List<Block> allBlocks = new ArrayList<>();
         allBlocks.add(bottomLeft.value0);
         allBlocks.add(bottomRight.value0);
         allBlocks.add(netheriteBlock);
@@ -204,7 +205,12 @@ public class SuperMiningMachineCreationEvent implements Listener {
         allBlocks.addAll(topRight.value1);
         superMiningMachine =
             new SuperMiningMachine(
-                allBlocks, bottomLeft.value0, bottomRight.value0, netheriteBlock, topRight.value0);
+                this.plugin,
+                allBlocks,
+                bottomLeft.value0,
+                bottomRight.value0,
+                netheriteBlock,
+                topRight.value0);
       } else {
         final var bottomRight = this.findNextNetheriteAndObsidians(netheriteBlock, BlockFace.SOUTH);
         if (bottomRight == null) {
@@ -222,7 +228,7 @@ public class SuperMiningMachineCreationEvent implements Listener {
         if (remaining == null) {
           return;
         }
-        final HashSet<Block> allBlocks = new HashSet<>();
+        final List<Block> allBlocks = new ArrayList<>();
         allBlocks.add(bottomLeft.value0);
         allBlocks.add(bottomRight.value0);
         allBlocks.add(topLeft.value0);
@@ -233,7 +239,12 @@ public class SuperMiningMachineCreationEvent implements Listener {
         allBlocks.addAll(remaining.value1);
         superMiningMachine =
             new SuperMiningMachine(
-                allBlocks, bottomLeft.value0, bottomRight.value0, topLeft.value0, netheriteBlock);
+                this.plugin,
+                allBlocks,
+                bottomLeft.value0,
+                bottomRight.value0,
+                topLeft.value0,
+                netheriteBlock);
       }
     }
 
@@ -242,58 +253,16 @@ public class SuperMiningMachineCreationEvent implements Listener {
       return;
     }
 
-    this.log(
-        String.format(
-            "SuperMiningMachine - blocks.size = %s | bottomLeft = %s | bottomRight = %s | topLeft = %s | topRight = %s | boundingBox = %s",
-            superMiningMachine.blocks.size(),
-            superMiningMachine.bottomLeftBlock,
-            superMiningMachine.bottomRightBlock,
-            superMiningMachine.topLeftBlock,
-            superMiningMachine.topRightBlock,
-            superMiningMachine.boundingBox));
-
-    final var item =
-        new RandomList<>(
-                List.of(
-                    Material.HONEY_BLOCK,
-                    Material.IRON_BLOCK,
-                    Material.EMERALD_BLOCK,
-                    Material.DIAMOND_BLOCK,
-                    Material.AMETHYST_BLOCK,
-                    Material.BAMBOO_BLOCK,
-                    Material.BONE_BLOCK,
-                    Material.COAL_BLOCK,
-                    Material.COPPER_BLOCK))
-            .next();
-
-    var location = event.getBlock().getLocation().clone();
-    location.set(
-        superMiningMachine.boundingBox.getMaxX() + 5,
-        event.getBlock().getY(),
-        superMiningMachine.boundingBox.getMaxZ() + 5);
-    location.getBlock().setType(Material.CHEST);
-    var state = (org.bukkit.block.Chest) location.getBlock().getState();
-
-    for (var x = superMiningMachine.innerBoundingBox.getMinX();
-        x <= superMiningMachine.innerBoundingBox.getMaxX();
-        x++) {
-      for (var z = superMiningMachine.innerBoundingBox.getMinZ();
-          z <= superMiningMachine.innerBoundingBox.getMaxZ();
-          z++) {
-        for (var y = event.getBlock().getY() - 1; y >= 0; y--) {
-          location.set(x, y, z);
-          final var block = event.getBlock().getWorld().getBlockAt(location);
-          if (!block.getType().isBlock()) {
-            final var drops = block.getDrops(new ItemStack(Material.DIAMOND_PICKAXE));
-            block.breakNaturally();
-            // if (state.getBlockInventory().)
-          }
-        }
-      }
+    assert plugin.superMiningMachineManager != null : "superMiningMachineManager is null";
+    if (plugin.superMiningMachineManager.isOverlappingAnotherMachine(
+        superMiningMachine.boundingBox)) {
+      this.log("{11} super mining machine is overlapping another machine");
+      return;
     }
 
-    //    blocksWithFaces.getFirst().value0.getDrops(new ItemStack(Material.DIAMOND_PICKAXE));
-    //    blocksWithFaces.getFirst().value0.breakNaturally();
+    this.log(String.format("SuperMiningMachine - %s", superMiningMachine));
+
+    this.plugin.superMiningMachineManager.addMachine(superMiningMachine);
   }
 
   private @Nullable Block getNetheriteBlock(
@@ -348,13 +317,5 @@ public class SuperMiningMachineCreationEvent implements Listener {
           String.format("{9} could not find next netherite block | direction = %s", direction));
     }
     return new Pair<>(nextBlock, allBlocks);
-  }
-
-  public void onEnable() {
-    // TODO reenable events
-  }
-
-  public void onDisable() {
-    // TODO cancel events
   }
 }

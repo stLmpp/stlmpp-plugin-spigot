@@ -2,7 +2,7 @@ package com.stlmpp.spigot.plugins;
 
 import com.stlmpp.spigot.plugins.events.*;
 import com.stlmpp.spigot.plugins.events.netherportalleaking.NetherPortalLeakingEvent;
-import com.stlmpp.spigot.plugins.events.superminingmachine.SuperMiningMachineCreationEvent;
+import com.stlmpp.spigot.plugins.events.superminingmachine.SuperMiningMachineManager;
 import com.stlmpp.spigot.plugins.tasks.NetherLightningTask;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -26,7 +26,7 @@ public class StlmppPlugin extends JavaPlugin {
 
   @Nullable private NetherPortalLeakingEvent netherPortalLeakingEvent;
   @Nullable private NetherLightningTask netherLightningTask;
-  @Nullable private SuperMiningMachineCreationEvent superMiningMachineCreationEvent;
+  @Nullable public SuperMiningMachineManager superMiningMachineManager;
 
   public String getWorldName() {
     return this.config.getString(StlmppPluginConfig.world);
@@ -55,7 +55,7 @@ public class StlmppPlugin extends JavaPlugin {
     this.netherPortalLeakingEvent = NetherPortalLeakingEvent.register(this);
     EggRandomEffectEvent.register(this);
     DeathEvent.register(this);
-    this.superMiningMachineCreationEvent = SuperMiningMachineCreationEvent.register(this);
+    this.superMiningMachineManager = SuperMiningMachineManager.register(this);
   }
 
   @Override
@@ -66,8 +66,8 @@ public class StlmppPlugin extends JavaPlugin {
     if (this.netherLightningTask != null) {
       this.netherLightningTask.stopLastTask();
     }
-    if (this.superMiningMachineCreationEvent != null) {
-      this.superMiningMachineCreationEvent.onDisable();
+    if (this.superMiningMachineManager != null) {
+      this.superMiningMachineManager.onDisable();
     }
   }
 }

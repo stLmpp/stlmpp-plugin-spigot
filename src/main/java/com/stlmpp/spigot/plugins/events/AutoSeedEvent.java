@@ -99,7 +99,7 @@ public class AutoSeedEvent implements Listener {
   @EventHandler
   public void onBlockClick(PlayerInteractEvent event) {
     this.plugin.log(String.format("action = %s", event.getAction()), true);
-    if (event.getAction() != Action.RIGHT_CLICK_BLOCK) {
+    if (!event.getAction().equals(Action.RIGHT_CLICK_BLOCK)) {
       return;
     }
     final var itemInHand = event.getItem();

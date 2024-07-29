@@ -2,6 +2,7 @@ package com.stlmpp.spigot.plugins.utils;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Predicate;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -197,5 +198,15 @@ public class Util {
     }
     return startInclusive
         + ((endExclusive - startInclusive) * ThreadLocalRandom.current().nextFloat());
+  }
+
+  @Nullable
+  public static <T> T findFirst(Collection<T> collection, Predicate<T> predicate) {
+    for (var element : collection) {
+      if (predicate.test(element)) {
+        return element;
+      }
+    }
+    return null;
   }
 }

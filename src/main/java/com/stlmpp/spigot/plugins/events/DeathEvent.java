@@ -163,7 +163,7 @@ public class DeathEvent implements Listener {
             if (item == null) {
               continue;
             }
-            plugin.log(String.format("item = %s", item));
+            plugin.log(String.format("item = %s", item), true);
             doubleChest.getInventory().addItem(item);
           }
         }

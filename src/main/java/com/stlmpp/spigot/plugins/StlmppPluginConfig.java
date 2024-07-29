@@ -73,7 +73,7 @@ public class StlmppPluginConfig {
     config.addDefault(StlmppPluginConfig.eggRandomEventChance, 10.0d);
     config.addDefault(StlmppPluginConfig.deathEventEnabled, true);
     config.addDefault(StlmppPluginConfig.superMiningMachineEnabled, true);
-    config.addDefault(StlmppPluginConfig.superMiningMachineMaxSize, 15);
+    config.addDefault(StlmppPluginConfig.superMiningMachineMaxSize, 30);
     config.options().copyDefaults(true);
     plugin.saveConfig();
     plugin.isDevMode = config.getBoolean(devMode);
