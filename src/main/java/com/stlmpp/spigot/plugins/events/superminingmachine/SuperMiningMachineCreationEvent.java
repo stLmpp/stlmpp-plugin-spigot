@@ -68,9 +68,7 @@ public class SuperMiningMachineCreationEvent implements Listener {
     final var netheriteFaces =
         Arrays.stream(this.blockFaces)
             .map(face -> new Pair<>(netheriteBlock.getRelative(face), face))
-            .filter(
-                pair ->
-                    this.plugin.superMiningMachineManager.isBlockTypeValid(pair.value0.getType()))
+            .filter(pair -> pair.value0.getType().equals(Material.OBSIDIAN))
             .toList();
 
     if (netheriteFaces.isEmpty()) {
@@ -94,8 +92,9 @@ public class SuperMiningMachineCreationEvent implements Listener {
       return;
     }
 
-    SuperMiningMachine superMiningMachine = null;
+    SuperMiningMachine machine = null;
 
+    // TODO enhance this algorithm by creating a helper class or something, this is ugly
     if (face1.equals(BlockFace.NORTH)) {
       if (face2.equals(BlockFace.SOUTH)) {
         this.log("{7} invalid faces (north and south)");
@@ -127,7 +126,7 @@ public class SuperMiningMachineCreationEvent implements Listener {
         allBlocks.addAll(bottomRight.value1);
         allBlocks.addAll(topLeft.value1);
         allBlocks.addAll(topRight.value1);
-        superMiningMachine =
+        machine =
             new SuperMiningMachine(
                 this.plugin,
                 allBlocks,
@@ -161,7 +160,7 @@ public class SuperMiningMachineCreationEvent implements Listener {
         allBlocks.addAll(remaining.value1);
         allBlocks.addAll(topLeft.value1);
         allBlocks.addAll(topRight.value1);
-        superMiningMachine =
+        machine =
             new SuperMiningMachine(
                 this.plugin,
                 allBlocks,
@@ -203,7 +202,7 @@ public class SuperMiningMachineCreationEvent implements Listener {
         allBlocks.addAll(bottomRight.value1);
         allBlocks.addAll(remaining.value1);
         allBlocks.addAll(topRight.value1);
-        superMiningMachine =
+        machine =
             new SuperMiningMachine(
                 this.plugin,
                 allBlocks,
@@ -237,7 +236,7 @@ public class SuperMiningMachineCreationEvent implements Listener {
         allBlocks.addAll(bottomRight.value1);
         allBlocks.addAll(topLeft.value1);
         allBlocks.addAll(remaining.value1);
-        superMiningMachine =
+        machine =
             new SuperMiningMachine(
                 this.plugin,
                 allBlocks,
@@ -248,25 +247,36 @@ public class SuperMiningMachineCreationEvent implements Listener {
       }
     }
 
-    if (superMiningMachine == null) {
+    if (machine == null) {
       this.log("{10} could not create super mining machine");
       return;
     }
 
-    assert plugin.superMiningMachineManager != null : "superMiningMachineManager is null";
-    if (plugin.superMiningMachineManager.isOverlappingAnotherMachine(
-        superMiningMachine.boundingBox)) {
+    assert plugin.superMiningMachineManager != null;
+    if (plugin.superMiningMachineManager.isOverlappingAnotherMachine(machine.boundingBox)) {
       this.log("{11} super mining machine is overlapping another machine");
       return;
     }
 
-    this.log(String.format("SuperMiningMachine - %s", superMiningMachine));
+    // TODO check if machine has been created before at the same spot and deny it
 
-    this.plugin.superMiningMachineManager.addMachine(superMiningMachine);
+    this.log(String.format("SuperMiningMachine - %s", machine));
+
+    this.plugin.superMiningMachineManager.addMachine(machine);
+
+    this.plugin.sendMessage(
+        String.format(
+            "%s criou uma escavadeira de %s por %s, com custo de %s levels",
+            event.getPlayer().getName(),
+            (int) machine.boundingBox.getWidthX() - 1,
+            (int) machine.boundingBox.getWidthZ() - 1,
+            machine.getExpLevelRequired()));
+
+    machine.construct();
   }
 
   private @Nullable Block getNetheriteBlock(
-      BlockPlaceEvent event, List<Pair<Block, BlockFace>> blocksWithFaces) {
+      @NotNull BlockPlaceEvent event, @NotNull List<Pair<Block, BlockFace>> blocksWithFaces) {
     Block netheriteBlock = null;
     if (!event.getBlock().getType().equals(Material.NETHERITE_BLOCK)) {
       final var block1 = blocksWithFaces.getFirst().value0;
@@ -315,6 +325,7 @@ public class SuperMiningMachineCreationEvent implements Listener {
     if (!nextBlock.getType().equals(Material.NETHERITE_BLOCK)) {
       this.log(
           String.format("{9} could not find next netherite block | direction = %s", direction));
+      return null;
     }
     return new Pair<>(nextBlock, allBlocks);
   }

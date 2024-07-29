@@ -27,6 +27,7 @@ public class SuperMiningMachineManager {
     SuperMiningMachineCreationEvent.register(plugin);
     SuperMiningMachineStartEvent.register(plugin);
     SuperMiningMachineDestroyEvent.register(plugin);
+    this.onEnable();
   }
 
   private final StlmppPlugin plugin;
@@ -59,6 +60,7 @@ public class SuperMiningMachineManager {
 
   public void addMachine(SuperMiningMachine machine) {
     this.machines.put(machine.getId(), machine);
+    // TODO persist machine
   }
 
   public void onEnable() {
@@ -68,6 +70,7 @@ public class SuperMiningMachineManager {
   public void onDisable() {
     for (SuperMiningMachine machine : machines.values()) {
       machine.stop();
+      // TODO persist machine
     }
   }
 }

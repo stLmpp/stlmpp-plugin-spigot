@@ -4,6 +4,7 @@ import com.stlmpp.spigot.plugins.events.*;
 import com.stlmpp.spigot.plugins.events.netherportalleaking.NetherPortalLeakingEvent;
 import com.stlmpp.spigot.plugins.events.superminingmachine.SuperMiningMachineManager;
 import com.stlmpp.spigot.plugins.tasks.NetherLightningTask;
+import net.kyori.adventure.text.Component;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -19,6 +20,10 @@ public class StlmppPlugin extends JavaPlugin {
     if (!onlyDevMode || this.isDevMode) {
       this.getLogger().info(String.format("[StlmppPlugin] %s", message));
     }
+  }
+
+  public void sendMessage(String message) {
+    this.getServer().broadcast(Component.text(message));
   }
 
   public final FileConfiguration config = this.getConfig();

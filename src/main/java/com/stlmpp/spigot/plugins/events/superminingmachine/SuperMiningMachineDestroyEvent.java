@@ -35,6 +35,7 @@ public class SuperMiningMachineDestroyEvent implements Listener {
       return;
     }
     // TODO figure out why the sound is not playing
+    // TODO send message saying that the machine is broken
     event
         .getBlock()
         .getWorld()

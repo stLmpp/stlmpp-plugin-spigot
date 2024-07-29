@@ -3,10 +3,11 @@ package com.stlmpp.spigot.plugins.utils;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Predicate;
-
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.util.BoundingBox;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -208,5 +209,71 @@ public class Util {
       }
     }
     return null;
+  }
+
+  private static final BlockFace[] blockFaces = {
+    BlockFace.NORTH,
+    BlockFace.EAST,
+    BlockFace.SOUTH,
+    BlockFace.WEST,
+    BlockFace.UP,
+    BlockFace.DOWN,
+    BlockFace.NORTH_EAST,
+    BlockFace.NORTH_WEST,
+    BlockFace.SOUTH_EAST,
+    BlockFace.SOUTH_WEST
+  };
+
+  private static List<Block> getRelatives(@NotNull Block block) {
+    return Arrays.stream(blockFaces).map(block::getRelative).toList();
+  }
+
+  public static HashSet<Block> getBlocksAround(Block startBlock) {
+    int currentIteration = 0;
+    final var blocks = new HashSet<Block>();
+    final var visited = new HashSet<Block>();
+    blocks.add(startBlock);
+    final var queue = new LinkedList<>(getRelatives(startBlock));
+    while (!queue.isEmpty() && currentIteration < 1024) {
+      currentIteration++;
+      final var block = queue.remove();
+      if (visited.contains(block)) {
+        continue;
+      }
+      visited.add(block);
+      if (!block.getType().equals(startBlock.getType())) {
+        continue;
+      }
+      blocks.add(block);
+      queue.addAll(getRelatives(block));
+    }
+    return blocks;
+  }
+
+  private static final HashSet<Material> ores =
+      new HashSet<>(
+          List.of(
+              Material.IRON_ORE,
+              Material.COAL_ORE,
+              Material.DIAMOND_ORE,
+              Material.COPPER_ORE,
+              Material.EMERALD_ORE,
+              Material.GOLD_ORE,
+              Material.LAPIS_ORE,
+              Material.REDSTONE_ORE,
+              Material.DEEPSLATE_IRON_ORE,
+              Material.DEEPSLATE_COAL_ORE,
+              Material.DEEPSLATE_DIAMOND_ORE,
+              Material.DEEPSLATE_COPPER_ORE,
+              Material.DEEPSLATE_EMERALD_ORE,
+              Material.DEEPSLATE_GOLD_ORE,
+              Material.DEEPSLATE_LAPIS_ORE,
+              Material.DEEPSLATE_REDSTONE_ORE,
+              Material.NETHER_GOLD_ORE,
+              Material.NETHER_QUARTZ_ORE,
+              Material.ANCIENT_DEBRIS));
+
+  public static boolean isOre(Block block) {
+    return ores.contains(block.getType());
   }
 }

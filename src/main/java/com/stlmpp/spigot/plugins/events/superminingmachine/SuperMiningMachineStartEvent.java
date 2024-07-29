@@ -1,7 +1,9 @@
 package com.stlmpp.spigot.plugins.events.superminingmachine;
 
 import com.stlmpp.spigot.plugins.StlmppPlugin;
+import org.bukkit.GameMode;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
@@ -40,11 +42,42 @@ public class SuperMiningMachineStartEvent implements Listener {
     assert this.plugin.superMiningMachineManager != null;
     final var machine = this.plugin.superMiningMachineManager.getMachineByNetheriteBlock(block);
     if (machine == null) {
+      // TODO check why the machine is not being found in certain blocks
       this.plugin.log(String.format("machine not found with block %s", block), true);
       return;
     }
-    // TODO check if player has enough experience and consume it
-    player.getInventory().getItemInMainHand().subtract(1);
+    final var isCreative = player.getGameMode().equals(GameMode.CREATIVE);
+    if (!machine.getIsRunning()) {
+      this.startMachine(player, machine, isCreative);
+      return;
+    }
+    if (machine.hasMaxBoost()) {
+      this.plugin.sendMessage(
+          String.format("%s, essa maquina ja esta com o boost maximo!", player.getName()));
+      return;
+    }
+    machine.addBoost();
+    if (!isCreative) {
+      player.getInventory().getItemInMainHand().subtract(1);
+    }
+    this.plugin.sendMessage(
+        String.format(
+            "%s adicionou um boost na escavadeira! Boost total de %s%%",
+            player.getName(), (int) Math.floor(machine.getBoost() * 100)));
+  }
+
+  private void startMachine(Player player, SuperMiningMachine machine, boolean isCreative) {
+    if (player.getLevel() < machine.getExpLevelRequired() && !isCreative) {
+      this.plugin.sendMessage(
+          String.format(
+              "%s, essa escavadeira custa %s levels, voce tem %s levels",
+              player.getName(), machine.getExpLevelRequired(), player.getLevel()));
+      return;
+    }
+    if (!isCreative) {
+      player.setLevel(player.getLevel() - machine.getExpLevelRequired());
+      player.getInventory().getItemInMainHand().subtract(1);
+    }
     machine.start();
   }
 }

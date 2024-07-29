@@ -15,6 +15,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class AutoSeedEvent implements Listener {
@@ -53,11 +54,11 @@ public class AutoSeedEvent implements Listener {
   private final Map<Material, Material> fromSeed = new HashMap<>();
   private final int configAutoSeedMaxBlocks;
 
-  private List<Block> getRelatives(Block block) {
+  private List<Block> getRelatives(@NotNull Block block) {
     return Arrays.stream(this.blockFaces).map(block::getRelative).toList();
   }
 
-  private Set<Block> getBlocks(Block startBlock, int maxBlocks) {
+  private @NotNull Set<Block> getBlocks(Block startBlock, int maxBlocks) {
     int currentIteration = 0;
     final var blocks = new HashSet<Block>();
     final var visited = new HashSet<Block>();
