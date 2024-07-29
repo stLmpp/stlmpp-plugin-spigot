@@ -3,9 +3,8 @@ package com.stlmpp.spigot.plugins.events.superminingmachine;
 import com.stlmpp.spigot.plugins.StlmppPlugin;
 import com.stlmpp.spigot.plugins.utils.RandomList;
 import com.stlmpp.spigot.plugins.utils.Tick;
-import java.util.*;
-
 import com.stlmpp.spigot.plugins.utils.Util;
+import java.util.*;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -236,7 +235,10 @@ public class SuperMiningMachine {
       }
       block = this.lastBlockVector.toLocation(this.bottomLeftBlock.getWorld()).getBlock();
       this.increaseLastBlockVector();
-    } while (!block.getType().isSolid()
+
+    } while (!block.getType().equals(Material.WATER)
+        || !block.getType().equals(Material.LAVA)
+        || !block.getType().isSolid()
         || !block.getType().isBlock()
         || block.getType().equals(Material.BEDROCK));
     return block;
@@ -273,12 +275,36 @@ public class SuperMiningMachine {
             final var pickaxe = new ItemStack(Material.DIAMOND_PICKAXE);
             pickaxe.addEnchantment(Enchantment.FORTUNE, 3);
             Collection<ItemStack> drops = new ArrayList<>();
+            // TODO replace this bunch of if elses
             if (Util.isOre(block)) {
               final var allOres = Util.getBlocksAround(block);
               for (Block oreBlock : allOres) {
                 drops.addAll(oreBlock.getDrops(pickaxe));
                 oreBlock.breakNaturally();
               }
+            } else if (block.getType().equals(Material.WATER)) {
+              drops.add(new ItemStack(Material.WATER_BUCKET));
+              block.setType(Material.AIR);
+            } else if (block.getType().equals(Material.LAVA)) {
+              drops.add(new ItemStack(Material.LAVA_BUCKET));
+              block.setType(Material.AIR);
+            } else if (block.getType().equals(Material.CHEST)) {
+              final var isDoubleChest =
+                  ((org.bukkit.block.Chest) block).getInventory().getHolder()
+                      instanceof DoubleChest;
+              final var inventory =
+                  ((org.bukkit.block.Chest) block).getInventory().getHolder()
+                          instanceof DoubleChest doubleChest
+                      ? doubleChest.getInventory()
+                      : ((org.bukkit.block.Chest) block).getInventory();
+              drops.addAll(List.of(inventory.getContents()));
+              final var chestStack = new ItemStack(Material.CHEST);
+              if (isDoubleChest) {
+                chestStack.add();
+              }
+              drops.add(chestStack);
+            } else if (block.getType().equals(Material.SPAWNER)) {
+              // TODO
             } else {
               drops.addAll(block.getDrops(pickaxe));
               block.breakNaturally();
@@ -367,7 +393,21 @@ public class SuperMiningMachine {
       for (var z = (int) innerBoundingBox.getMinZ(); z <= innerBoundingBox.getMaxZ(); z++) {
         final var block = bottomLeftBlock.getWorld().getBlockAt(x, glassY, z);
         block.setType(randomGlassList.next());
-        this.blockVectors.add(block.getLocation().toVector().toBlockVector());
+      }
+    }
+    for (var vector : this.blockVectors) {
+      var location = vector.toLocation(bottomLeftBlock.getWorld());
+      final var floor = Util.getFloor(location.clone().subtract(0, 1, 0));
+      final var blockFloorY = vector.getBlockY() - 1;
+      if (floor == blockFloorY) {
+        continue;
+      }
+      final var isNetherite = location.getBlock().getType().equals(Material.NETHERITE_BLOCK);
+      for (var y = blockFloorY; y >= floor; y--) {
+        location.setY(y);
+        location
+            .getBlock()
+            .setType(isNetherite ? Material.IRON_BLOCK : this.randomGlassList.next());
       }
     }
   }

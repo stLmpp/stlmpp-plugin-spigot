@@ -28,10 +28,7 @@ public class SuperMiningMachineDestroyEvent implements Listener {
       return;
     }
     final var machine = this.plugin.superMiningMachineManager.getMachineByBlock(event.getBlock());
-    if (machine == null) {
-      return;
-    }
-    if (!machine.getIsRunning()) {
+    if (machine == null || !machine.getIsRunning()) {
       return;
     }
     // TODO figure out why the sound is not playing
@@ -40,6 +37,7 @@ public class SuperMiningMachineDestroyEvent implements Listener {
         .getBlock()
         .getWorld()
         .playSound(event.getBlock().getLocation(), Sound.BLOCK_ANVIL_BREAK, 3.0f, 1f);
+    // TODO what will happen when someone breaks the machine? Maybe break some blocks of it
     machine.stop();
   }
 }

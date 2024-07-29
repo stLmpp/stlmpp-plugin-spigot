@@ -2,10 +2,7 @@ package com.stlmpp.spigot.plugins.events;
 
 import com.stlmpp.spigot.plugins.StlmppPlugin;
 import com.stlmpp.spigot.plugins.StlmppPluginConfig;
-import com.stlmpp.spigot.plugins.utils.Util;
-
 import java.util.*;
-
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -39,18 +36,21 @@ public class AutoSeedEvent implements Listener {
     this.fromSeed.put(Material.BEETROOT_SEEDS, Material.BEETROOTS);
     this.fromSeed.put(Material.POTATO, Material.POTATOES);
     this.fromSeed.put(Material.CARROT, Material.CARROTS);
-    final var allowedSeedNames =
-        this.plugin.config.getList(StlmppPluginConfig.autoSeedAllowedSeedList);
-    if (allowedSeedNames != null) {
-      Util.setMaterialsFromNames(this.allowedSeeds, allowedSeedNames);
-    }
   }
 
   private final StlmppPlugin plugin;
   private final BlockFace[] blockFaces = {
     BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST
   };
-  private final Set<Material> allowedSeeds = new HashSet<>();
+  private final Set<Material> allowedSeeds =
+      new HashSet<>(
+          List.of(
+              Material.WHEAT_SEEDS,
+              Material.MELON_SEEDS,
+              Material.BEETROOT_SEEDS,
+              Material.PUMPKIN_SEEDS,
+              Material.POTATO,
+              Material.CARROT));
   private final Map<Material, Material> fromSeed = new HashMap<>();
   private final int configAutoSeedMaxBlocks;
 

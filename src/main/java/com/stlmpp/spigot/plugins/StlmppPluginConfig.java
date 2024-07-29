@@ -17,7 +17,6 @@ public class StlmppPluginConfig {
   public static final String worldNether = "world-nether";
   public static final String autoSeedMaxBlocks = "auto-seed-max-blocks";
   public static final String autoSeedEnabled = "auto-seed-enabled";
-  public static final String autoSeedAllowedSeedList = "auto-seed-allowed-seed-list";
   public static final String tpLightningEnabled = "tp-lightning-enabled";
   public static final String tpLightningNetherBlocksRadius = "tp-lightning-nether-blocks-radius";
   public static final String tpLightningChance = "tp-lightning-chance";
@@ -49,16 +48,6 @@ public class StlmppPluginConfig {
     config.addDefault(StlmppPluginConfig.worldNether, "world_nether");
     config.addDefault(StlmppPluginConfig.autoSeedEnabled, true);
     config.addDefault(StlmppPluginConfig.autoSeedMaxBlocks, 60);
-    config.addDefault(
-        StlmppPluginConfig.autoSeedAllowedSeedList,
-        new String[] {
-          Material.WHEAT_SEEDS.name(),
-          Material.MELON_SEEDS.name(),
-          Material.BEETROOT_SEEDS.name(),
-          Material.PUMPKIN_SEEDS.name(),
-          Material.POTATO.name(),
-          Material.CARROT.name(),
-        });
     config.addDefault(StlmppPluginConfig.world, "world");
     config.addDefault(StlmppPluginConfig.tpLightningEnabled, true);
     config.addDefault(StlmppPluginConfig.tpLightningChance, 75d);

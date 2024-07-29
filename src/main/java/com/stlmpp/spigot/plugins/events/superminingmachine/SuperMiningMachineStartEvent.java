@@ -79,5 +79,6 @@ public class SuperMiningMachineStartEvent implements Listener {
       player.getInventory().getItemInMainHand().subtract(1);
     }
     machine.start();
+    // TODO add message of start
   }
 }
