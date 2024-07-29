@@ -272,7 +272,7 @@ public class SuperMiningMachineCreationEvent implements Listener {
             (int) machine.boundingBox.getWidthZ() - 1,
             machine.getExpLevelRequired()));
 
-    machine.construct();
+    machine.createBaseStructure();
   }
 
   private @Nullable Block getNetheriteBlock(

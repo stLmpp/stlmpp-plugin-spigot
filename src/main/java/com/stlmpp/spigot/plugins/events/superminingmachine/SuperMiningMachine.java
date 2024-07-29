@@ -357,10 +357,11 @@ public class SuperMiningMachine {
     this.isRunning = false;
   }
 
-  public void construct() {
+  public void createBaseStructure() {
     // TODO figure out a better construction
     // TODO play sound of construction
     // TODO add sign with experience level required and id
+    // TODO if structure is above ground, create iron blocks around it
     final var glassY = (int) innerBoundingBox.getMaxY();
     for (var x = (int) innerBoundingBox.getMinX(); x <= innerBoundingBox.getMaxX(); x++) {
       for (var z = (int) innerBoundingBox.getMinZ(); z <= innerBoundingBox.getMaxZ(); z++) {
