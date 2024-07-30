@@ -1,7 +1,7 @@
 package com.stlmpp.spigot.plugins.events.superminingmachine;
 
 import com.stlmpp.spigot.plugins.StlmppPlugin;
-import com.stlmpp.spigot.plugins.utils.RandomList;
+import com.stlmpp.spigot.plugins.utils.BlockHashSet;
 import com.stlmpp.spigot.plugins.utils.Tick;
 import com.stlmpp.spigot.plugins.utils.Util;
 import java.util.*;
@@ -34,31 +34,18 @@ public class SuperMiningMachine {
       @NotNull Block topLeftBlock,
       @NotNull Block topRightBlock) {
     this.plugin = plugin;
-    this.blockVectors =
-        new HashSet<>(
-            blocks.stream().map(block -> block.getLocation().toVector().toBlockVector()).toList());
+    this.corners =
+        new BlockHashSet(
+            bottomLeftBlock.getWorld(),
+            List.of(bottomLeftBlock, bottomRightBlock, topLeftBlock, topRightBlock));
+    this.blocks = new BlockHashSet(bottomLeftBlock.getWorld(), blocks);
     this.bottomLeftBlock = bottomLeftBlock;
     this.bottomRightBlock = bottomRightBlock;
     this.topLeftBlock = topLeftBlock;
     this.topRightBlock = topRightBlock;
-    final var xList =
-        List.of(
-            bottomLeftBlock.getX(),
-            bottomRightBlock.getX(),
-            topLeftBlock.getX(),
-            topRightBlock.getX());
-    final var yList =
-        List.of(
-            bottomLeftBlock.getY(),
-            bottomRightBlock.getY(),
-            topLeftBlock.getY(),
-            topRightBlock.getY());
-    final var zList =
-        List.of(
-            bottomLeftBlock.getZ(),
-            bottomRightBlock.getZ(),
-            topLeftBlock.getZ(),
-            topRightBlock.getZ());
+    final var xList = this.corners.stream().map(Block::getX).toList();
+    final var yList = this.corners.stream().map(Block::getY).toList();
+    final var zList = this.corners.stream().map(Block::getZ).toList();
     this.boundingBox =
         new BoundingBox(
             xList.stream().mapToInt(v -> v).min().orElse(0),
@@ -84,26 +71,6 @@ public class SuperMiningMachine {
             this.boundingBox.getMax().getBlockX(),
             this.boundingBox.getMax().getBlockY(),
             this.boundingBox.getMax().getBlockZ());
-    this.randomGlassList =
-        new RandomList<>(
-            List.of(
-                Material.GLASS,
-                Material.WHITE_STAINED_GLASS,
-                Material.ORANGE_STAINED_GLASS,
-                Material.MAGENTA_STAINED_GLASS,
-                Material.LIGHT_BLUE_STAINED_GLASS,
-                Material.YELLOW_STAINED_GLASS,
-                Material.LIME_STAINED_GLASS,
-                Material.PINK_STAINED_GLASS,
-                Material.GRAY_STAINED_GLASS,
-                Material.LIGHT_GRAY_STAINED_GLASS,
-                Material.CYAN_STAINED_GLASS,
-                Material.PURPLE_STAINED_GLASS,
-                Material.BLUE_STAINED_GLASS,
-                Material.BROWN_STAINED_GLASS,
-                Material.GREEN_STAINED_GLASS,
-                Material.RED_STAINED_GLASS,
-                Material.BLACK_STAINED_GLASS));
     this.expLevelRequired =
         (int) Math.floor(this.boundingBox.getWidthX() + this.boundingBox.getWidthZ() - 2);
     this.lastBlockVector =
@@ -116,19 +83,19 @@ public class SuperMiningMachine {
 
   public final BoundingBox boundingBox;
   public final BoundingBox innerBoundingBox;
-  public final HashSet<BlockVector> blockVectors;
   public final Block bottomLeftBlock;
   public final Block bottomRightBlock;
   public final Block topLeftBlock;
   public final Block topRightBlock;
 
+  private final BlockHashSet blocks;
   private final int minY;
   private final String id;
   private final StlmppPlugin plugin;
   private final int expLevelRequired;
   private final List<DoubleChest> chests = new ArrayList<>();
-  private final RandomList<Material> randomGlassList;
   private final double maxBoost = 0.85;
+  private final BlockHashSet corners;
 
   private double boostFactor = 0;
   private int boostTimes = 0;
@@ -137,6 +104,14 @@ public class SuperMiningMachine {
   @Nullable private BlockVector signLocation = null;
   @Nullable private BlockVector lastBlockVector;
   @Nullable private BukkitTask lastTask;
+
+  public BlockHashSet getCorners() {
+    return this.corners;
+  }
+
+  public BlockHashSet getBlocks() {
+    return this.blocks;
+  }
 
   public String getId() {
     return this.id;
@@ -165,30 +140,11 @@ public class SuperMiningMachine {
   }
 
   public boolean hasNetheriteBlock(@NotNull Block block) {
-    return this.bottomLeftBlock
-            .getLocation()
-            .toVector()
-            .toBlockVector()
-            .equals(block.getLocation().toVector().toBlockVector())
-        || this.bottomRightBlock
-            .getLocation()
-            .toVector()
-            .toBlockVector()
-            .equals(block.getLocation().toVector().toBlockVector())
-        || this.topLeftBlock
-            .getLocation()
-            .toVector()
-            .toBlockVector()
-            .equals(block.getLocation().toVector().toBlockVector())
-        || this.topRightBlock
-            .getLocation()
-            .toVector()
-            .toBlockVector()
-            .equals(block.getLocation().toVector().toBlockVector());
+    return this.corners.contains(block);
   }
 
   public boolean hasBlock(@NotNull Block block) {
-    return this.blockVectors.contains(block.getLocation().toVector().toBlockVector());
+    return this.blocks.contains(block);
   }
 
   public void start() {
@@ -234,8 +190,6 @@ public class SuperMiningMachine {
   private boolean isValidBlockToMine(@NotNull Block block) {
     final var type = block.getType();
     return (type.isBlock() && block.isSolid() && !type.equals(Material.BEDROCK))
-        || type.equals(Material.WATER)
-        || type.equals(Material.LAVA)
         || type.equals(Material.CHEST);
   }
 
@@ -289,12 +243,9 @@ public class SuperMiningMachine {
                 drops.addAll(oreBlock.getDrops(pickaxe));
                 oreBlock.setType(Material.AIR);
               }
-            } else if (block.getType().equals(Material.WATER)) {
-              drops.add(new ItemStack(Material.WATER_BUCKET));
-            } else if (block.getType().equals(Material.LAVA)) {
-              drops.add(new ItemStack(Material.LAVA_BUCKET));
             } else if (block.getType().equals(Material.CHEST)) {
-              final var chest = (org.bukkit.block.Chest) block;
+              // TODO this is crashing the server somehow
+              final var chest = (org.bukkit.block.Chest) block.getState();
               final var isDoubleChest = chest.getInventory().getHolder() instanceof DoubleChest;
               final var inventory =
                   isDoubleChest
@@ -440,11 +391,11 @@ public class SuperMiningMachine {
     for (var x = (int) innerBoundingBox.getMinX(); x <= innerBoundingBox.getMaxX(); x++) {
       for (var z = (int) innerBoundingBox.getMinZ(); z <= innerBoundingBox.getMaxZ(); z++) {
         final var block = bottomLeftBlock.getWorld().getBlockAt(x, glassY, z);
-        block.setType(randomGlassList.next());
+        block.setType(Util.randomGlassList.next());
       }
     }
-    for (var vector : this.blockVectors) {
-      final var location = vector.toLocation(bottomLeftBlock.getWorld());
+    for (var block : this.blocks) {
+      final var location = block.getLocation();
       final var isNetherite = location.getBlock().getType().equals(Material.NETHERITE_BLOCK);
       final var blockFloorY = location.getBlockY() - 1;
       Util.setUntilSolid(
@@ -453,7 +404,7 @@ public class SuperMiningMachine {
             if (y == blockFloorY || isNextSolid) {
               return Material.IRON_BLOCK;
             }
-            return isNetherite ? Material.IRON_BLOCK : this.randomGlassList.next();
+            return isNetherite ? Material.IRON_BLOCK : Util.randomGlassList.next();
           });
     }
   }
@@ -463,7 +414,7 @@ public class SuperMiningMachine {
     return String.format(
         "SuperMiningMachine - blocks.size = %s | bottomLeft = %s | bottomRight = %s "
             + "| topLeft = %s | topRight = %s | boundingBox = %s | innerBoundingBox = %s",
-        this.blockVectors.size(),
+        this.blocks.size(),
         this.bottomLeftBlock,
         this.bottomRightBlock,
         this.topLeftBlock,
@@ -476,7 +427,7 @@ public class SuperMiningMachine {
     final HashMap<String, Object> map = new HashMap<>();
     map.put("is_running", this.isRunning);
     map.put("chests", this.chests); // TODO
-    map.put("blocks", this.blockVectors); // TODO;
+    map.put("blocks", this.blocks); // TODO;
     map.put("sign_location", this.signLocation); // TODO
     // TODO complete
     return map;

@@ -42,7 +42,6 @@ public class SuperMiningMachineStartEvent implements Listener {
     assert this.plugin.superMiningMachineManager != null;
     final var machine = this.plugin.superMiningMachineManager.getMachineByNetheriteBlock(block);
     if (machine == null) {
-      // TODO check why the machine is not being found in certain blocks
       this.plugin.log(String.format("machine not found with block %s", block), true);
       return;
     }

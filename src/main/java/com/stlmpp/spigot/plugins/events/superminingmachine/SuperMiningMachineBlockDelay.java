@@ -12,22 +12,22 @@ public class SuperMiningMachineBlockDelay {
     map = new HashMap<>();
 
     // Ores
-    map.put(Material.IRON_ORE, 1.25);
-    map.put(Material.COAL_ORE, 0.85);
+    map.put(Material.IRON_ORE, 4.0);
+    map.put(Material.COAL_ORE, 8.0);
     map.put(Material.DIAMOND_ORE, 5.0);
-    map.put(Material.COPPER_ORE, 3.0);
+    map.put(Material.COPPER_ORE, 9.0);
     map.put(Material.EMERALD_ORE, 7.0);
-    map.put(Material.GOLD_ORE, 4.0);
-    map.put(Material.LAPIS_ORE, 1.0);
+    map.put(Material.GOLD_ORE, 6.0);
+    map.put(Material.LAPIS_ORE, 3.0);
     map.put(Material.REDSTONE_ORE, 2.0);
-    map.put(Material.DEEPSLATE_IRON_ORE, 1.25 + 0.1);
-    map.put(Material.DEEPSLATE_COAL_ORE, 0.85 + 0.09);
+    map.put(Material.DEEPSLATE_IRON_ORE, 4.0 + 1.1);
+    map.put(Material.DEEPSLATE_COAL_ORE, 8.0 + 1.5);
     map.put(Material.DEEPSLATE_DIAMOND_ORE, 5.0 + 2.0);
-    map.put(Material.DEEPSLATE_COPPER_ORE, 3.0 + 1.75);
+    map.put(Material.DEEPSLATE_COPPER_ORE, 9.0 + 3.75);
     map.put(Material.DEEPSLATE_EMERALD_ORE, 7.0 + 3.0);
-    map.put(Material.DEEPSLATE_GOLD_ORE, 4.0 + 1.0);
-    map.put(Material.DEEPSLATE_LAPIS_ORE, 1.0 + 1.5);
-    map.put(Material.DEEPSLATE_REDSTONE_ORE, 2.0 + 1.2);
+    map.put(Material.DEEPSLATE_GOLD_ORE, 6.0 + 2.2);
+    map.put(Material.DEEPSLATE_LAPIS_ORE, 3.0 + 2.5);
+    map.put(Material.DEEPSLATE_REDSTONE_ORE, 2.0 + 2.2);
     map.put(Material.NETHER_GOLD_ORE, 3.2);
     map.put(Material.NETHER_QUARTZ_ORE, 2.2);
     map.put(Material.ANCIENT_DEBRIS, 20.0);

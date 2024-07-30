@@ -178,7 +178,7 @@ public class SuperMiningMachineCreationEvent implements Listener {
                 this.plugin,
                 allBlocks,
                 bottomLeft.value0,
-                remaining.value0,
+                netheriteBlock,
                 topLeft.value0,
                 topRight.value0);
       }
