@@ -271,8 +271,6 @@ public class SuperMiningMachineCreationEvent implements Listener {
       return;
     }
 
-    // TODO check if machine has been created before at the same spot and deny it
-
     this.log(String.format("SuperMiningMachine - %s", machine));
 
     this.plugin.superMiningMachineManager.addMachine(machine);

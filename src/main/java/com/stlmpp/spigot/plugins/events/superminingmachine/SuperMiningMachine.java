@@ -5,11 +5,16 @@ import com.stlmpp.spigot.plugins.utils.RandomList;
 import com.stlmpp.spigot.plugins.utils.Tick;
 import com.stlmpp.spigot.plugins.utils.Util;
 import java.util.*;
+import java.util.stream.Stream;
+import net.kyori.adventure.text.Component;
+import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.DoubleChest;
+import org.bukkit.block.Sign;
 import org.bukkit.block.data.type.Chest;
+import org.bukkit.block.sign.Side;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -72,7 +77,7 @@ public class SuperMiningMachine {
             this.boundingBox.getMaxZ() - 1);
     this.id =
         String.format(
-            "SuperMiningMachine_%s_%s_%s_%s_%s_%s",
+            "SMM_%s_%s_%s_%s_%s_%s",
             this.boundingBox.getMin().getBlockX(),
             this.boundingBox.getMin().getBlockY(),
             this.boundingBox.getMin().getBlockZ(),
@@ -126,10 +131,11 @@ public class SuperMiningMachine {
   private final double maxBoost = 0.85;
 
   private double boostFactor = 0;
-  private double boostTimes = 0;
+  private int boostTimes = 0;
   private boolean isRunning = false;
-  @Nullable private BlockVector lastBlockVector;
 
+  @Nullable private BlockVector signLocation = null;
+  @Nullable private BlockVector lastBlockVector;
   @Nullable private BukkitTask lastTask;
 
   public String getId() {
@@ -190,6 +196,8 @@ public class SuperMiningMachine {
       this.plugin.log(String.format("Machine %s is already running", this.id), true);
       return;
     }
+    // TODO play sound to indicate the machine has started
+    // TODO add some effects or particles
     this.plugin.log(String.format("Starting machine %s", this.id), true);
     this.isRunning = true;
     this.scheduleNext();
@@ -223,9 +231,9 @@ public class SuperMiningMachine {
     this.lastBlockVector.setZ(z);
   }
 
-  private boolean isValidBlockToMine(Block block) {
+  private boolean isValidBlockToMine(@NotNull Block block) {
     final var type = block.getType();
-    return (type.isBlock() && type.isSolid() && !type.equals(Material.BEDROCK))
+    return (type.isBlock() && block.isSolid() && !type.equals(Material.BEDROCK))
         || type.equals(Material.WATER)
         || type.equals(Material.LAVA)
         || type.equals(Material.CHEST);
@@ -318,6 +326,37 @@ public class SuperMiningMachine {
         }.runTaskLater(this.plugin, Tick.fromSeconds(seconds));
   }
 
+  private void createSign() {
+    final var location =
+        bottomLeftBlock
+            .getLocation()
+            .getBlock()
+            .getRelative(BlockFace.SOUTH)
+            .getRelative(BlockFace.EAST, 3)
+            .getLocation()
+            .clone();
+    this.signLocation = location.toVector().toBlockVector();
+    final var block = location.getBlock();
+    block.setType(Material.DARK_OAK_SIGN);
+    Util.setUntilSolid(location.subtract(0, 1, 0), Material.IRON_BLOCK);
+    final var state = block.getState();
+    if (!(state instanceof Sign sign)) {
+      return;
+    }
+    Stream.of(Side.FRONT, Side.BACK)
+        .forEach(
+            side -> {
+              final var signSide = sign.getSide(side);
+              signSide.line(0, Component.text("Levels de"));
+              signSide.line(1, Component.text("experiencia"));
+              signSide.line(2, Component.text("necessario:"));
+              signSide.line(3, Component.text(this.getExpLevelRequired()));
+              signSide.setGlowingText(true);
+              signSide.setColor(DyeColor.WHITE);
+            });
+    sign.update();
+  }
+
   private DoubleChest createNewChest() {
     final var location =
         this.chests.isEmpty()
@@ -387,10 +426,16 @@ public class SuperMiningMachine {
   }
 
   public void createBaseStructure() {
-    // TODO figure out a better construction
     // TODO play sound of construction
-    // TODO add sign with experience level required and id
-    // TODO if structure is above ground, create iron blocks around it
+    this.createSign();
+    if (this.chests.isEmpty()) {
+      this.createNewChest();
+      final var leftFloor =
+          bottomLeftBlock.getRelative(BlockFace.SOUTH).getRelative(BlockFace.DOWN);
+      final var rightFloor = leftFloor.getRelative(BlockFace.EAST);
+      Util.setUntilSolid(leftFloor.getLocation(), Material.IRON_BLOCK);
+      Util.setUntilSolid(rightFloor.getLocation(), Material.IRON_BLOCK);
+    }
     final var glassY = (int) innerBoundingBox.getMaxY();
     for (var x = (int) innerBoundingBox.getMinX(); x <= innerBoundingBox.getMaxX(); x++) {
       for (var z = (int) innerBoundingBox.getMinZ(); z <= innerBoundingBox.getMaxZ(); z++) {
@@ -399,19 +444,17 @@ public class SuperMiningMachine {
       }
     }
     for (var vector : this.blockVectors) {
-      var location = vector.toLocation(bottomLeftBlock.getWorld());
-      final var floor = Util.getFloor(location.clone().subtract(0, 1, 0));
-      final var blockFloorY = vector.getBlockY() - 1;
-      if (floor == blockFloorY) {
-        continue;
-      }
+      final var location = vector.toLocation(bottomLeftBlock.getWorld());
       final var isNetherite = location.getBlock().getType().equals(Material.NETHERITE_BLOCK);
-      for (var y = blockFloorY; y >= floor; y--) {
-        location.setY(y);
-        location
-            .getBlock()
-            .setType(isNetherite ? Material.IRON_BLOCK : this.randomGlassList.next());
-      }
+      final var blockFloorY = location.getBlockY() - 1;
+      Util.setUntilSolid(
+          location.subtract(0, 1, 0),
+          (y, isNextSolid) -> {
+            if (y == blockFloorY || isNextSolid) {
+              return Material.IRON_BLOCK;
+            }
+            return isNetherite ? Material.IRON_BLOCK : this.randomGlassList.next();
+          });
     }
   }
 
@@ -427,5 +470,21 @@ public class SuperMiningMachine {
         this.topRightBlock,
         this.boundingBox,
         this.innerBoundingBox);
+  }
+
+  public HashMap<String, Object> serialize() {
+    final HashMap<String, Object> map = new HashMap<>();
+    map.put("is_running", this.isRunning);
+    map.put("chests", this.chests); // TODO
+    map.put("blocks", this.blockVectors); // TODO;
+    map.put("sign_location", this.signLocation); // TODO
+    // TODO complete
+    return map;
+  }
+
+  public float getExplosionPower() {
+    return (float)
+        (Math.max(this.boundingBox.getWidthX(), this.boundingBox.getWidthZ())
+            + (this.boostTimes * 0.30));
   }
 }

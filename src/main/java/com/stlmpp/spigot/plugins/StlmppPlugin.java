@@ -4,6 +4,7 @@ import com.stlmpp.spigot.plugins.events.*;
 import com.stlmpp.spigot.plugins.events.netherportalleaking.NetherPortalLeakingEvent;
 import com.stlmpp.spigot.plugins.events.superminingmachine.SuperMiningMachineManager;
 import com.stlmpp.spigot.plugins.tasks.NetherLightningTask;
+import com.stlmpp.spigot.plugins.utils.Util;
 import net.kyori.adventure.text.Component;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -53,6 +54,7 @@ public class StlmppPlugin extends JavaPlugin {
 
   @Override
   public void onEnable() {
+    Util.plugin = this;
     new StlmppPluginConfig(this);
     this.netherLightningTask = NetherLightningTask.register(this);
     AutoSeedEvent.register(this);

@@ -2,18 +2,26 @@ package com.stlmpp.spigot.plugins.utils;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
+
+import com.stlmpp.spigot.plugins.StlmppPlugin;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.BoundingBox;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class Util {
 
+  public static StlmppPlugin plugin;
   public static final Map<Material, Material> toNetherMaterialMap = new HashMap<>();
   public static final Material toNetherDefaultMaterial = Material.NETHERRACK;
 
@@ -119,31 +127,13 @@ public class Util {
 
   public static Integer getFloor(
       Location location, boolean returnNullOnMaxIterations, int maxIterations) {
+    location = location.clone();
     var iteration = 0;
-    var locationY = location.getBlockY();
-    while (!location
-            .getWorld()
-            .getBlockAt(location.getBlockX(), locationY, location.getBlockZ())
-            .getType()
-            .isSolid()
-        && iteration <= maxIterations) {
+    while (!location.getBlock().isSolid() && iteration <= maxIterations) {
       iteration++;
-      locationY--;
+      location.subtract(0, 1, 0);
     }
-    return iteration > maxIterations && returnNullOnMaxIterations ? null : locationY;
-  }
-
-  public static void setMaterialsFromNames(
-      @NotNull Set<Material> materialSet, @NotNull List<?> materialNames) {
-    for (Object materialName : materialNames) {
-      if (!(materialName instanceof String materialNameString)) {
-        continue;
-      }
-      final var material = Material.getMaterial(materialNameString);
-      if (material != null) {
-        materialSet.add(material);
-      }
-    }
+    return iteration > maxIterations && returnNullOnMaxIterations ? null : location.getBlockY();
   }
 
   public static Location getRandomLocationAroundLocation(Location location, BoundingBox distance) {
@@ -275,5 +265,38 @@ public class Util {
 
   public static boolean isOre(Block block) {
     return ores.contains(block.getType());
+  }
+
+  public static void setUntilSolid(
+      Location location, BiFunction<Integer, Boolean, Material> function) {
+    location = location.clone();
+    while (!location.getBlock().isSolid()) {
+      final var y = location.getBlockY();
+      final var block = location.getBlock();
+      location.subtract(0, 1, 0);
+      block.setType(function.apply(y, location.getBlock().isSolid()));
+    }
+  }
+
+  public static void setUntilSolid(Location location, Function<Integer, Material> function) {
+    Util.setUntilSolid(location, (y, _isNextSolid) -> function.apply(y));
+  }
+
+  public static void setUntilSolid(Location location, Supplier<Material> function) {
+    Util.setUntilSolid(location, (_y) -> function.get());
+  }
+
+  public static void setUntilSolid(Location location, Material material) {
+    Util.setUntilSolid(location, () -> material);
+  }
+
+  @NotNull
+  public static BukkitTask runLater(long delay, Runnable function) {
+    return new BukkitRunnable() {
+      @Override
+      public void run() {
+        function.run();
+      }
+    }.runTaskLater(plugin, delay);
   }
 }

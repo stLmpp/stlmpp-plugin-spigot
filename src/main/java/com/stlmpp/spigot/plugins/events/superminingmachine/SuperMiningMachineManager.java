@@ -36,7 +36,12 @@ public class SuperMiningMachineManager {
 
   public boolean isOverlappingAnotherMachine(BoundingBox boundingBox) {
     return machines.values().stream()
-        .anyMatch(machine -> machine.boundingBox.overlaps(boundingBox));
+        .anyMatch(
+            machine -> {
+              final var extendedBoundingBox =
+                  machine.boundingBox.clone().expand(0, 64, 0, 0, 320, 0);
+              return extendedBoundingBox.overlaps(boundingBox);
+            });
   }
 
   @Nullable
@@ -60,6 +65,11 @@ public class SuperMiningMachineManager {
 
   public void addMachine(SuperMiningMachine machine) {
     this.machines.put(machine.getId(), machine);
+    // TODO persist machine
+  }
+
+  public void removeMachine(SuperMiningMachine machine) {
+    this.machines.remove(machine.getId());
     // TODO persist machine
   }
 
