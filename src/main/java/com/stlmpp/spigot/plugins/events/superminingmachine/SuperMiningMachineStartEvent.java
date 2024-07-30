@@ -63,7 +63,7 @@ public class SuperMiningMachineStartEvent implements Listener {
     this.plugin.sendMessage(
         String.format(
             "%s adicionou um boost na escavadeira! Boost total de %s%%",
-            player.getName(), (int) Math.floor(machine.getBoost() * 100)));
+            player.getName(), (int) Math.floor(machine.getBoostFactor() * 100)));
   }
 
   private void startMachine(Player player, SuperMiningMachine machine, boolean isCreative) {
@@ -79,6 +79,9 @@ public class SuperMiningMachineStartEvent implements Listener {
       player.getInventory().getItemInMainHand().subtract(1);
     }
     machine.start();
-    // TODO add message of start
+    this.plugin.sendMessage(
+        String.format(
+            "%s iniciou a escavadeira sacrificando %s levels de xp",
+            player.getName(), machine.getExpLevelRequired()));
   }
 }

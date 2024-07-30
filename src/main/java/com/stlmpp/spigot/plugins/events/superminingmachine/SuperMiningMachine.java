@@ -106,6 +106,7 @@ public class SuperMiningMachine {
             (int) innerBoundingBox.getMinX(),
             (int) innerBoundingBox.getMaxY() - 1,
             (int) innerBoundingBox.getMinZ());
+    this.minY = bottomLeftBlock.getWorld().getName().equals(this.plugin.getWorldName()) ? -63 : 1;
   }
 
   public final BoundingBox boundingBox;
@@ -116,14 +117,16 @@ public class SuperMiningMachine {
   public final Block topLeftBlock;
   public final Block topRightBlock;
 
+  private final int minY;
   private final String id;
   private final StlmppPlugin plugin;
   private final int expLevelRequired;
   private final List<DoubleChest> chests = new ArrayList<>();
   private final RandomList<Material> randomGlassList;
-  private final double maxBoost = 0.95;
+  private final double maxBoost = 0.85;
 
-  private double boost = 0;
+  private double boostFactor = 0;
+  private double boostTimes = 0;
   private boolean isRunning = false;
   @Nullable private BlockVector lastBlockVector;
 
@@ -141,23 +144,18 @@ public class SuperMiningMachine {
     return this.expLevelRequired;
   }
 
-  public double getBoost() {
-    return this.boost;
+  public double getBoostFactor() {
+    return this.boostFactor;
   }
 
   public boolean hasMaxBoost() {
-    return this.boost == this.maxBoost;
+    return this.boostFactor == this.maxBoost;
   }
 
   public void addBoost() {
-    var boost = 0.1;
-    if (this.boost > 0.4 && this.boost < 0.7) {
-      boost *= 0.5;
-    } else if (this.boost >= 0.7) {
-      boost *= 0.2;
-    }
-    this.boost = Math.min(this.boost + boost, this.maxBoost);
-    this.plugin.log(String.format("Machine %s has been boosted to %s", id, boost));
+    this.boostTimes++;
+    this.boostFactor = Math.min(this.boostFactor + (0.25 / this.boostTimes), this.maxBoost);
+    this.plugin.log(String.format("Machine %s has been boosted to %s", id, this.boostFactor));
   }
 
   public boolean hasNetheriteBlock(@NotNull Block block) {
@@ -214,8 +212,7 @@ public class SuperMiningMachine {
         z = (int) innerBoundingBox.getMinZ();
         y--;
         // If y goes below minY, no more blocks to mine
-        // TODO this needs to be dynamic because of the nether
-        if (y < -63) {
+        if (y < this.minY) {
           this.lastBlockVector = null;
           return;
         }
@@ -224,6 +221,14 @@ public class SuperMiningMachine {
     this.lastBlockVector.setY(y);
     this.lastBlockVector.setX(x);
     this.lastBlockVector.setZ(z);
+  }
+
+  private boolean isValidBlockToMine(Block block) {
+    final var type = block.getType();
+    return (type.isBlock() && type.isSolid() && !type.equals(Material.BEDROCK))
+        || type.equals(Material.WATER)
+        || type.equals(Material.LAVA)
+        || type.equals(Material.CHEST);
   }
 
   @Nullable
@@ -235,12 +240,7 @@ public class SuperMiningMachine {
       }
       block = this.lastBlockVector.toLocation(this.bottomLeftBlock.getWorld()).getBlock();
       this.increaseLastBlockVector();
-
-    } while (!block.getType().equals(Material.WATER)
-        || !block.getType().equals(Material.LAVA)
-        || !block.getType().isSolid()
-        || !block.getType().isBlock()
-        || block.getType().equals(Material.BEDROCK));
+    } while (!this.isValidBlockToMine(block));
     return block;
   }
 
@@ -249,11 +249,15 @@ public class SuperMiningMachine {
     if (block == null) {
       this.lastTask = null;
       this.stop();
+      this.plugin.sendMessage(
+          String.format(
+              "Escavadeira na coordenada %s %s %s terminou a escavacao!",
+              bottomLeftBlock.getX(), bottomLeftBlock.getY(), bottomLeftBlock.getZ()));
       return;
     }
     var seconds = SuperMiningMachineBlockDelay.get(block.getType());
-    if (this.boost > 0.0) {
-      seconds -= seconds * this.boost;
+    if (this.boostFactor > 0.0) {
+      seconds -= seconds * this.boostFactor;
     }
     plugin.log(
         String.format(
@@ -264,51 +268,50 @@ public class SuperMiningMachine {
         new BukkitRunnable() {
           @Override
           public void run() {
-            // TODO delete dropped items somehow
             // TODO play sound of block breaking
             // TODO spawn particle
             // TODO play sound around machine
-            // TODO check if block is special: water, lava, chest, spawner, etc, and put it in the
-            // chest
-            // TODO instead of breaking block naturally, maybe replace it with AIR
             // TODO check walls of mining area for ores and mine them
             final var pickaxe = new ItemStack(Material.DIAMOND_PICKAXE);
             pickaxe.addEnchantment(Enchantment.FORTUNE, 3);
             Collection<ItemStack> drops = new ArrayList<>();
-            // TODO replace this bunch of if elses
             if (Util.isOre(block)) {
               final var allOres = Util.getBlocksAround(block);
               for (Block oreBlock : allOres) {
                 drops.addAll(oreBlock.getDrops(pickaxe));
-                oreBlock.breakNaturally();
+                oreBlock.setType(Material.AIR);
               }
             } else if (block.getType().equals(Material.WATER)) {
               drops.add(new ItemStack(Material.WATER_BUCKET));
-              block.setType(Material.AIR);
             } else if (block.getType().equals(Material.LAVA)) {
               drops.add(new ItemStack(Material.LAVA_BUCKET));
-              block.setType(Material.AIR);
             } else if (block.getType().equals(Material.CHEST)) {
-              final var isDoubleChest =
-                  ((org.bukkit.block.Chest) block).getInventory().getHolder()
-                      instanceof DoubleChest;
+              final var chest = (org.bukkit.block.Chest) block;
+              final var isDoubleChest = chest.getInventory().getHolder() instanceof DoubleChest;
               final var inventory =
-                  ((org.bukkit.block.Chest) block).getInventory().getHolder()
-                          instanceof DoubleChest doubleChest
-                      ? doubleChest.getInventory()
-                      : ((org.bukkit.block.Chest) block).getInventory();
+                  isDoubleChest
+                      ? chest.getInventory().getHolder().getInventory()
+                      : chest.getInventory();
               drops.addAll(List.of(inventory.getContents()));
               final var chestStack = new ItemStack(Material.CHEST);
               if (isDoubleChest) {
                 chestStack.add();
+                final var left = ((DoubleChest) chest.getInventory().getHolder()).getLeftSide();
+                final var right = ((DoubleChest) chest.getInventory().getHolder()).getRightSide();
+                if (left != null && left.getInventory().getLocation() != null) {
+                  left.getInventory().getLocation().getBlock().setType(Material.AIR);
+                }
+                if (right != null && right.getInventory().getLocation() != null) {
+                  right.getInventory().getLocation().getBlock().setType(Material.AIR);
+                }
               }
               drops.add(chestStack);
             } else if (block.getType().equals(Material.SPAWNER)) {
               // TODO
             } else {
               drops.addAll(block.getDrops(pickaxe));
-              block.breakNaturally();
             }
+            block.setType(Material.AIR);
             addItemsToChest(drops);
             scheduleNext();
           }

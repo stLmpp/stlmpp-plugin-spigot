@@ -22,6 +22,12 @@ public class SuperMiningMachineCreationEvent implements Listener {
   private SuperMiningMachineCreationEvent(StlmppPlugin plugin) {
     this.plugin = plugin;
     this.maxSize = plugin.config.getInt(StlmppPluginConfig.superMiningMachineMaxSize);
+    this.minY = new HashMap<>();
+    this.minY.put(plugin.getWorldName(), 62);
+    this.minY.put(plugin.getWorldNetherName(), 42);
+    this.maxY = new HashMap<>();
+    this.maxY.put(plugin.getWorldName(), 256);
+    this.maxY.put(plugin.getWorldNetherName(), 100);
     this.plugin.getServer().getPluginManager().registerEvents(this, plugin);
   }
 
@@ -32,6 +38,9 @@ public class SuperMiningMachineCreationEvent implements Listener {
     BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST
   };
 
+  private final Map<String, Integer> minY;
+  private final Map<String, Integer> maxY;
+
   private void log(String message) {
     this.plugin.log(String.format("(SuperMiningMachineCreationEvent) %s", message), true);
   }
@@ -39,8 +48,12 @@ public class SuperMiningMachineCreationEvent implements Listener {
   @EventHandler
   public void onBlockPlaceEvent(BlockPlaceEvent event) {
     assert this.plugin.superMiningMachineManager != null;
+    final var blockY = event.getBlock().getY();
+    final var worldName = event.getBlock().getWorld().getName();
     if (!this.plugin.superMiningMachineManager.isBlockTypeValid(event.getBlock().getType())
-        || !this.plugin.superMiningMachineManager.isWorldValid(event.getBlock().getWorld())) {
+        || !this.plugin.superMiningMachineManager.isWorldValid(event.getBlock().getWorld())
+        || blockY > this.maxY.get(worldName)
+        || blockY < this.minY.get(worldName)) {
       return;
     }
     final var blocksWithFaces =
