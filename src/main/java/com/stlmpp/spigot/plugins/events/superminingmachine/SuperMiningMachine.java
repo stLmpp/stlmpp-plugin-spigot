@@ -2,6 +2,7 @@ package com.stlmpp.spigot.plugins.events.superminingmachine;
 
 import com.stlmpp.spigot.plugins.StlmppPlugin;
 import com.stlmpp.spigot.plugins.utils.BlockHashSet;
+import com.stlmpp.spigot.plugins.utils.Chance;
 import com.stlmpp.spigot.plugins.utils.Tick;
 import com.stlmpp.spigot.plugins.utils.Util;
 import java.util.*;
@@ -15,9 +16,7 @@ import org.bukkit.block.DoubleChest;
 import org.bukkit.block.Sign;
 import org.bukkit.block.data.type.Chest;
 import org.bukkit.block.sign.Side;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.BlockVector;
 import org.bukkit.util.BoundingBox;
@@ -88,6 +87,7 @@ public class SuperMiningMachine {
   public final Block topLeftBlock;
   public final Block topRightBlock;
 
+  private final SMMBlockBreaker blockBreaker = new SMMBlockBreaker();
   private final BlockHashSet blocks;
   private final int minY;
   private final String id;
@@ -218,63 +218,26 @@ public class SuperMiningMachine {
       return;
     }
     var seconds = SuperMiningMachineBlockDelay.get(block.getType());
-    if (this.boostFactor > 0.0) {
-      seconds -= seconds * this.boostFactor;
+    if (boostFactor > 0.0) {
+      seconds -= seconds * boostFactor;
     }
     plugin.log(
         String.format(
             "breaking block at %s %s %s in %s seconds",
             block.getX(), block.getY(), block.getZ(), seconds),
         true);
-    this.lastTask =
-        new BukkitRunnable() {
-          @Override
-          public void run() {
-            // TODO play sound of block breaking
-            // TODO spawn particle
-            // TODO play sound around machine
-            // TODO check walls of mining area for ores and mine them
-            final var pickaxe = new ItemStack(Material.DIAMOND_PICKAXE);
-            pickaxe.addEnchantment(Enchantment.FORTUNE, 3);
-            Collection<ItemStack> drops = new ArrayList<>();
-            if (Util.isOre(block)) {
-              final var allOres = Util.getBlocksAround(block);
-              for (Block oreBlock : allOres) {
-                drops.addAll(oreBlock.getDrops(pickaxe));
-                oreBlock.setType(Material.AIR);
-              }
-            } else if (block.getType().equals(Material.CHEST)) {
-              // TODO this is crashing the server somehow
-              final var chest = (org.bukkit.block.Chest) block.getState();
-              final var isDoubleChest = chest.getInventory().getHolder() instanceof DoubleChest;
-              final var inventory =
-                  isDoubleChest
-                      ? chest.getInventory().getHolder().getInventory()
-                      : chest.getInventory();
-              drops.addAll(List.of(inventory.getContents()));
-              final var chestStack = new ItemStack(Material.CHEST);
-              if (isDoubleChest) {
-                chestStack.add();
-                final var left = ((DoubleChest) chest.getInventory().getHolder()).getLeftSide();
-                final var right = ((DoubleChest) chest.getInventory().getHolder()).getRightSide();
-                if (left != null && left.getInventory().getLocation() != null) {
-                  left.getInventory().getLocation().getBlock().setType(Material.AIR);
-                }
-                if (right != null && right.getInventory().getLocation() != null) {
-                  right.getInventory().getLocation().getBlock().setType(Material.AIR);
-                }
-              }
-              drops.add(chestStack);
-            } else if (block.getType().equals(Material.SPAWNER)) {
-              // TODO
-            } else {
-              drops.addAll(block.getDrops(pickaxe));
-            }
-            block.setType(Material.AIR);
-            addItemsToChest(drops);
-            scheduleNext();
-          }
-        }.runTaskLater(this.plugin, Tick.fromSeconds(seconds));
+    lastTask =
+        plugin.runLater(
+            Tick.fromSeconds(seconds),
+            () -> {
+              // TODO play sound of block breaking
+              // TODO spawn particle
+              // TODO play sound around machine
+              // TODO check walls of mining area for ores and mine them
+              final var blockBreaker = this.blockBreaker.get(block.getType());
+              addItemsToChest(blockBreaker.apply(block));
+              scheduleNext();
+            });
   }
 
   private void createSign() {
@@ -437,5 +400,37 @@ public class SuperMiningMachine {
     return (float)
         (Math.max(this.boundingBox.getWidthX(), this.boundingBox.getWidthZ())
             + (this.boostTimes * 0.30));
+  }
+
+  public void explode(long delay) {
+    var blockNumber = 0;
+    for (Block block : getCorners()) {
+      blockNumber++;
+      final var explosionLocation = block.getLocation().subtract(0, 1, 0);
+      final var isFinalBlock = blockNumber == getCorners().size();
+      plugin.runLater(
+          Tick.fromSeconds(blockNumber + delay),
+          () -> {
+            explosionLocation
+                .getBlock()
+                .getWorld()
+                .createExplosion(explosionLocation, getExplosionPower(), true, true);
+            if (Chance.of(50)) {
+              block.setType(Material.LAVA);
+            }
+            if (!isFinalBlock) {
+              return;
+            }
+            var obsidianNumber = 0;
+            for (Block blockToBreak : getBlocks()) {
+              assert plugin.superMiningMachineManager != null;
+              if (!plugin.superMiningMachineManager.isBlockTypeValid(blockToBreak.getType())) {
+                continue;
+              }
+              plugin.runLater(
+                  Tick.fromSeconds(++obsidianNumber / 10), blockToBreak::breakNaturally);
+            }
+          });
+    }
   }
 }

@@ -4,11 +4,12 @@ import com.stlmpp.spigot.plugins.events.*;
 import com.stlmpp.spigot.plugins.events.netherportalleaking.NetherPortalLeakingEvent;
 import com.stlmpp.spigot.plugins.events.superminingmachine.SuperMiningMachineManager;
 import com.stlmpp.spigot.plugins.tasks.NetherLightningTask;
-import com.stlmpp.spigot.plugins.utils.Util;
 import net.kyori.adventure.text.Component;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.Nullable;
 
 public class StlmppPlugin extends JavaPlugin {
@@ -54,7 +55,6 @@ public class StlmppPlugin extends JavaPlugin {
 
   @Override
   public void onEnable() {
-    Util.plugin = this;
     new StlmppPluginConfig(this);
     this.netherLightningTask = NetherLightningTask.register(this);
     AutoSeedEvent.register(this);
@@ -76,5 +76,14 @@ public class StlmppPlugin extends JavaPlugin {
     if (this.superMiningMachineManager != null) {
       this.superMiningMachineManager.onDisable();
     }
+  }
+
+  public BukkitTask runLater(long delay, Runnable function) {
+    return new BukkitRunnable() {
+      @Override
+      public void run() {
+        function.run();
+      }
+    }.runTaskLater(this, delay);
   }
 }

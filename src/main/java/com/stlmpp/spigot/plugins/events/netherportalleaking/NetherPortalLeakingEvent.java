@@ -128,7 +128,8 @@ public class NetherPortalLeakingEvent implements Listener {
     this.plugin.log(
         String.format(
             "widthZ = %s, widthX = %s",
-            netherPortal.boundingBox.getWidthZ(), netherPortal.boundingBox.getWidthX()));
+            netherPortal.boundingBox.getWidthZ(), netherPortal.boundingBox.getWidthX()),
+        true);
     this.plugin.log(String.format("boundingBox = %s", netherPortal.boundingBox));
     final var centerVector = netherPortal.getCenter();
     final var startingX = centerVector.getBlockX();

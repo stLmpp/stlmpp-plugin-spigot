@@ -39,6 +39,8 @@ public class SuperMiningMachineBlockDelay {
     map.put(Material.DIRT, 0.95);
     map.put(Material.SAND, 0.95);
     map.put(Material.SANDSTONE, 1.05);
+    map.put(Material.NETHERITE_BLOCK, 30.0);
+    map.put(Material.OBSIDIAN, 5.0);
   }
 
   public static double get(Material material) {

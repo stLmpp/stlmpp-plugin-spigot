@@ -6,32 +6,33 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
-import com.stlmpp.spigot.plugins.StlmppPlugin;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.enchantments.Enchantment;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.BoundingBox;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class Util {
 
-  public static StlmppPlugin plugin;
   public static final Map<Material, Material> toNetherMaterialMap = new HashMap<>();
   public static final Material toNetherDefaultMaterial = Material.NETHERRACK;
 
   static {
+    toNetherMaterialMap.put(Material.CHERRY_LOG, Material.CRIMSON_STEM);
     toNetherMaterialMap.put(Material.ACACIA_LOG, Material.CRIMSON_STEM);
     toNetherMaterialMap.put(Material.BIRCH_LOG, Material.CRIMSON_STEM);
     toNetherMaterialMap.put(Material.JUNGLE_LOG, Material.CRIMSON_STEM);
     toNetherMaterialMap.put(Material.SPRUCE_LOG, Material.WARPED_STEM);
     toNetherMaterialMap.put(Material.DARK_OAK_LOG, Material.WARPED_STEM);
     toNetherMaterialMap.put(Material.OAK_LOG, Material.WARPED_STEM);
+    toNetherMaterialMap.put(Material.CHERRY_LEAVES, Material.NETHER_WART_BLOCK);
     toNetherMaterialMap.put(Material.ACACIA_LEAVES, Material.NETHER_WART_BLOCK);
     toNetherMaterialMap.put(Material.BIRCH_LEAVES, Material.NETHER_WART_BLOCK);
     toNetherMaterialMap.put(Material.JUNGLE_LEAVES, Material.NETHER_WART_BLOCK);
@@ -57,67 +58,66 @@ public class Util {
     toNetherMaterialMap.put(Material.PUMPKIN, Material.JACK_O_LANTERN);
   }
 
-  public static final Set<Material> netherMaterials = new HashSet<>();
-
-  static {
-    netherMaterials.add(Material.ANCIENT_DEBRIS);
-    netherMaterials.add(Material.BASALT);
-    netherMaterials.add(Material.POLISHED_BASALT);
-    netherMaterials.add(Material.SMOOTH_BASALT);
-    netherMaterials.add(Material.BLACKSTONE);
-    netherMaterials.add(Material.NETHER_BRICK_FENCE);
-    netherMaterials.add(Material.GILDED_BLACKSTONE);
-    netherMaterials.add(Material.GLOWSTONE);
-    netherMaterials.add(Material.MAGMA_BLOCK);
-    netherMaterials.add(Material.NETHER_BRICK);
-    netherMaterials.add(Material.NETHER_BRICK_SLAB);
-    netherMaterials.add(Material.NETHER_BRICK_STAIRS);
-    netherMaterials.add(Material.NETHER_BRICK_WALL);
-    netherMaterials.add(Material.NETHER_GOLD_ORE);
-    netherMaterials.add(Material.NETHER_QUARTZ_ORE);
-    netherMaterials.add(Material.QUARTZ_BLOCK);
-    netherMaterials.add(Material.QUARTZ_BRICKS);
-    netherMaterials.add(Material.QUARTZ_PILLAR);
-    netherMaterials.add(Material.QUARTZ_SLAB);
-    netherMaterials.add(Material.QUARTZ_STAIRS);
-    netherMaterials.add(Material.CHISELED_QUARTZ_BLOCK);
-    netherMaterials.add(Material.SMOOTH_QUARTZ);
-    netherMaterials.add(Material.SMOOTH_QUARTZ_STAIRS);
-    netherMaterials.add(Material.SMOOTH_QUARTZ_SLAB);
-    netherMaterials.add(Material.NETHER_SPROUTS);
-    netherMaterials.add(Material.NETHER_WART);
-    netherMaterials.add(Material.NETHER_WART_BLOCK);
-    netherMaterials.add(Material.NETHERRACK);
-    netherMaterials.add(Material.POLISHED_BLACKSTONE);
-    netherMaterials.add(Material.POLISHED_BLACKSTONE_BRICKS);
-    netherMaterials.add(Material.BLACKSTONE_SLAB);
-    netherMaterials.add(Material.BLACKSTONE_STAIRS);
-    netherMaterials.add(Material.CHISELED_POLISHED_BLACKSTONE);
-    netherMaterials.add(Material.CRACKED_POLISHED_BLACKSTONE_BRICKS);
-    netherMaterials.add(Material.POLISHED_BLACKSTONE_BRICK_SLAB);
-    netherMaterials.add(Material.POLISHED_BLACKSTONE_BRICK_STAIRS);
-    netherMaterials.add(Material.POLISHED_BLACKSTONE_SLAB);
-    netherMaterials.add(Material.POLISHED_BLACKSTONE_STAIRS);
-    netherMaterials.add(Material.POLISHED_BLACKSTONE_WALL);
-    netherMaterials.add(Material.SHROOMLIGHT);
-    netherMaterials.add(Material.SOUL_SAND);
-    netherMaterials.add(Material.SOUL_SOIL);
-    netherMaterials.add(Material.CRIMSON_STEM);
-    netherMaterials.add(Material.WARPED_STEM);
-    netherMaterials.add(Material.CRIMSON_PLANKS);
-    netherMaterials.add(Material.WARPED_PLANKS);
-    netherMaterials.add(Material.CRIMSON_HYPHAE);
-    netherMaterials.add(Material.CRIMSON_NYLIUM);
-    netherMaterials.add(Material.CRIMSON_SLAB);
-    netherMaterials.add(Material.CRIMSON_STAIRS);
-    netherMaterials.add(Material.WARPED_HYPHAE);
-    netherMaterials.add(Material.WARPED_NYLIUM);
-    netherMaterials.add(Material.WARPED_SLAB);
-    netherMaterials.add(Material.WARPED_STAIRS);
-  }
+  public static final Set<Material> netherMaterials =
+      new HashSet<>(
+          List.of(
+              Material.ANCIENT_DEBRIS,
+              Material.BASALT,
+              Material.POLISHED_BASALT,
+              Material.SMOOTH_BASALT,
+              Material.BLACKSTONE,
+              Material.NETHER_BRICK_FENCE,
+              Material.GILDED_BLACKSTONE,
+              Material.GLOWSTONE,
+              Material.MAGMA_BLOCK,
+              Material.NETHER_BRICK,
+              Material.NETHER_BRICK_SLAB,
+              Material.NETHER_BRICK_STAIRS,
+              Material.NETHER_BRICK_WALL,
+              Material.NETHER_GOLD_ORE,
+              Material.NETHER_QUARTZ_ORE,
+              Material.QUARTZ_BLOCK,
+              Material.QUARTZ_BRICKS,
+              Material.QUARTZ_PILLAR,
+              Material.QUARTZ_SLAB,
+              Material.QUARTZ_STAIRS,
+              Material.CHISELED_QUARTZ_BLOCK,
+              Material.SMOOTH_QUARTZ,
+              Material.SMOOTH_QUARTZ_STAIRS,
+              Material.SMOOTH_QUARTZ_SLAB,
+              Material.NETHER_SPROUTS,
+              Material.NETHER_WART,
+              Material.NETHER_WART_BLOCK,
+              Material.NETHERRACK,
+              Material.POLISHED_BLACKSTONE,
+              Material.POLISHED_BLACKSTONE_BRICKS,
+              Material.BLACKSTONE_SLAB,
+              Material.BLACKSTONE_STAIRS,
+              Material.CHISELED_POLISHED_BLACKSTONE,
+              Material.CRACKED_POLISHED_BLACKSTONE_BRICKS,
+              Material.POLISHED_BLACKSTONE_BRICK_SLAB,
+              Material.POLISHED_BLACKSTONE_BRICK_STAIRS,
+              Material.POLISHED_BLACKSTONE_SLAB,
+              Material.POLISHED_BLACKSTONE_STAIRS,
+              Material.POLISHED_BLACKSTONE_WALL,
+              Material.SHROOMLIGHT,
+              Material.SOUL_SAND,
+              Material.SOUL_SOIL,
+              Material.CRIMSON_STEM,
+              Material.WARPED_STEM,
+              Material.CRIMSON_PLANKS,
+              Material.WARPED_PLANKS,
+              Material.CRIMSON_HYPHAE,
+              Material.CRIMSON_NYLIUM,
+              Material.CRIMSON_SLAB,
+              Material.CRIMSON_STAIRS,
+              Material.WARPED_HYPHAE,
+              Material.WARPED_NYLIUM,
+              Material.WARPED_SLAB,
+              Material.WARPED_STAIRS));
 
   public static int getFloor(Location location) {
-    Integer floor = Util.getFloor(location, false, 128);
+    Integer floor = Util.getFloor(location, false, 256);
     if (floor == null) {
       // This is never going to happen
       floor = -1;
@@ -240,7 +240,7 @@ public class Util {
     return blocks;
   }
 
-  private static final HashSet<Material> ores =
+  public static final HashSet<Material> oreList =
       new HashSet<>(
           List.of(
               Material.IRON_ORE,
@@ -262,10 +262,6 @@ public class Util {
               Material.NETHER_GOLD_ORE,
               Material.NETHER_QUARTZ_ORE,
               Material.ANCIENT_DEBRIS));
-
-  public static boolean isOre(Block block) {
-    return ores.contains(block.getType());
-  }
 
   public static void setUntilSolid(
       Location location, BiFunction<Integer, Boolean, Material> function) {
@@ -290,16 +286,6 @@ public class Util {
     Util.setUntilSolid(location, () -> material);
   }
 
-  @NotNull
-  public static BukkitTask runLater(long delay, Runnable function) {
-    return new BukkitRunnable() {
-      @Override
-      public void run() {
-        function.run();
-      }
-    }.runTaskLater(plugin, delay);
-  }
-
   public static final RandomList<Material> randomGlassList =
       new RandomList<>(
           List.of(
@@ -320,4 +306,19 @@ public class Util {
               Material.GREEN_STAINED_GLASS,
               Material.RED_STAINED_GLASS,
               Material.BLACK_STAINED_GLASS));
+
+  private static final ArrayList<ItemStack> allTools =
+      new ArrayList<>(
+          Stream.of(
+                  new ItemStack(Material.DIAMOND_PICKAXE),
+                  new ItemStack(Material.DIAMOND_SHOVEL),
+                  new ItemStack(Material.DIAMOND_AXE),
+                  new ItemStack(Material.DIAMOND_HOE))
+              .peek(itemStack -> itemStack.addEnchantment(Enchantment.FORTUNE, 3))
+              .toList());
+
+  public static ItemStack findBestTool(Block block) {
+    return Optional.ofNullable(Util.findFirst(allTools, block::isPreferredTool))
+        .orElse(allTools.getFirst());
+  }
 }
