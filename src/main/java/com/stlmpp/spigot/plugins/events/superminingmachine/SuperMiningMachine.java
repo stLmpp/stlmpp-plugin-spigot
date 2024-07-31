@@ -10,6 +10,7 @@ import java.util.stream.Stream;
 import net.kyori.adventure.text.Component;
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.DoubleChest;
@@ -134,6 +135,7 @@ public class SuperMiningMachine {
   }
 
   public void addBoost() {
+    // TODO play sound Sound.BLOCK_BEACON_POWER_SELECT
     this.boostTimes++;
     this.boostFactor = Math.min(this.boostFactor + (0.25 / this.boostTimes), this.maxBoost);
     this.plugin.log(String.format("Machine %s has been boosted to %s", id, this.boostFactor));
@@ -152,7 +154,7 @@ public class SuperMiningMachine {
       this.plugin.log(String.format("Machine %s is already running", this.id), true);
       return;
     }
-    // TODO play sound to indicate the machine has started
+    // TODO play sound to indicate the machine has started block.beacon.activate
     // TODO add some effects or particles
     this.plugin.log(String.format("Starting machine %s", this.id), true);
     this.isRunning = true;
@@ -230,12 +232,13 @@ public class SuperMiningMachine {
         plugin.runLater(
             Tick.fromSeconds(seconds),
             () -> {
-              // TODO play sound of block breaking
               // TODO spawn particle
-              // TODO play sound around machine
               // TODO check walls of mining area for ores and mine them
-              final var blockBreaker = this.blockBreaker.get(block.getType());
-              addItemsToChest(blockBreaker.apply(block));
+              final var items = this.blockBreaker.get(block.getType()).apply(block);
+              bottomLeftBlock
+                  .getWorld()
+                  .playSound(bottomLeftBlock.getLocation(), Sound.ENTITY_IRON_GOLEM_STEP, 1, 1);
+              addItemsToChest(items);
               scheduleNext();
             });
   }
@@ -333,6 +336,7 @@ public class SuperMiningMachine {
   }
 
   public void stop() {
+    // TODO block.beacon.deactivate
     if (this.lastTask != null) {
       this.lastTask.cancel();
     }

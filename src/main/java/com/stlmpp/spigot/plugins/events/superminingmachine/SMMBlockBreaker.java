@@ -13,7 +13,7 @@ import java.util.stream.Stream;
 
 public class SMMBlockBreaker {
 
-  SMMBlockBreaker() {
+  public SMMBlockBreaker() {
     this.map = new HashMap<>();
     this.map.put(Material.CHEST, this::onChest);
     this.map.put(Material.SPAWNER, this::onSpawner);
