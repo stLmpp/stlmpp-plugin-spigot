@@ -11,6 +11,7 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.DoubleChest;
@@ -79,8 +80,11 @@ public class SuperMiningMachine {
             (int) innerBoundingBox.getMaxY() - 1,
             (int) innerBoundingBox.getMinZ());
     this.minY = bottomLeftBlock.getWorld().getName().equals(this.plugin.getWorldName()) ? -63 : 1;
+    this.size =
+        (int) (Math.max(this.innerBoundingBox.getWidthX(), this.innerBoundingBox.getWidthZ()) - 2);
   }
 
+  // TODO make all this fields private and provide methods
   public final BoundingBox boundingBox;
   public final BoundingBox innerBoundingBox;
   public final Block bottomLeftBlock;
@@ -88,7 +92,7 @@ public class SuperMiningMachine {
   public final Block topLeftBlock;
   public final Block topRightBlock;
 
-  private final SMMBlockBreaker blockBreaker = new SMMBlockBreaker();
+  private final SMMBlockBreaker blockBreaker = new SMMBlockBreaker(this);
   private final BlockHashSet blocks;
   private final int minY;
   private final String id;
@@ -97,6 +101,7 @@ public class SuperMiningMachine {
   private final List<DoubleChest> chests = new ArrayList<>();
   private final double maxBoost = 0.85;
   private final BlockHashSet corners;
+  private final int size;
 
   private double boostFactor = 0;
   private int boostTimes = 0;
@@ -105,6 +110,10 @@ public class SuperMiningMachine {
   @Nullable private BlockVector signLocation = null;
   @Nullable private BlockVector lastBlockVector;
   @Nullable private BukkitTask lastTask;
+
+  public World getWorld() {
+    return bottomLeftBlock.getWorld();
+  }
 
   public BlockHashSet getCorners() {
     return this.corners;
@@ -135,7 +144,10 @@ public class SuperMiningMachine {
   }
 
   public void addBoost() {
-    // TODO play sound Sound.BLOCK_BEACON_POWER_SELECT
+    if (this.hasMaxBoost()) {
+      return;
+    }
+    this.playSound(Sound.BLOCK_BEACON_POWER_SELECT);
     this.boostTimes++;
     this.boostFactor = Math.min(this.boostFactor + (0.25 / this.boostTimes), this.maxBoost);
     this.plugin.log(String.format("Machine %s has been boosted to %s", id, this.boostFactor));
@@ -154,7 +166,7 @@ public class SuperMiningMachine {
       this.plugin.log(String.format("Machine %s is already running", this.id), true);
       return;
     }
-    // TODO play sound to indicate the machine has started block.beacon.activate
+    this.playSound(Sound.BLOCK_BEACON_ACTIVATE);
     // TODO add some effects or particles
     this.plugin.log(String.format("Starting machine %s", this.id), true);
     this.isRunning = true;
@@ -233,11 +245,8 @@ public class SuperMiningMachine {
             Tick.fromSeconds(seconds),
             () -> {
               // TODO spawn particle
-              // TODO check walls of mining area for ores and mine them
-              final var items = this.blockBreaker.get(block.getType()).apply(block);
-              bottomLeftBlock
-                  .getWorld()
-                  .playSound(bottomLeftBlock.getLocation(), Sound.ENTITY_IRON_GOLEM_STEP, 1, 1);
+              final var items = this.blockBreaker.breakAndGetDrops(block);
+              this.playSound(Sound.ENTITY_IRON_GOLEM_STEP);
               addItemsToChest(items);
               scheduleNext();
             });
@@ -336,15 +345,15 @@ public class SuperMiningMachine {
   }
 
   public void stop() {
-    // TODO block.beacon.deactivate
     if (this.lastTask != null) {
       this.lastTask.cancel();
     }
+    this.playSound(Sound.BLOCK_BEACON_DEACTIVATE);
     this.isRunning = false;
   }
 
   public void createBaseStructure() {
-    // TODO play sound of construction
+    this.playSound(Sound.BLOCK_ANVIL_USE);
     this.createSign();
     if (this.chests.isEmpty()) {
       this.createNewChest();
@@ -401,9 +410,20 @@ public class SuperMiningMachine {
   }
 
   public float getExplosionPower() {
-    return (float)
-        (Math.max(this.boundingBox.getWidthX(), this.boundingBox.getWidthZ())
-            + (this.boostTimes * 0.30));
+    return (float) (this.size + (this.boostTimes * 0.30));
+  }
+
+  private float getSoundVolume() {
+    return (float) this.size / 4;
+  }
+
+  private void playSound(Sound sound) {
+    this.getWorld()
+        .playSound(
+            this.boundingBox.getCenter().toLocation(this.getWorld()),
+            sound,
+            this.getSoundVolume(),
+            1);
   }
 
   public void explode(long delay) {

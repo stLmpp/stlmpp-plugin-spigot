@@ -4,6 +4,8 @@ import com.stlmpp.spigot.plugins.StlmppPlugin;
 import com.stlmpp.spigot.plugins.StlmppPluginConfig;
 import com.stlmpp.spigot.plugins.utils.Pair;
 import java.util.*;
+
+import com.stlmpp.spigot.plugins.utils.Util;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -41,6 +43,13 @@ public class SuperMiningMachineCreationEvent implements Listener {
   private final Map<String, Integer> minY;
   private final Map<String, Integer> maxY;
 
+  private final Map<SMMCornerType, HashSet<BlockFace>> cornerIdentificationMap =
+      Map.of(
+          SMMCornerType.BottomLeft, new HashSet<>(List.of(BlockFace.NORTH, BlockFace.EAST)),
+          SMMCornerType.BottomRight, new HashSet<>(List.of(BlockFace.NORTH, BlockFace.WEST)),
+          SMMCornerType.TopLeft, new HashSet<>(List.of(BlockFace.SOUTH, BlockFace.EAST)),
+          SMMCornerType.TopRight, new HashSet<>(List.of(BlockFace.SOUTH, BlockFace.WEST)));
+
   private void log(String message) {
     this.plugin.log(String.format("(SuperMiningMachineCreationEvent) %s", message), true);
   }
@@ -56,214 +65,57 @@ public class SuperMiningMachineCreationEvent implements Listener {
         || blockY < this.minY.get(worldName)) {
       return;
     }
-    final var blocksWithFaces =
-        Arrays.stream(this.blockFaces)
-            .map(face -> new Pair<>(event.getBlock().getRelative(face), face))
-            .filter(
-                pair ->
-                    this.plugin.superMiningMachineManager.isBlockTypeValid(pair.value0.getType()))
-            .toList();
-    if (blocksWithFaces.isEmpty()) {
-      this.log("{1} No blocks found while searching for faces");
-      return;
-    }
-    if (blocksWithFaces.size() != 2) {
-      this.log("{2} There has to be exactly 2 faces");
-      return;
-    }
-    final Block netheriteBlock = getNetheriteBlock(event, blocksWithFaces);
 
-    if (netheriteBlock == null) {
-      this.log("{3} Could not find netherite block");
-      return;
-    }
+    SMMCorner corner1 = parseCorner(event.getBlock());
 
-    final var netheriteFaces =
-        Arrays.stream(this.blockFaces)
-            .map(face -> new Pair<>(netheriteBlock.getRelative(face), face))
-            .filter(pair -> pair.value0.getType().equals(Material.OBSIDIAN))
-            .toList();
-
-    if (netheriteFaces.isEmpty()) {
-      this.log("{4} No faces found on netherite block");
-      return;
-    }
-
-    if (netheriteFaces.size() != 2) {
-      this.log("{5} There has to be exactly 2 faces on netherite block");
-      return;
-    }
-
-    final var block1 = netheriteFaces.getFirst().value0;
-    final var face1 = netheriteFaces.getFirst().value1;
-    final var block2 = netheriteFaces.getLast().value0;
-    final var face2 = netheriteFaces.getLast().value1;
-
-    if (!block1.getType().equals(Material.OBSIDIAN)
-        || !block2.getType().equals(Material.OBSIDIAN)) {
-      this.log("{6} Netherite faces must be obsidian");
-      return;
-    }
-
-    SuperMiningMachine machine = null;
-
-    // TODO enhance this algorithm by creating a helper class or something, this is ugly
-    if (face1.equals(BlockFace.NORTH)) {
-      if (face2.equals(BlockFace.SOUTH)) {
-        this.log("{7} invalid faces (north and south)");
+    if (corner1 == null) {
+      final var edge = parseEdge(event.getBlock());
+      if (edge == null) {
         return;
       }
-      if (face2.equals(BlockFace.EAST)) {
-        final var bottomRight = this.findNextNetheriteAndObsidians(netheriteBlock, BlockFace.EAST);
-        if (bottomRight == null) {
-          return;
-        }
-        final var topLeft = this.findNextNetheriteAndObsidians(netheriteBlock, BlockFace.NORTH);
-        if (topLeft == null) {
-          return;
-        }
-        final var topRight = this.findNextNetheriteAndObsidians(topLeft.value0, BlockFace.EAST);
-        if (topRight == null) {
-          return;
-        }
-        final var remaining = this.findNextNetheriteAndObsidians(topRight.value0, BlockFace.SOUTH);
-        if (remaining == null) {
-          return;
-        }
-        final List<Block> allBlocks = new ArrayList<>();
-        allBlocks.add(netheriteBlock);
-        allBlocks.add(bottomRight.value0);
-        allBlocks.add(topLeft.value0);
-        allBlocks.add(topRight.value0);
-        allBlocks.addAll(remaining.value1);
-        allBlocks.addAll(bottomRight.value1);
-        allBlocks.addAll(topLeft.value1);
-        allBlocks.addAll(topRight.value1);
-        machine =
-            new SuperMiningMachine(
-                this.plugin,
-                allBlocks,
-                netheriteBlock,
-                bottomRight.value0,
-                topLeft.value0,
-                topRight.value0);
-      } else {
-        final var bottomLeft = this.findNextNetheriteAndObsidians(netheriteBlock, BlockFace.WEST);
-        if (bottomLeft == null) {
-          return;
-        }
-        final var topRight = this.findNextNetheriteAndObsidians(netheriteBlock, BlockFace.NORTH);
-        if (topRight == null) {
-          return;
-        }
-        final var topLeft = this.findNextNetheriteAndObsidians(topRight.value0, BlockFace.WEST);
-        if (topLeft == null) {
-          return;
-        }
-        final var remaining = this.findNextNetheriteAndObsidians(topLeft.value0, BlockFace.SOUTH);
-        if (remaining == null) {
-          return;
-        }
-        final List<Block> allBlocks = new ArrayList<>();
-        allBlocks.add(bottomLeft.value0);
-        allBlocks.add(netheriteBlock);
-        allBlocks.add(topLeft.value0);
-        allBlocks.add(topRight.value0);
-        allBlocks.addAll(bottomLeft.value1);
-        allBlocks.addAll(remaining.value1);
-        allBlocks.addAll(topLeft.value1);
-        allBlocks.addAll(topRight.value1);
-        machine =
-            new SuperMiningMachine(
-                this.plugin,
-                allBlocks,
-                bottomLeft.value0,
-                netheriteBlock,
-                topLeft.value0,
-                topRight.value0);
-      }
-    } else if (face1.equals(BlockFace.SOUTH)) {
-      if (face2.equals(BlockFace.NORTH)) {
-        this.log("{8} invalid faces (south and north)");
+      corner1 = getCornerFromEdge(edge);
+    }
+
+    if (corner1 == null) {
+      return;
+    }
+
+    final var allBlocks = new ArrayList<>(List.of(corner1.block()));
+    var corner = corner1;
+
+    SMMCorner bottomLeft = null;
+    SMMCorner bottomRight = null;
+    SMMCorner topLeft = null;
+    SMMCorner topRight = null;
+
+    for (final var face : corner1.getFacesListInOrder()) {
+      final var r = getEdgesAndCornerFromCorner(corner, face);
+      if (r == null) {
         return;
       }
-      if (face2.equals(BlockFace.EAST)) {
-        final var bottomLeft = this.findNextNetheriteAndObsidians(netheriteBlock, BlockFace.SOUTH);
-        if (bottomLeft == null) {
-          return;
-        }
-        final var topRight = this.findNextNetheriteAndObsidians(netheriteBlock, BlockFace.EAST);
-        if (topRight == null) {
-          return;
-        }
-        final var bottomRight =
-            this.findNextNetheriteAndObsidians(topRight.value0, BlockFace.SOUTH);
-        if (bottomRight == null) {
-          return;
-        }
-        final var remaining =
-            this.findNextNetheriteAndObsidians(bottomRight.value0, BlockFace.WEST);
-        if (remaining == null) {
-          return;
-        }
-        final List<Block> allBlocks = new ArrayList<>();
-        allBlocks.add(bottomLeft.value0);
-        allBlocks.add(bottomRight.value0);
-        allBlocks.add(netheriteBlock);
-        allBlocks.add(topRight.value0);
-        allBlocks.addAll(bottomLeft.value1);
-        allBlocks.addAll(bottomRight.value1);
-        allBlocks.addAll(remaining.value1);
-        allBlocks.addAll(topRight.value1);
-        machine =
-            new SuperMiningMachine(
-                this.plugin,
-                allBlocks,
-                bottomLeft.value0,
-                bottomRight.value0,
-                netheriteBlock,
-                topRight.value0);
-      } else {
-        final var bottomRight = this.findNextNetheriteAndObsidians(netheriteBlock, BlockFace.SOUTH);
-        if (bottomRight == null) {
-          return;
-        }
-        final var topLeft = this.findNextNetheriteAndObsidians(netheriteBlock, BlockFace.WEST);
-        if (topLeft == null) {
-          return;
-        }
-        final var bottomLeft = this.findNextNetheriteAndObsidians(topLeft.value0, BlockFace.SOUTH);
-        if (bottomLeft == null) {
-          return;
-        }
-        final var remaining = this.findNextNetheriteAndObsidians(bottomLeft.value0, BlockFace.EAST);
-        if (remaining == null) {
-          return;
-        }
-        final List<Block> allBlocks = new ArrayList<>();
-        allBlocks.add(bottomLeft.value0);
-        allBlocks.add(bottomRight.value0);
-        allBlocks.add(topLeft.value0);
-        allBlocks.add(netheriteBlock);
-        allBlocks.addAll(bottomLeft.value1);
-        allBlocks.addAll(bottomRight.value1);
-        allBlocks.addAll(topLeft.value1);
-        allBlocks.addAll(remaining.value1);
-        machine =
-            new SuperMiningMachine(
-                this.plugin,
-                allBlocks,
-                bottomLeft.value0,
-                bottomRight.value0,
-                topLeft.value0,
-                netheriteBlock);
+      allBlocks.addAll(r.value1.stream().map(SMMEdge::block).toList());
+      allBlocks.add(r.value0.block());
+      corner = r.value0;
+      switch (corner.type()) {
+        case BottomLeft -> bottomLeft = corner;
+        case BottomRight -> bottomRight = corner;
+        case TopLeft -> topLeft = corner;
+        case TopRight -> topRight = corner;
       }
     }
 
-    if (machine == null) {
-      this.log("{10} could not create super mining machine");
+    if (bottomLeft == null || bottomRight == null || topLeft == null || topRight == null) {
       return;
     }
+
+    final var machine =
+        new SuperMiningMachine(
+            plugin,
+            allBlocks,
+            bottomLeft.block(),
+            bottomRight.block(),
+            topLeft.block(),
+            topRight.block());
 
     assert plugin.superMiningMachineManager != null;
     if (plugin.superMiningMachineManager.isOverlappingAnotherMachine(machine.boundingBox)) {
@@ -286,58 +138,92 @@ public class SuperMiningMachineCreationEvent implements Listener {
     machine.createBaseStructure();
   }
 
-  private @Nullable Block getNetheriteBlock(
-      @NotNull BlockPlaceEvent event, @NotNull List<Pair<Block, BlockFace>> blocksWithFaces) {
-    Block netheriteBlock = null;
-    if (!event.getBlock().getType().equals(Material.NETHERITE_BLOCK)) {
-      final var block1 = blocksWithFaces.getFirst().value0;
-      final var face1 = blocksWithFaces.getFirst().value1;
-      final var block2 = blocksWithFaces.getLast().value0;
-      if (block1.getType().equals(Material.NETHERITE_BLOCK)) {
-        netheriteBlock = block1;
-      }
-      if (block2.getType().equals(Material.NETHERITE_BLOCK)) {
-        netheriteBlock = block2;
-      }
-      Block next = block1;
-      int iteration = 0;
-      while (netheriteBlock == null
-          && next.getType().equals(Material.OBSIDIAN)
-          && iteration < maxSize) {
-        if (next.getType().equals(Material.NETHERITE_BLOCK)) {
-          netheriteBlock = block1;
-        }
-        next = next.getRelative(face1);
-        iteration++;
-      }
-    } else {
-      netheriteBlock = event.getBlock();
+  @Nullable
+  private SMMCorner parseCorner(@NotNull Block block) {
+    if (!block.getType().equals(Material.NETHERITE_BLOCK)) {
+      return null;
     }
-    return netheriteBlock;
+    final var faces =
+        Arrays.stream(blockFaces)
+            .filter(face -> block.getRelative(face).getType().equals(Material.OBSIDIAN))
+            .toList();
+    if (faces.size() != 2) {
+      return null;
+    }
+    final var face1 = faces.getFirst();
+    final var face2 = faces.getLast();
+    if (face1.getOppositeFace().equals(face2)) {
+      return null;
+    }
+    final var corner =
+        Util.findFirst(
+            this.cornerIdentificationMap.entrySet().stream().toList(),
+            kv -> kv.getValue().containsAll(faces));
+    if (corner == null) {
+      return null;
+    }
+    return new SMMCorner(block, corner.getKey());
   }
 
   @Nullable
-  private Pair<Block, List<Block>> findNextNetheriteAndObsidians(
-      Block netheriteBlock, BlockFace direction) {
-    final List<Block> allBlocks = new ArrayList<>();
-    Block nextBlock = netheriteBlock.getRelative(direction);
-    if (!nextBlock.getType().equals(Material.OBSIDIAN)) {
-      this.log("{8} netherite faces must be obsidian");
+  private SMMEdge parseEdge(@NotNull Block block) {
+    if (!block.getType().equals(Material.OBSIDIAN)) {
       return null;
     }
+    assert plugin.superMiningMachineManager != null;
+    final var faces =
+        Arrays.stream(blockFaces)
+            .filter(
+                face ->
+                    plugin.superMiningMachineManager.isBlockTypeValid(
+                        block.getRelative(face).getType()))
+            .toList();
+    if (faces.size() != 2) {
+      return null;
+    }
+    final var face1 = faces.getFirst();
+    final var face2 = faces.getLast();
+    if (!face1.getOppositeFace().equals(face2)) {
+      return null;
+    }
+    return new SMMEdge(block, face1);
+  }
+
+  @Nullable
+  private SMMCorner getCornerFromEdge(@NotNull SMMEdge edge) {
+    Block blockFace1 = edge.block();
+    Block blockFace2 = edge.block();
     int iteration = 0;
-    while (!nextBlock.getType().equals(Material.NETHERITE_BLOCK)
-        && nextBlock.getType().equals(Material.OBSIDIAN)
-        && iteration < this.maxSize) {
-      allBlocks.add(nextBlock);
-      nextBlock = nextBlock.getRelative(direction);
+    do {
+      blockFace1 = blockFace1.getRelative(edge.face());
+      blockFace2 = blockFace2.getRelative(edge.face().getOppositeFace());
       iteration++;
-    }
-    if (!nextBlock.getType().equals(Material.NETHERITE_BLOCK)) {
-      this.log(
-          String.format("{9} could not find next netherite block | direction = %s", direction));
+    } while (!blockFace1.getType().equals(Material.NETHERITE_BLOCK)
+        && !blockFace2.getType().equals(Material.NETHERITE_BLOCK)
+        && iteration < maxSize);
+    return blockFace1.getType().equals(Material.NETHERITE_BLOCK)
+        ? parseCorner(blockFace1)
+        : parseCorner(blockFace2);
+  }
+
+  @Nullable
+  private Pair<SMMCorner, List<SMMEdge>> getEdgesAndCornerFromCorner(
+      @NotNull SMMCorner corner, BlockFace direction) {
+    Block block = corner.block();
+    final List<SMMEdge> obsidians = new ArrayList<>();
+    int iteration = 0;
+    do {
+      block = block.getRelative(direction);
+      obsidians.add(new SMMEdge(block, direction));
+      iteration++;
+    } while (block.getType().equals(Material.OBSIDIAN) && iteration < maxSize);
+    if (!block.getType().equals(Material.NETHERITE_BLOCK)) {
       return null;
     }
-    return new Pair<>(nextBlock, allBlocks);
+    final var nextCorner = parseCorner(block);
+    if (nextCorner == null) {
+      return null;
+    }
+    return new Pair<>(nextCorner, obsidians);
   }
 }

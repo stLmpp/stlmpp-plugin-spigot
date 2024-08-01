@@ -6,6 +6,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.DoubleChest;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.function.Function;
@@ -13,7 +14,8 @@ import java.util.stream.Stream;
 
 public class SMMBlockBreaker {
 
-  public SMMBlockBreaker() {
+  public SMMBlockBreaker(SuperMiningMachine machine) {
+    this.machine = machine;
     this.map = new HashMap<>();
     this.map.put(Material.CHEST, this::onChest);
     this.map.put(Material.SPAWNER, this::onSpawner);
@@ -22,10 +24,34 @@ public class SMMBlockBreaker {
     }
   }
 
+  private final SuperMiningMachine machine;
   private final HashMap<Material, Function<Block, Collection<ItemStack>>> map;
 
-  public Function<Block, Collection<ItemStack>> get(Material material) {
+  private Function<Block, Collection<ItemStack>> get(Material material) {
     return Optional.ofNullable(map.get(material)).orElse(this::onDefault);
+  }
+
+  public Collection<ItemStack> breakAndGetDrops(@NotNull Block block) {
+    final var items = this.get(block.getType()).apply(block);
+    final int minZ = (int) machine.innerBoundingBox.getMinZ(),
+        maxZ = (int) machine.innerBoundingBox.getMaxZ(),
+        minX = (int) machine.innerBoundingBox.getMinX(),
+        maxX = (int) machine.innerBoundingBox.getMaxX(),
+        x = block.getX(),
+        z = block.getZ();
+    if (x == minX || x == maxX || z == minZ || z == maxZ) {
+      final var additionalBlocks =
+          Util.getBlocksAround(
+              block, (additionalBlock) -> Util.oreList.contains(additionalBlock.getType()));
+      items.addAll(breakAdditionalBlocks(additionalBlocks));
+    }
+    return items;
+  }
+
+  private Collection<ItemStack> breakAdditionalBlocks(@NotNull Collection<Block> blocks) {
+    return blocks.stream()
+        .flatMap(block -> this.get(block.getType()).apply(block).stream())
+        .toList();
   }
 
   private Collection<ItemStack> onOre(Block block) {

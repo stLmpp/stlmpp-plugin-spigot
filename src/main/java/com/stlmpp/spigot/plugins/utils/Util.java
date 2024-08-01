@@ -218,7 +218,7 @@ public class Util {
     return Arrays.stream(blockFaces).map(block::getRelative).toList();
   }
 
-  public static HashSet<Block> getBlocksAround(Block startBlock) {
+  public static HashSet<Block> getBlocksAround(Block startBlock, Predicate<Block> predicate) {
     int currentIteration = 0;
     final var blocks = new HashSet<Block>();
     final var visited = new HashSet<Block>();
@@ -231,13 +231,18 @@ public class Util {
         continue;
       }
       visited.add(block);
-      if (!block.getType().equals(startBlock.getType())) {
+      if (!predicate.test(block)) {
         continue;
       }
       blocks.add(block);
       queue.addAll(getRelatives(block));
     }
     return blocks;
+  }
+
+  public static HashSet<Block> getBlocksAround(Block startBlock) {
+    return Util.getBlocksAround(
+        startBlock, (block) -> block.getType().equals(startBlock.getType()));
   }
 
   public static final HashSet<Material> oreList =
