@@ -20,7 +20,7 @@ public class StlmppPlugin extends JavaPlugin {
 
   public void log(String message, boolean onlyDevMode) {
     if (!onlyDevMode || this.isDevMode) {
-      this.getLogger().info(String.format("[StlmppPlugin] %s", message));
+      this.getLogger().info(message);
     }
   }
 
@@ -85,5 +85,14 @@ public class StlmppPlugin extends JavaPlugin {
         function.run();
       }
     }.runTaskLater(this, delay);
+  }
+
+  public BukkitTask runTimer(long delay, long period, Runnable function) {
+    return new BukkitRunnable() {
+      @Override
+      public void run() {
+        function.run();
+      }
+    }.runTaskTimer(this, delay, period);
   }
 }

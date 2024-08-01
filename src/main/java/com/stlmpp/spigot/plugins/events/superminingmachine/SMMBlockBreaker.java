@@ -1,6 +1,9 @@
 package com.stlmpp.spigot.plugins.events.superminingmachine;
 
 import com.stlmpp.spigot.plugins.utils.Util;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Stream;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.DoubleChest;
@@ -8,17 +11,14 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Stream;
-
 public class SMMBlockBreaker {
+
+  private static HashSet<Material> excludedMaterials = new HashSet<>(List.of(Material.SPAWNER));
 
   public SMMBlockBreaker(SuperMiningMachine machine) {
     this.machine = machine;
     this.map = new HashMap<>();
     this.map.put(Material.CHEST, this::onChest);
-    this.map.put(Material.SPAWNER, this::onSpawner);
     for (Material material : Util.oreList) {
       this.map.put(material, this::onOre);
     }
@@ -67,6 +67,9 @@ public class SMMBlockBreaker {
   }
 
   private Collection<ItemStack> onDefault(Block block) {
+    if (excludedMaterials.contains(block.getType())) {
+      return Collections.emptyList();
+    }
     final var tool = Util.findBestTool(block);
     var drops = block.getDrops(tool);
     if (drops.isEmpty()) {
@@ -101,10 +104,5 @@ public class SMMBlockBreaker {
     }
     items.add(chestStack);
     return items;
-  }
-
-  private Collection<ItemStack> onSpawner(Block block) {
-    // TODO
-    return new ArrayList<>();
   }
 }

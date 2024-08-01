@@ -1,7 +1,5 @@
 package com.stlmpp.spigot.plugins;
 
-import org.bukkit.Material;
-
 public class StlmppPluginConfig {
 
   public static final String netherLightningEnabled = "nether-lightning-enabled";

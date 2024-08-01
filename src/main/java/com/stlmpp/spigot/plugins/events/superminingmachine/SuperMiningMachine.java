@@ -6,12 +6,12 @@ import com.stlmpp.spigot.plugins.utils.Chance;
 import com.stlmpp.spigot.plugins.utils.Tick;
 import com.stlmpp.spigot.plugins.utils.Util;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 import net.kyori.adventure.text.Component;
-import org.bukkit.DyeColor;
-import org.bukkit.Material;
-import org.bukkit.Sound;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.DoubleChest;
@@ -19,6 +19,7 @@ import org.bukkit.block.Sign;
 import org.bukkit.block.data.type.Chest;
 import org.bukkit.block.sign.Side;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.BlockVector;
 import org.bukkit.util.BoundingBox;
@@ -35,15 +36,14 @@ public class SuperMiningMachine {
       @NotNull Block topLeftBlock,
       @NotNull Block topRightBlock) {
     this.plugin = plugin;
-    this.corners =
-        new BlockHashSet(
-            bottomLeftBlock.getWorld(),
-            List.of(bottomLeftBlock, bottomRightBlock, topLeftBlock, topRightBlock));
-    this.blocks = new BlockHashSet(bottomLeftBlock.getWorld(), blocks);
     this.bottomLeftBlock = bottomLeftBlock;
     this.bottomRightBlock = bottomRightBlock;
     this.topLeftBlock = topLeftBlock;
     this.topRightBlock = topRightBlock;
+    this.corners =
+        new BlockHashSet(
+            getWorld(), List.of(bottomLeftBlock, bottomRightBlock, topLeftBlock, topRightBlock));
+    this.blocks = new BlockHashSet(getWorld(), blocks);
     final var xList = this.corners.stream().map(Block::getX).toList();
     final var yList = this.corners.stream().map(Block::getY).toList();
     final var zList = this.corners.stream().map(Block::getZ).toList();
@@ -72,26 +72,19 @@ public class SuperMiningMachine {
             this.boundingBox.getMax().getBlockX(),
             this.boundingBox.getMax().getBlockY(),
             this.boundingBox.getMax().getBlockZ());
-    this.expLevelRequired =
-        (int) Math.floor(this.boundingBox.getWidthX() + this.boundingBox.getWidthZ() - 2);
-    this.lastBlockVector =
-        new BlockVector(
-            (int) innerBoundingBox.getMinX(),
-            (int) innerBoundingBox.getMaxY() - 1,
-            (int) innerBoundingBox.getMinZ());
-    this.minY = bottomLeftBlock.getWorld().getName().equals(this.plugin.getWorldName()) ? -63 : 1;
-    this.size =
-        (int) (Math.max(this.innerBoundingBox.getWidthX(), this.innerBoundingBox.getWidthZ()) - 2);
+    this.size = (int) Math.floor(this.boundingBox.getWidthX() + this.boundingBox.getWidthZ() - 2);
+    this.expLevelRequired = size;
+    this.lastBlockVector = this.getInitialBlockVector();
+    this.minY = getWorld().getName().equals(this.plugin.getWorldName()) ? -63 : 1;
   }
 
-  // TODO make all this fields private and provide methods
   public final BoundingBox boundingBox;
   public final BoundingBox innerBoundingBox;
-  public final Block bottomLeftBlock;
-  public final Block bottomRightBlock;
-  public final Block topLeftBlock;
-  public final Block topRightBlock;
 
+  private final Block bottomLeftBlock;
+  private final Block bottomRightBlock;
+  private final Block topLeftBlock;
+  private final Block topRightBlock;
   private final SMMBlockBreaker blockBreaker = new SMMBlockBreaker(this);
   private final BlockHashSet blocks;
   private final int minY;
@@ -110,6 +103,7 @@ public class SuperMiningMachine {
   @Nullable private BlockVector signLocation = null;
   @Nullable private BlockVector lastBlockVector;
   @Nullable private BukkitTask lastTask;
+  @Nullable private BukkitTask smokeTask;
 
   public World getWorld() {
     return bottomLeftBlock.getWorld();
@@ -150,6 +144,7 @@ public class SuperMiningMachine {
     this.playSound(Sound.BLOCK_BEACON_POWER_SELECT);
     this.boostTimes++;
     this.boostFactor = Math.min(this.boostFactor + (0.25 / this.boostTimes), this.maxBoost);
+    this.restartSmoke();
     this.plugin.log(String.format("Machine %s has been boosted to %s", id, this.boostFactor));
   }
 
@@ -167,10 +162,62 @@ public class SuperMiningMachine {
       return;
     }
     this.playSound(Sound.BLOCK_BEACON_ACTIVATE);
-    // TODO add some effects or particles
+    this.startSmoke();
     this.plugin.log(String.format("Starting machine %s", this.id), true);
     this.isRunning = true;
     this.scheduleNext();
+  }
+
+  public void stop() {
+    if (this.lastTask != null) {
+      this.lastTask.cancel();
+    }
+    this.stopSmoke();
+    this.playSound(Sound.BLOCK_BEACON_DEACTIVATE);
+    this.lastBlockVector = this.getInitialBlockVector();
+    this.isRunning = false;
+  }
+
+  private void startSmoke() {
+    var seconds = 0.7;
+    if (boostFactor > 0) {
+      seconds -= seconds * boostFactor;
+    }
+    this.smokeTask =
+        new BukkitRunnable() {
+          @Override
+          public void run() {
+            for (var corner : corners) {
+              final var random = ThreadLocalRandom.current();
+              final var location = corner.getLocation().add(0, 1, 0);
+              for (var i = 0; i < random.nextInt(1, 3); i++) {
+                final var spawnLocation =
+                    location.add(random.nextDouble(0, 0.99), 0, random.nextDouble(0, 0.99));
+                getWorld()
+                    .spawnParticle(
+                        Particle.CAMPFIRE_SIGNAL_SMOKE, spawnLocation, 0, 0, 0.5, 0, 0.1);
+              }
+            }
+          }
+        }.runTaskTimerAsynchronously(plugin, 0, Tick.fromSeconds(seconds));
+  }
+
+  private void stopSmoke() {
+    if (this.smokeTask != null) {
+      this.smokeTask.cancel();
+    }
+  }
+
+  private void restartSmoke() {
+    this.stopSmoke();
+    this.startSmoke();
+  }
+
+  private BlockVector getInitialBlockVector() {
+    return new BlockVector(
+        (int) innerBoundingBox.getMinX(),
+        (int) innerBoundingBox.getMaxY() - 1,
+        (int) innerBoundingBox.getMinZ());
   }
 
   private void increaseLastBlockVector() {
@@ -211,12 +258,12 @@ public class SuperMiningMachine {
   private Block getNextBlock() {
     Block block;
     do {
-      if (this.lastBlockVector == null) {
+      if (lastBlockVector == null) {
         return null;
       }
-      block = this.lastBlockVector.toLocation(this.bottomLeftBlock.getWorld()).getBlock();
-      this.increaseLastBlockVector();
-    } while (!this.isValidBlockToMine(block));
+      block = lastBlockVector.toLocation(getWorld()).getBlock();
+      increaseLastBlockVector();
+    } while (!isValidBlockToMine(block));
     return block;
   }
 
@@ -244,9 +291,9 @@ public class SuperMiningMachine {
         plugin.runLater(
             Tick.fromSeconds(seconds),
             () -> {
-              // TODO spawn particle
               final var items = this.blockBreaker.breakAndGetDrops(block);
               this.playSound(Sound.ENTITY_IRON_GOLEM_STEP);
+              this.playSound(Sound.ENTITY_IRON_GOLEM_STEP, block.getLocation());
               addItemsToChest(items);
               scheduleNext();
             });
@@ -344,14 +391,6 @@ public class SuperMiningMachine {
     }
   }
 
-  public void stop() {
-    if (this.lastTask != null) {
-      this.lastTask.cancel();
-    }
-    this.playSound(Sound.BLOCK_BEACON_DEACTIVATE);
-    this.isRunning = false;
-  }
-
   public void createBaseStructure() {
     this.playSound(Sound.BLOCK_ANVIL_USE);
     this.createSign();
@@ -366,7 +405,7 @@ public class SuperMiningMachine {
     final var glassY = (int) innerBoundingBox.getMaxY();
     for (var x = (int) innerBoundingBox.getMinX(); x <= innerBoundingBox.getMaxX(); x++) {
       for (var z = (int) innerBoundingBox.getMinZ(); z <= innerBoundingBox.getMaxZ(); z++) {
-        final var block = bottomLeftBlock.getWorld().getBlockAt(x, glassY, z);
+        final var block = getWorld().getBlockAt(x, glassY, z);
         block.setType(Util.randomGlassList.next());
       }
     }
@@ -417,16 +456,45 @@ public class SuperMiningMachine {
     return (float) this.size / 4;
   }
 
-  private void playSound(Sound sound) {
-    this.getWorld()
-        .playSound(
-            this.boundingBox.getCenter().toLocation(this.getWorld()),
+  private void playSound(Sound sound, Location location) {
+    this.plugin.log(
+        String.format(
+            "Playing sound %s at %s %s %s with volume = %s",
             sound,
-            this.getSoundVolume(),
-            1);
+            location.getBlockX(),
+            location.getBlockY(),
+            location.getBlockZ(),
+            this.getSoundVolume()));
+    this.getWorld().playSound(location, sound, this.getSoundVolume(), 1);
+  }
+
+  private void playSound(Sound sound) {
+    final var location = this.boundingBox.getCenter().toLocation(this.getWorld());
+    playSound(sound, location);
   }
 
   public void explode(long delay) {
+    if (delay <= 0) {
+      delay = 4;
+    }
+    final var soundCount = new AtomicInteger(0);
+    final long playSoundUntil = delay - 1;
+    var countdownTask =
+        new AtomicReference<>(
+            plugin.runTimer(
+                0,
+                Tick.fromSeconds(1),
+                () -> {
+                  if (soundCount.get() > playSoundUntil) {
+                    return;
+                  }
+                  if (soundCount.get() < playSoundUntil) {
+                    playSound(Sound.ENTITY_CREEPER_HURT);
+                  } else {
+                    playSound(Sound.ENTITY_CREEPER_PRIMED);
+                  }
+                  soundCount.incrementAndGet();
+                }));
     var blockNumber = 0;
     for (Block block : getCorners()) {
       blockNumber++;
@@ -435,6 +503,11 @@ public class SuperMiningMachine {
       plugin.runLater(
           Tick.fromSeconds(blockNumber + delay),
           () -> {
+            if (countdownTask.get() != null) {
+              countdownTask.get().cancel();
+              countdownTask.set(null);
+            }
+            explosionLocation.getBlock().setType(Material.AIR);
             explosionLocation
                 .getBlock()
                 .getWorld()
