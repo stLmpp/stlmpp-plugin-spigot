@@ -1,6 +1,8 @@
 package com.stlmpp.spigot.plugins.events.superminingmachine;
 
 import com.stlmpp.spigot.plugins.StlmppPlugin;
+import com.stlmpp.spigot.plugins.events.superminingmachine.entity.SMMBlockEntity;
+import com.stlmpp.spigot.plugins.events.superminingmachine.entity.SMMEntity;
 import com.stlmpp.spigot.plugins.utils.BlockHashSet;
 import com.stlmpp.spigot.plugins.utils.Chance;
 import com.stlmpp.spigot.plugins.utils.Tick;
@@ -74,8 +76,30 @@ public class SuperMiningMachine {
             this.boundingBox.getMax().getBlockZ());
     this.size = (int) Math.floor(this.boundingBox.getWidthX() + this.boundingBox.getWidthZ() - 2);
     this.expLevelRequired = size;
-    this.lastBlockVector = this.getInitialBlockVector();
+    this.lastBlockBroken = this.getInitialBlockVector();
     this.minY = getWorld().getName().equals(this.plugin.getWorldName()) ? -63 : 1;
+  }
+
+  private SuperMiningMachine(
+      StlmppPlugin plugin,
+      @NotNull List<Block> blocks,
+      @NotNull Block bottomLeftBlock,
+      @NotNull Block bottomRightBlock,
+      @NotNull Block topLeftBlock,
+      @NotNull Block topRightBlock,
+      @NotNull List<DoubleChest> chests,
+      @NotNull SMMEntity entity) {
+    this(plugin, blocks, bottomLeftBlock, bottomRightBlock, topLeftBlock, topRightBlock);
+    this.boostFactor = entity.boostFactor();
+    this.boostTimes = entity.boostTimes();
+    if (entity.lastBlock() != null) {
+      this.lastBlockBroken = deserializeLocation(entity.lastBlock());
+    }
+    this.chests.addAll(chests);
+    this.hasFinished = entity.hasFinished() == 1;
+    if (entity.isRunning() == 1 && !hasFinished) {
+      this.start();
+    }
   }
 
   public final BoundingBox boundingBox;
@@ -99,9 +123,9 @@ public class SuperMiningMachine {
   private double boostFactor = 0;
   private int boostTimes = 0;
   private boolean isRunning = false;
+  private boolean hasFinished = false;
 
-  @Nullable private BlockVector signLocation = null;
-  @Nullable private BlockVector lastBlockVector;
+  @Nullable private BlockVector lastBlockBroken;
   @Nullable private BukkitTask lastTask;
   @Nullable private BukkitTask smokeTask;
 
@@ -123,6 +147,10 @@ public class SuperMiningMachine {
 
   public boolean getIsRunning() {
     return this.isRunning;
+  }
+
+  public boolean getHasFinished() {
+    return this.hasFinished;
   }
 
   public int getExpLevelRequired() {
@@ -161,6 +189,10 @@ public class SuperMiningMachine {
       this.plugin.log(String.format("Machine %s is already running", this.id), true);
       return;
     }
+    if (this.hasFinished) {
+      this.plugin.log(String.format("Machine %s is already completed", this.id), true);
+      return;
+    }
     this.playSound(Sound.BLOCK_BEACON_ACTIVATE);
     this.startSmoke();
     this.plugin.log(String.format("Starting machine %s", this.id), true);
@@ -174,7 +206,7 @@ public class SuperMiningMachine {
     }
     this.stopSmoke();
     this.playSound(Sound.BLOCK_BEACON_DEACTIVATE);
-    this.lastBlockVector = this.getInitialBlockVector();
+    this.lastBlockBroken = this.getInitialBlockVector();
     this.isRunning = false;
   }
 
@@ -221,10 +253,10 @@ public class SuperMiningMachine {
   }
 
   private void increaseLastBlockVector() {
-    assert lastBlockVector != null;
-    int x = lastBlockVector.getBlockX();
-    int y = lastBlockVector.getBlockY();
-    int z = lastBlockVector.getBlockZ();
+    assert lastBlockBroken != null;
+    int x = lastBlockBroken.getBlockX();
+    int y = lastBlockBroken.getBlockY();
+    int z = lastBlockBroken.getBlockZ();
 
     // Move to the next x-coordinate
     x++;
@@ -238,14 +270,14 @@ public class SuperMiningMachine {
         y--;
         // If y goes below minY, no more blocks to mine
         if (y < this.minY) {
-          this.lastBlockVector = null;
+          this.lastBlockBroken = null;
           return;
         }
       }
     }
-    this.lastBlockVector.setY(y);
-    this.lastBlockVector.setX(x);
-    this.lastBlockVector.setZ(z);
+    this.lastBlockBroken.setY(y);
+    this.lastBlockBroken.setX(x);
+    this.lastBlockBroken.setZ(z);
   }
 
   private boolean isValidBlockToMine(@NotNull Block block) {
@@ -258,10 +290,10 @@ public class SuperMiningMachine {
   private Block getNextBlock() {
     Block block;
     do {
-      if (lastBlockVector == null) {
+      if (lastBlockBroken == null) {
         return null;
       }
-      block = lastBlockVector.toLocation(getWorld()).getBlock();
+      block = lastBlockBroken.toLocation(getWorld()).getBlock();
       increaseLastBlockVector();
     } while (!isValidBlockToMine(block));
     return block;
@@ -271,6 +303,7 @@ public class SuperMiningMachine {
     final var block = this.getNextBlock();
     if (block == null) {
       this.lastTask = null;
+      this.hasFinished = true;
       this.stop();
       this.plugin.sendMessage(
           String.format(
@@ -278,7 +311,7 @@ public class SuperMiningMachine {
               bottomLeftBlock.getX(), bottomLeftBlock.getY(), bottomLeftBlock.getZ()));
       return;
     }
-    var seconds = SuperMiningMachineBlockDelay.get(block.getType());
+    var seconds = SMMBlockDelay.get(block.getType());
     if (boostFactor > 0.0) {
       seconds -= seconds * boostFactor;
     }
@@ -308,7 +341,6 @@ public class SuperMiningMachine {
             .getRelative(BlockFace.EAST, 3)
             .getLocation()
             .clone();
-    this.signLocation = location.toVector().toBlockVector();
     final var block = location.getBlock();
     block.setType(Material.DARK_OAK_SIGN);
     Util.setUntilSolid(location.subtract(0, 1, 0), Material.IRON_BLOCK);
@@ -438,16 +470,6 @@ public class SuperMiningMachine {
         this.innerBoundingBox);
   }
 
-  public HashMap<String, Object> serialize() {
-    final HashMap<String, Object> map = new HashMap<>();
-    map.put("is_running", this.isRunning);
-    map.put("chests", this.chests); // TODO
-    map.put("blocks", this.blocks); // TODO;
-    map.put("sign_location", this.signLocation); // TODO
-    // TODO complete
-    return map;
-  }
-
   public float getExplosionPower() {
     return (float) (this.size + (this.boostTimes * 0.30));
   }
@@ -520,8 +542,8 @@ public class SuperMiningMachine {
             }
             var obsidianNumber = 0;
             for (Block blockToBreak : getBlocks()) {
-              assert plugin.superMiningMachineManager != null;
-              if (!plugin.superMiningMachineManager.isBlockTypeValid(blockToBreak.getType())) {
+              assert plugin.smmManager != null;
+              if (!plugin.smmManager.isBlockTypeValid(blockToBreak.getType())) {
                 continue;
               }
               plugin.runLater(
@@ -529,5 +551,94 @@ public class SuperMiningMachine {
             }
           });
     }
+  }
+
+  public SMMEntity serialize() {
+    final var blocks =
+        new ArrayList<SMMBlockEntity>(
+            getBlocks().stream()
+                .map(block -> new SMMBlockEntity(null, id, serializeLocation(block), "block"))
+                .toList());
+    blocks.addAll(
+        chests.stream()
+            .map(
+                chest -> {
+                  if (chest.getLeftSide() == null
+                      || chest.getLeftSide().getInventory().getLocation() == null) {
+                    return null;
+                  }
+                  final var block = chest.getLeftSide().getInventory().getLocation().getBlock();
+                  return new SMMBlockEntity(null, id, serializeLocation(block), "chest");
+                })
+            .filter(Objects::nonNull)
+            .toList());
+    return new SMMEntity(
+        id,
+        getWorld().getName(),
+        serializeLocation(bottomLeftBlock),
+        serializeLocation(bottomRightBlock),
+        serializeLocation(topLeftBlock),
+        serializeLocation(topRightBlock),
+        lastBlockBroken != null ? serializeLocation(lastBlockBroken) : null,
+        boostFactor,
+        boostTimes,
+        isRunning ? 1 : 0,
+        hasFinished ? 1 : 0,
+        blocks);
+  }
+
+  @NotNull
+  public static String serializeLocation(@NotNull BlockVector vector) {
+    return vector.getBlockX() + "," + vector.getBlockY() + "," + vector.getBlockZ();
+  }
+
+  @NotNull
+  public static String serializeLocation(@NotNull Block block) {
+    return serializeLocation(block.getLocation().toVector().toBlockVector());
+  }
+
+  public static BlockVector deserializeLocation(@NotNull String location) {
+    final var coordinates = location.split(",");
+    final var x = Integer.parseInt(coordinates[0]);
+    final var y = Integer.parseInt(coordinates[1]);
+    final var z = Integer.parseInt(coordinates[2]);
+    return new BlockVector(x, y, z);
+  }
+
+  @Nullable
+  public static SuperMiningMachine deserialize(
+      @NotNull StlmppPlugin plugin, @NotNull SMMEntity entity) {
+    final var world = plugin.getServer().getWorld(entity.world());
+    if (world == null) {
+      plugin.log(String.format("World = %s not found", entity.world()), true);
+      return null;
+    }
+    final var bottomLeft = deserializeLocation(entity.bottomLeft()).toLocation(world).getBlock();
+    final var bottomRight = deserializeLocation(entity.bottomRight()).toLocation(world).getBlock();
+    final var topLeft = deserializeLocation(entity.topLeft()).toLocation(world).getBlock();
+    final var topRight = deserializeLocation(entity.topRight()).toLocation(world).getBlock();
+    final var blocks = new ArrayList<Block>();
+    final var chests = new ArrayList<DoubleChest>();
+    for (final var blockEntity : entity.blocks()) {
+      final var block = deserializeLocation(blockEntity.location()).toLocation(world).getBlock();
+      switch (blockEntity.type()) {
+        case "block":
+          {
+            blocks.add(block);
+            break;
+          }
+        case "chest":
+          {
+            if (!(block.getState() instanceof org.bukkit.block.Chest state)
+                || !(state.getInventory().getHolder() instanceof DoubleChest doubleChest)) {
+              continue;
+            }
+            chests.add(doubleChest);
+            break;
+          }
+      }
+    }
+    return new SuperMiningMachine(
+        plugin, blocks, bottomLeft, bottomRight, topLeft, topRight, chests, entity);
   }
 }

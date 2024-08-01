@@ -5,15 +5,15 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 
-public class SuperMiningMachineDestroyEvent implements Listener {
+public class SMMDestroyEvent implements Listener {
 
   private final StlmppPlugin plugin;
 
-  public static SuperMiningMachineDestroyEvent register(StlmppPlugin plugin) {
-    return new SuperMiningMachineDestroyEvent(plugin);
+  public static SMMDestroyEvent register(StlmppPlugin plugin) {
+    return new SMMDestroyEvent(plugin);
   }
 
-  private SuperMiningMachineDestroyEvent(StlmppPlugin plugin) {
+  private SMMDestroyEvent(StlmppPlugin plugin) {
     this.plugin = plugin;
     this.plugin.getServer().getPluginManager().registerEvents(this, plugin);
   }
@@ -21,12 +21,12 @@ public class SuperMiningMachineDestroyEvent implements Listener {
   @EventHandler
   public void onBlockBreak(BlockBreakEvent event) {
 
-    assert this.plugin.superMiningMachineManager != null;
-    if (!this.plugin.superMiningMachineManager.isBlockTypeValid(event.getBlock().getType())
-        || !this.plugin.superMiningMachineManager.isWorldValid(event.getBlock().getWorld())) {
+    assert this.plugin.smmManager != null;
+    if (!this.plugin.smmManager.isBlockTypeValid(event.getBlock().getType())
+        || !this.plugin.smmManager.isWorldValid(event.getBlock().getWorld())) {
       return;
     }
-    final var machine = this.plugin.superMiningMachineManager.getMachineByBlock(event.getBlock());
+    final var machine = this.plugin.smmManager.getMachineByBlock(event.getBlock());
     if (machine == null) {
       return;
     }
@@ -41,6 +41,6 @@ public class SuperMiningMachineDestroyEvent implements Listener {
       machine.explode(4);
       machine.stop();
     }
-    this.plugin.superMiningMachineManager.removeMachine(machine);
+    this.plugin.smmManager.removeMachine(machine);
   }
 }

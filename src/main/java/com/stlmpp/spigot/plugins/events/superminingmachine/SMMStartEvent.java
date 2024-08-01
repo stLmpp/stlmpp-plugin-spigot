@@ -10,15 +10,15 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 
-public class SuperMiningMachineStartEvent implements Listener {
+public class SMMStartEvent implements Listener {
 
   private final StlmppPlugin plugin;
 
-  public static SuperMiningMachineStartEvent register(StlmppPlugin plugin) {
-    return new SuperMiningMachineStartEvent(plugin);
+  public static SMMStartEvent register(StlmppPlugin plugin) {
+    return new SMMStartEvent(plugin);
   }
 
-  private SuperMiningMachineStartEvent(StlmppPlugin plugin) {
+  private SMMStartEvent(StlmppPlugin plugin) {
     this.plugin = plugin;
     this.plugin.getServer().getPluginManager().registerEvents(this, plugin);
   }
@@ -39,13 +39,18 @@ public class SuperMiningMachineStartEvent implements Listener {
         || !player.getInventory().getItemInMainHand().getType().equals(Material.NETHER_STAR)) {
       return;
     }
-    assert this.plugin.superMiningMachineManager != null;
-    final var machine = this.plugin.superMiningMachineManager.getMachineByNetheriteBlock(block);
+    assert this.plugin.smmManager != null;
+    final var machine = this.plugin.smmManager.getMachineByNetheriteBlock(block);
     if (machine == null) {
       this.plugin.log(String.format("machine not found with block %s", block), true);
       return;
     }
     final var isCreative = player.getGameMode().equals(GameMode.CREATIVE);
+    if (machine.getHasFinished()) {
+      this.plugin.sendMessage(
+          String.format("%s, essa maquina ja terminou a escavacao!", player.getName()));
+      return;
+    }
     if (!machine.getIsRunning()) {
       this.startMachine(player, machine, isCreative);
       return;

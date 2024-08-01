@@ -15,13 +15,13 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class SuperMiningMachineCreationEvent implements Listener {
+public class SMMCreationEvent implements Listener {
 
-  public static SuperMiningMachineCreationEvent register(@NotNull StlmppPlugin plugin) {
-    return new SuperMiningMachineCreationEvent(plugin);
+  public static SMMCreationEvent register(@NotNull StlmppPlugin plugin) {
+    return new SMMCreationEvent(plugin);
   }
 
-  private SuperMiningMachineCreationEvent(StlmppPlugin plugin) {
+  private SMMCreationEvent(StlmppPlugin plugin) {
     this.plugin = plugin;
     this.maxSize = plugin.config.getInt(StlmppPluginConfig.superMiningMachineMaxSize);
     this.minY = new HashMap<>();
@@ -56,11 +56,11 @@ public class SuperMiningMachineCreationEvent implements Listener {
 
   @EventHandler
   public void onBlockPlaceEvent(BlockPlaceEvent event) {
-    assert this.plugin.superMiningMachineManager != null;
+    assert this.plugin.smmManager != null;
     final var blockY = event.getBlock().getY();
     final var worldName = event.getBlock().getWorld().getName();
-    if (!this.plugin.superMiningMachineManager.isBlockTypeValid(event.getBlock().getType())
-        || !this.plugin.superMiningMachineManager.isWorldValid(event.getBlock().getWorld())
+    if (!this.plugin.smmManager.isBlockTypeValid(event.getBlock().getType())
+        || !this.plugin.smmManager.isWorldValid(event.getBlock().getWorld())
         || blockY > this.maxY.get(worldName)
         || blockY < this.minY.get(worldName)) {
       return;
@@ -117,15 +117,15 @@ public class SuperMiningMachineCreationEvent implements Listener {
             topLeft.block(),
             topRight.block());
 
-    assert plugin.superMiningMachineManager != null;
-    if (plugin.superMiningMachineManager.isOverlappingAnotherMachine(machine.boundingBox)) {
+    assert plugin.smmManager != null;
+    if (plugin.smmManager.isOverlappingAnotherMachine(machine.boundingBox)) {
       this.log("{11} super mining machine is overlapping another machine");
       return;
     }
 
     this.log(String.format("SuperMiningMachine - %s", machine));
 
-    this.plugin.superMiningMachineManager.addMachine(machine);
+    this.plugin.smmManager.addMachine(machine);
 
     this.plugin.sendMessage(
         String.format(
@@ -170,13 +170,10 @@ public class SuperMiningMachineCreationEvent implements Listener {
     if (!block.getType().equals(Material.OBSIDIAN)) {
       return null;
     }
-    assert plugin.superMiningMachineManager != null;
+    assert plugin.smmManager != null;
     final var faces =
         Arrays.stream(blockFaces)
-            .filter(
-                face ->
-                    plugin.superMiningMachineManager.isBlockTypeValid(
-                        block.getRelative(face).getType()))
+            .filter(face -> plugin.smmManager.isBlockTypeValid(block.getRelative(face).getType()))
             .toList();
     if (faces.size() != 2) {
       return null;

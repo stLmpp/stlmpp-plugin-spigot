@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.bukkit.Material;
 
-public class SuperMiningMachineBlockDelay {
+public class SMMBlockDelay {
 
   private static final Map<Material, Double> map;
 
