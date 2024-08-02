@@ -23,14 +23,14 @@ public class SMMCreationEvent implements Listener {
 
   private SMMCreationEvent(StlmppPlugin plugin) {
     this.plugin = plugin;
-    this.maxSize = plugin.config.getInt(StlmppPluginConfig.superMiningMachineMaxSize);
-    this.minY = new HashMap<>();
-    this.minY.put(plugin.getWorldName(), 62);
-    this.minY.put(plugin.getWorldNetherName(), 42);
-    this.maxY = new HashMap<>();
-    this.maxY.put(plugin.getWorldName(), 256);
-    this.maxY.put(plugin.getWorldNetherName(), 100);
-    this.plugin.getServer().getPluginManager().registerEvents(this, plugin);
+    maxSize = plugin.config.getInt(StlmppPluginConfig.superMiningMachineMaxSize);
+    minY = new HashMap<>();
+    minY.put(plugin.getWorldName(), 62);
+    minY.put(plugin.getWorldNetherName(), 42);
+    maxY = new HashMap<>();
+    maxY.put(plugin.getWorldName(), 256);
+    maxY.put(plugin.getWorldNetherName(), 100);
+    plugin.getServer().getPluginManager().registerEvents(this, plugin);
   }
 
   private final int maxSize;
@@ -51,51 +51,51 @@ public class SMMCreationEvent implements Listener {
           SMMCornerType.TopRight, new HashSet<>(List.of(BlockFace.SOUTH, BlockFace.WEST)));
 
   private void log(String message) {
-    this.plugin.log(String.format("(SuperMiningMachineCreationEvent) %s", message), true);
+    plugin.log(String.format("(SuperMiningMachineCreationEvent) %s", message), true);
   }
 
   @EventHandler
   public void onBlockPlaceEvent(BlockPlaceEvent event) {
-    assert this.plugin.smmManager != null;
+    assert plugin.smmManager != null;
     final var blockY = event.getBlock().getY();
     final var worldName = event.getBlock().getWorld().getName();
-    if (!this.plugin.smmManager.isBlockTypeValid(event.getBlock().getType())
-        || !this.plugin.smmManager.isWorldValid(event.getBlock().getWorld())
-        || blockY > this.maxY.get(worldName)
-        || blockY < this.minY.get(worldName)) {
+    if (!plugin.smmManager.isBlockTypeValid(event.getBlock().getType())
+        || !plugin.smmManager.isWorldValid(event.getBlock().getWorld())
+        || blockY > maxY.get(worldName)
+        || blockY < minY.get(worldName)) {
       return;
     }
 
-    SMMCorner corner1 = parseCorner(event.getBlock());
+    SMMCorner firstCorner = parseCorner(event.getBlock());
 
-    if (corner1 == null) {
+    if (firstCorner == null) {
       final var edge = parseEdge(event.getBlock());
       if (edge == null) {
         return;
       }
-      corner1 = getCornerFromEdge(edge);
+      firstCorner = getCornerFromEdge(edge);
     }
 
-    if (corner1 == null) {
+    if (firstCorner == null) {
       return;
     }
 
-    final var allBlocks = new ArrayList<>(List.of(corner1.block()));
-    var corner = corner1;
+    final List<Block> allBlocks = new ArrayList<>();
+    var corner = firstCorner;
 
     SMMCorner bottomLeft = null;
     SMMCorner bottomRight = null;
     SMMCorner topLeft = null;
     SMMCorner topRight = null;
 
-    for (final var face : corner1.getFacesListInOrder()) {
-      final var r = getEdgesAndCornerFromCorner(corner, face);
-      if (r == null) {
+    for (final var face : firstCorner.getFacesListInOrder()) {
+      final var cornerAndEdgesPair = getCornerAndEdgesFromCorner(corner, face);
+      if (cornerAndEdgesPair == null) {
         return;
       }
-      allBlocks.addAll(r.value1.stream().map(SMMEdge::block).toList());
-      allBlocks.add(r.value0.block());
-      corner = r.value0;
+      allBlocks.addAll(cornerAndEdgesPair.value1.stream().map(SMMEdge::block).toList());
+      allBlocks.add(cornerAndEdgesPair.value0.block());
+      corner = cornerAndEdgesPair.value0;
       switch (corner.type()) {
         case BottomLeft -> bottomLeft = corner;
         case BottomRight -> bottomRight = corner;
@@ -119,15 +119,15 @@ public class SMMCreationEvent implements Listener {
 
     assert plugin.smmManager != null;
     if (plugin.smmManager.isOverlappingAnotherMachine(machine.boundingBox)) {
-      this.log("{11} super mining machine is overlapping another machine");
+      log("{11} super mining machine is overlapping another machine");
       return;
     }
 
-    this.log(String.format("SuperMiningMachine - %s", machine));
+    log(String.format("SuperMiningMachine - %s", machine));
 
-    this.plugin.smmManager.addMachine(machine);
+    plugin.smmManager.addMachine(machine);
 
-    this.plugin.sendMessage(
+    plugin.sendMessage(
         String.format(
             "%s criou uma escavadeira de %s por %s, com custo de %s levels",
             event.getPlayer().getName(),
@@ -157,7 +157,7 @@ public class SMMCreationEvent implements Listener {
     }
     final var corner =
         Util.findFirst(
-            this.cornerIdentificationMap.entrySet().stream().toList(),
+            cornerIdentificationMap.entrySet().stream().toList(),
             kv -> kv.getValue().containsAll(faces));
     if (corner == null) {
       return null;
@@ -204,7 +204,7 @@ public class SMMCreationEvent implements Listener {
   }
 
   @Nullable
-  private Pair<SMMCorner, List<SMMEdge>> getEdgesAndCornerFromCorner(
+  private Pair<SMMCorner, List<SMMEdge>> getCornerAndEdgesFromCorner(
       @NotNull SMMCorner corner, BlockFace direction) {
     Block block = corner.block();
     final List<SMMEdge> obsidians = new ArrayList<>();

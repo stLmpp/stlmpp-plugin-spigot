@@ -29,7 +29,7 @@ public class SMMManager {
 
   private SMMManager(StlmppPlugin plugin) {
     this.plugin = plugin;
-    this.prepareDatabase();
+    prepareDatabase();
     SMMCreationEvent.register(plugin);
     SMMStartEvent.register(plugin);
     SMMDestroyEvent.register(plugin);
@@ -50,26 +50,23 @@ public class SMMManager {
   public boolean isOverlappingAnotherMachine(BoundingBox boundingBox) {
     return machines.values().stream()
         .anyMatch(
-            machine -> {
-              final var extendedBoundingBox =
-                  machine.boundingBox.clone().expand(0, 64, 0, 0, 320, 0);
-              return extendedBoundingBox.overlaps(boundingBox);
-            });
+            machine ->
+                machine.boundingBox.clone().expand(0, 64, 0, 0, 320, 0).overlaps(boundingBox));
   }
 
   @Nullable
   public SuperMiningMachine getMachineByNetheriteBlock(Block block) {
-    return Util.findFirst(this.machines.values(), machine -> machine.hasNetheriteBlock(block));
+    return Util.findFirst(machines.values(), machine -> machine.hasNetheriteBlock(block));
   }
 
   @Nullable
   public SuperMiningMachine getMachineByBlock(Block block) {
-    return Util.findFirst(this.machines.values(), machine -> machine.hasBlock(block));
+    return Util.findFirst(machines.values(), machine -> machine.hasBlock(block));
   }
 
   public boolean isWorldValid(@NotNull World world) {
-    return world.getName().equals(this.plugin.getWorldName())
-        || world.getName().equals(this.plugin.getWorldNetherName());
+    return world.getName().equals(plugin.getWorldName())
+        || world.getName().equals(plugin.getWorldNetherName());
   }
 
   public boolean isBlockTypeValid(@NotNull Material material) {
@@ -77,7 +74,7 @@ public class SMMManager {
   }
 
   public void addMachine(SuperMiningMachine machine) {
-    this.machines.put(machine.getId(), machine);
+    machines.put(machine.getId(), machine);
     final var entity = machine.serialize();
     final var insertBlockQuery =
         SMMQueries.smmBlockInsertBase
@@ -112,7 +109,7 @@ public class SMMManager {
   }
 
   public void removeMachine(SuperMiningMachine machine) {
-    this.machines.remove(machine.getId());
+    machines.remove(machine.getId());
     try (final var statement = plugin.getDatabaseConnection().prepareStatement(SMMQueries.delete);
         final var statementBlocks =
             plugin.getDatabaseConnection().prepareStatement(SMMQueries.deleteBlocks)) {

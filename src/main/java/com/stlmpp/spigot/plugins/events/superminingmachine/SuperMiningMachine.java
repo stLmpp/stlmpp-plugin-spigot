@@ -51,7 +51,7 @@ public class SuperMiningMachine {
     final var xList = corners.stream().map(Block::getX).toList();
     final var yList = corners.stream().map(Block::getY).toList();
     final var zList = corners.stream().map(Block::getZ).toList();
-    this.boundingBox =
+    boundingBox =
         new BoundingBox(
             xList.stream().mapToInt(v -> v).min().orElse(0),
             yList.stream().mapToInt(v -> v).min().orElse(0),
@@ -59,7 +59,7 @@ public class SuperMiningMachine {
             xList.stream().mapToInt(v -> v).max().orElse(0),
             yList.stream().mapToInt(v -> v).max().orElse(0),
             zList.stream().mapToInt(v -> v).max().orElse(0));
-    this.innerBoundingBox =
+    innerBoundingBox =
         new BoundingBox(
             boundingBox.getMinX() + 1,
             boundingBox.getMinY(),
@@ -92,15 +92,15 @@ public class SuperMiningMachine {
       @NotNull List<DoubleChest> chests,
       @NotNull SMMEntity entity) {
     this(plugin, blocks, bottomLeftBlock, bottomRightBlock, topLeftBlock, topRightBlock);
-    this.boostFactor = entity.boostFactor();
-    this.boostTimes = entity.boostTimes();
+    boostFactor = entity.boostFactor();
+    boostTimes = entity.boostTimes();
     if (entity.lastBlock() != null) {
-      this.lastBlockBroken = deserializeLocation(entity.lastBlock());
+      lastBlockBroken = deserializeLocation(entity.lastBlock());
     }
     this.chests.addAll(chests);
-    this.hasFinished = entity.hasFinished() == 1;
+    hasFinished = entity.hasFinished() == 1;
     if (entity.isRunning() == 1 && !hasFinished) {
-      this.onEnable();
+      onEnable();
     }
   }
 
@@ -209,7 +209,7 @@ public class SuperMiningMachine {
     }
     playSound(Sound.BLOCK_BEACON_ACTIVATE);
     startSmoke();
-    plugin.log(String.format("Starting machine %s", this.id), true);
+    plugin.log(String.format("Starting machine %s", id), true);
     isRunning = true;
     scheduleNext();
   }
