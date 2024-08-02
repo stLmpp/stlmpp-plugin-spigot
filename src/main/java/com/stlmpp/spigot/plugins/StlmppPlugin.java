@@ -21,22 +21,22 @@ import java.sql.SQLException;
 public class StlmppPlugin extends JavaPlugin {
 
   public void log(String message) {
-    this.log(message, false);
+    log(message, false);
   }
 
   public void log(String message, boolean onlyDevMode) {
-    if (!onlyDevMode || this.isDevMode) {
-      this.getLogger().info(message);
+    if (!onlyDevMode || isDevMode) {
+      getLogger().info(message);
     }
   }
 
   public void sendMessage(String message) {
-    this.getServer().broadcast(Component.text(message));
+    getServer().broadcast(Component.text(message));
   }
 
   private Connection databaseConnection;
 
-  public final FileConfiguration config = this.getConfig();
+  public final FileConfiguration config = getConfig();
   public Boolean isDevMode = false;
 
   @Nullable private NetherPortalLeakingEvent netherPortalLeakingEvent;
@@ -44,21 +44,21 @@ public class StlmppPlugin extends JavaPlugin {
   @Nullable public SMMManager smmManager;
 
   public String getWorldName() {
-    return this.config.getString(StlmppPluginConfig.world);
+    return config.getString(StlmppPluginConfig.world);
   }
 
   public String getWorldNetherName() {
-    return this.config.getString(StlmppPluginConfig.worldNether);
+    return config.getString(StlmppPluginConfig.worldNether);
   }
 
   @Nullable
   public World getWorld() {
-    return this.getServer().getWorld(this.getWorldName());
+    return getServer().getWorld(getWorldName());
   }
 
   @Nullable
   public World getWorldNether() {
-    return this.getServer().getWorld(this.getWorldNetherName());
+    return getServer().getWorld(getWorldNetherName());
   }
 
   @Override
@@ -66,30 +66,33 @@ public class StlmppPlugin extends JavaPlugin {
     new StlmppPluginConfig(this);
     Path filePath = Paths.get(getDataPath().toString(), "database.db");
     try {
-      this.databaseConnection = DriverManager.getConnection("jdbc:sqlite:" + filePath);
+      databaseConnection = DriverManager.getConnection("jdbc:sqlite:" + filePath);
     } catch (SQLException e) {
       log("Failed to connect to database.");
       throw new RuntimeException(e);
     }
-    this.netherLightningTask = NetherLightningTask.register(this);
+    netherLightningTask = NetherLightningTask.register(this);
     AutoSeedEvent.register(this);
     LightningTeleportEvent.register(this);
-    this.netherPortalLeakingEvent = NetherPortalLeakingEvent.register(this);
+    netherPortalLeakingEvent = NetherPortalLeakingEvent.register(this);
     EggRandomEffectEvent.register(this);
     DeathEvent.register(this);
-    this.smmManager = SMMManager.register(this);
+    smmManager = SMMManager.register(this);
+    if (smmManager != null) {
+      smmManager.onEnable();
+    }
   }
 
   @Override
   public void onDisable() {
-    if (this.netherPortalLeakingEvent != null) {
-      this.netherPortalLeakingEvent.destroy();
+    if (netherPortalLeakingEvent != null) {
+      netherPortalLeakingEvent.destroy();
     }
-    if (this.netherLightningTask != null) {
-      this.netherLightningTask.stopLastTask();
+    if (netherLightningTask != null) {
+      netherLightningTask.stopLastTask();
     }
-    if (this.smmManager != null) {
-      this.smmManager.onDisable();
+    if (smmManager != null) {
+      smmManager.onDisable();
     }
   }
 

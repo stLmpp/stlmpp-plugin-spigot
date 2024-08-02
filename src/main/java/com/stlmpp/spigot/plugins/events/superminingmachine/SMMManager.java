@@ -7,16 +7,15 @@ import com.stlmpp.spigot.plugins.events.superminingmachine.entity.SMMEntity;
 import com.stlmpp.spigot.plugins.events.superminingmachine.entity.SMMQueries;
 import com.stlmpp.spigot.plugins.events.superminingmachine.entity.SMMStateUpdateDto;
 import com.stlmpp.spigot.plugins.utils.Util;
+import java.util.ArrayList;
+import java.util.HashMap;
+import org.apache.commons.lang3.StringUtils;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.util.BoundingBox;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
 
 public class SMMManager {
 
@@ -34,39 +33,12 @@ public class SMMManager {
     SMMCreationEvent.register(plugin);
     SMMStartEvent.register(plugin);
     SMMDestroyEvent.register(plugin);
-    this.onEnable();
   }
 
   private void prepareDatabase() {
     try (final var statement = plugin.getDatabaseConnection().createStatement()) {
-      statement.executeUpdate(
-          """
-create table if not exists super_mining_machine(
-    id text primary key,
-    world text not null,
-    bottom_left text not null,
-    bottom_right text not null,
-    top_left text not null,
-    top_right text not null,
-    last_block text null,
-    boost_factor real not null,
-    boost_times int not null,
-    is_running int not null,
-    has_finished int not null
-);
-""");
-      statement.executeUpdate(
-          """
-create table if not exists super_mining_machine_block (
-    id integer primary key autoincrement,
-    smm_id text not null,
-    location text not null,
-    type text not null,
-    foreign key (smm_id) references super_mining_machine (id)
-);
-""");
-    } catch (SQLException error) {
-      error.printStackTrace();
+      statement.executeUpdate(SMMQueries.ddl);
+    } catch (Exception error) {
       throw new RuntimeException(error.getMessage());
     }
   }
@@ -107,27 +79,13 @@ create table if not exists super_mining_machine_block (
   public void addMachine(SuperMiningMachine machine) {
     this.machines.put(machine.getId(), machine);
     final var entity = machine.serialize();
-    var insertQuery = new StringBuilder(SMMQueries.smmInsert);
-    for (final var block : entity.blocks()) {
-      insertQuery.append()
-    }
+    final var insertBlockQuery =
+        SMMQueries.smmBlockInsertBase
+            + StringUtils.chop("(?, ?, ?),".repeat(entity.blocks().size()));
     try (final var statement =
-        plugin
-            .getDatabaseConnection()
-            .prepareStatement(
-                """
-insert into super_mining_machine (
-    id, world,
-    bottom_left, bottom_right, top_left, top_right,
-    last_block, boost_factor, boost_times, is_running, has_finished)
-values (
-    ?, ?
-    ?, ?, ?, ?,
-    ?, ?, ?, ?, ?
-);
-
-""")) {
-      final var entity = machine.serialize();
+            plugin.getDatabaseConnection().prepareStatement(SMMQueries.smmInsert);
+        final var statementBlocks =
+            plugin.getDatabaseConnection().prepareStatement(insertBlockQuery)) {
       statement.setString(1, entity.id());
       statement.setString(2, entity.world());
       statement.setString(3, entity.bottomLeft());
@@ -139,39 +97,66 @@ values (
       statement.setInt(9, entity.boostTimes());
       statement.setInt(10, entity.isRunning());
       statement.setInt(11, entity.hasFinished());
-      statement.execute();
-    } catch (SQLException error) {
+      var parameterIndex = 0;
+      final var blocks = entity.blocks();
+      for (final SMMBlockEntity block : blocks) {
+        statementBlocks.setString(++parameterIndex, block.smmId());
+        statementBlocks.setString(++parameterIndex, block.location());
+        statementBlocks.setString(++parameterIndex, block.type());
+      }
+      statement.executeUpdate();
+      statementBlocks.executeUpdate();
+    } catch (Exception error) {
       plugin.log("Error trying to insert the machine: " + error.getMessage());
     }
   }
 
   public void removeMachine(SuperMiningMachine machine) {
     this.machines.remove(machine.getId());
-    // TODO persist machine
+    try (final var statement = plugin.getDatabaseConnection().prepareStatement(SMMQueries.delete);
+        final var statementBlocks =
+            plugin.getDatabaseConnection().prepareStatement(SMMQueries.deleteBlocks)) {
+      statement.setString(1, machine.getId());
+      statementBlocks.setString(1, machine.getId());
+      statement.executeUpdate();
+      statementBlocks.executeUpdate();
+    } catch (Exception error) {
+      plugin.log("Error trying to delete the machine: " + error.getMessage());
+    }
   }
 
-  public void onEnable() throws SQLException {
+  public void updateState(String id, SMMStateUpdateDto dto) {
+    plugin.log(String.format("Updating state of machine %s | %s", id, dto));
+    try (final var statement =
+        plugin.getDatabaseConnection().prepareStatement(SMMQueries.updateState)) {
+      statement.setInt(1, dto.isRunning());
+      statement.setInt(2, dto.hasFinished());
+      statement.setString(3, dto.lastBlock());
+      statement.setDouble(4, dto.boostFactor());
+      statement.setInt(5, dto.boostTimes());
+      statement.setString(6, id);
+      statement.executeUpdate();
+    } catch (Exception error) {
+      plugin.log("Error trying to update the state: " + error.getMessage());
+    }
+  }
+
+  public void insertBlock(SMMBlockEntity block) {
+    plugin.log(String.format("Inserting block on machine %s | %s", block.smmId(), block));
+    try (final var statement =
+        plugin.getDatabaseConnection().prepareStatement(SMMQueries.smmBlockInsert)) {
+      statement.setString(1, block.smmId());
+      statement.setString(2, block.location());
+      statement.setString(3, block.type());
+      statement.executeUpdate();
+    } catch (Exception error) {
+      plugin.log("Error trying to insert block: " + error.getMessage());
+    }
+  }
+
+  public void onEnable() {
     try (final var statement = plugin.getDatabaseConnection().createStatement()) {
-      final var results =
-          statement.executeQuery(
-              """
-select world,
-       bottom_left,
-       bottom_right,
-       top_left,
-       top_right,
-       last_block,
-       boost_factor,
-       boost_times,
-       is_running,
-       has_finished,
-       b.id b_id,
-       smm_id,
-       location,
-       type
-from super_mining_machine s
-         inner join super_mining_machine_block b on b.smm_id = s.id;
-""");
+      final var results = statement.executeQuery(SMMQueries.selectAll);
       final var map = new HashMap<String, SMMEntity>();
       while (results.next()) {
         final String world = results.getString(1);
@@ -211,40 +196,14 @@ from super_mining_machine s
       for (final var entity : map.values()) {
         machines.put(entity.id(), SuperMiningMachine.deserialize(plugin, entity));
       }
-    } catch (SQLException error) {
+    } catch (Exception error) {
       plugin.log("Error trying find machines in the database: " + error.getMessage());
-    }
-  }
-
-  public void updateState(String id, SMMStateUpdateDto dto) {
-    try (final var statement =
-        plugin
-            .getDatabaseConnection()
-            .prepareStatement(
-                """
-update super_mining_machine
-   set is_running = ?,
-       has_finished = ?,
-       last_block = ?,
-       boost_factor = ?,
-       boost_times = ?
- where id = ?
-""")) {
-      statement.setInt(1, dto.isRunning());
-      statement.setInt(2, dto.hasFinished());
-      statement.setString(3, dto.lastBlock());
-      statement.setDouble(4, dto.boostFactor());
-      statement.setInt(5, dto.boostTimes());
-      statement.setString(6, id);
-      statement.execute();
-    } catch (SQLException error) {
-      plugin.log("Error trying to update the state: " + error.getMessage());
     }
   }
 
   public void onDisable() {
     for (SuperMiningMachine machine : machines.values()) {
-      machine.stop();
+      machine.onDisable();
     }
   }
 }

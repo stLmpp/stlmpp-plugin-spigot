@@ -3,6 +3,7 @@ package com.stlmpp.spigot.plugins.events.superminingmachine;
 import com.stlmpp.spigot.plugins.StlmppPlugin;
 import com.stlmpp.spigot.plugins.events.superminingmachine.entity.SMMBlockEntity;
 import com.stlmpp.spigot.plugins.events.superminingmachine.entity.SMMEntity;
+import com.stlmpp.spigot.plugins.events.superminingmachine.entity.SMMStateUpdateDto;
 import com.stlmpp.spigot.plugins.utils.BlockHashSet;
 import com.stlmpp.spigot.plugins.utils.Chance;
 import com.stlmpp.spigot.plugins.utils.Tick;
@@ -25,6 +26,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.BlockVector;
 import org.bukkit.util.BoundingBox;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -42,13 +44,13 @@ public class SuperMiningMachine {
     this.bottomRightBlock = bottomRightBlock;
     this.topLeftBlock = topLeftBlock;
     this.topRightBlock = topRightBlock;
-    this.corners =
+    corners =
         new BlockHashSet(
             getWorld(), List.of(bottomLeftBlock, bottomRightBlock, topLeftBlock, topRightBlock));
     this.blocks = new BlockHashSet(getWorld(), blocks);
-    final var xList = this.corners.stream().map(Block::getX).toList();
-    final var yList = this.corners.stream().map(Block::getY).toList();
-    final var zList = this.corners.stream().map(Block::getZ).toList();
+    final var xList = corners.stream().map(Block::getX).toList();
+    final var yList = corners.stream().map(Block::getY).toList();
+    final var zList = corners.stream().map(Block::getZ).toList();
     this.boundingBox =
         new BoundingBox(
             xList.stream().mapToInt(v -> v).min().orElse(0),
@@ -59,25 +61,25 @@ public class SuperMiningMachine {
             zList.stream().mapToInt(v -> v).max().orElse(0));
     this.innerBoundingBox =
         new BoundingBox(
-            this.boundingBox.getMinX() + 1,
-            this.boundingBox.getMinY(),
-            this.boundingBox.getMinZ() + 1,
-            this.boundingBox.getMaxX() - 1,
-            this.boundingBox.getMaxY(),
-            this.boundingBox.getMaxZ() - 1);
-    this.id =
+            boundingBox.getMinX() + 1,
+            boundingBox.getMinY(),
+            boundingBox.getMinZ() + 1,
+            boundingBox.getMaxX() - 1,
+            boundingBox.getMaxY(),
+            boundingBox.getMaxZ() - 1);
+    id =
         String.format(
             "SMM_%s_%s_%s_%s_%s_%s",
-            this.boundingBox.getMin().getBlockX(),
-            this.boundingBox.getMin().getBlockY(),
-            this.boundingBox.getMin().getBlockZ(),
-            this.boundingBox.getMax().getBlockX(),
-            this.boundingBox.getMax().getBlockY(),
-            this.boundingBox.getMax().getBlockZ());
-    this.size = (int) Math.floor(this.boundingBox.getWidthX() + this.boundingBox.getWidthZ() - 2);
-    this.expLevelRequired = size;
-    this.lastBlockBroken = this.getInitialBlockVector();
-    this.minY = getWorld().getName().equals(this.plugin.getWorldName()) ? -63 : 1;
+            boundingBox.getMin().getBlockX(),
+            boundingBox.getMin().getBlockY(),
+            boundingBox.getMin().getBlockZ(),
+            boundingBox.getMax().getBlockX(),
+            boundingBox.getMax().getBlockY(),
+            boundingBox.getMax().getBlockZ());
+    size = (int) Math.floor(boundingBox.getWidthX() + boundingBox.getWidthZ() - 2);
+    expLevelRequired = size;
+    lastBlockBroken = getInitialBlockVector();
+    minY = getWorld().getName().equals(plugin.getWorldName()) ? -63 : 1;
   }
 
   private SuperMiningMachine(
@@ -98,7 +100,7 @@ public class SuperMiningMachine {
     this.chests.addAll(chests);
     this.hasFinished = entity.hasFinished() == 1;
     if (entity.isRunning() == 1 && !hasFinished) {
-      this.start();
+      this.onEnable();
     }
   }
 
@@ -134,80 +136,92 @@ public class SuperMiningMachine {
   }
 
   public BlockHashSet getCorners() {
-    return this.corners;
+    return corners;
   }
 
   public BlockHashSet getBlocks() {
-    return this.blocks;
+    return blocks;
   }
 
   public String getId() {
-    return this.id;
+    return id;
   }
 
   public boolean getIsRunning() {
-    return this.isRunning;
+    return isRunning;
   }
 
   public boolean getHasFinished() {
-    return this.hasFinished;
+    return hasFinished;
   }
 
   public int getExpLevelRequired() {
-    return this.expLevelRequired;
+    return expLevelRequired;
   }
 
   public double getBoostFactor() {
-    return this.boostFactor;
+    return boostFactor;
   }
 
   public boolean hasMaxBoost() {
-    return this.boostFactor == this.maxBoost;
+    return boostFactor == maxBoost;
   }
 
   public void addBoost() {
-    if (this.hasMaxBoost()) {
+    if (hasMaxBoost()) {
       return;
     }
-    this.playSound(Sound.BLOCK_BEACON_POWER_SELECT);
-    this.boostTimes++;
-    this.boostFactor = Math.min(this.boostFactor + (0.25 / this.boostTimes), this.maxBoost);
-    this.restartSmoke();
-    this.plugin.log(String.format("Machine %s has been boosted to %s", id, this.boostFactor));
+    playSound(Sound.BLOCK_BEACON_POWER_SELECT);
+    boostTimes++;
+    boostFactor = Math.min(boostFactor + (0.25 / boostTimes), maxBoost);
+    restartSmoke();
+    plugin.log(String.format("Machine %s has been boosted to %s", id, boostFactor));
+    updateDatabaseState();
   }
 
   public boolean hasNetheriteBlock(@NotNull Block block) {
-    return this.corners.contains(block);
+    return corners.contains(block);
   }
 
   public boolean hasBlock(@NotNull Block block) {
-    return this.blocks.contains(block);
+    return blocks.contains(block);
   }
 
   public void start() {
-    if (this.isRunning) {
-      this.plugin.log(String.format("Machine %s is already running", this.id), true);
+    if (isRunning) {
+      plugin.log(String.format("Machine %s is already running", id), true);
       return;
     }
-    if (this.hasFinished) {
-      this.plugin.log(String.format("Machine %s is already completed", this.id), true);
-      return;
-    }
-    this.playSound(Sound.BLOCK_BEACON_ACTIVATE);
-    this.startSmoke();
-    this.plugin.log(String.format("Starting machine %s", this.id), true);
-    this.isRunning = true;
-    this.scheduleNext();
+    onEnable();
   }
 
   public void stop() {
-    if (this.lastTask != null) {
-      this.lastTask.cancel();
+    onDisable();
+    playSound(Sound.BLOCK_BEACON_DEACTIVATE);
+    isRunning = false;
+    updateDatabaseState();
+  }
+
+  public void onEnable() {
+    if (hasFinished) {
+      plugin.log(String.format("Machine %s is already completed", id), true);
+      return;
     }
-    this.stopSmoke();
-    this.playSound(Sound.BLOCK_BEACON_DEACTIVATE);
-    this.lastBlockBroken = this.getInitialBlockVector();
-    this.isRunning = false;
+    playSound(Sound.BLOCK_BEACON_ACTIVATE);
+    startSmoke();
+    plugin.log(String.format("Starting machine %s", this.id), true);
+    isRunning = true;
+    scheduleNext();
+  }
+
+  public void onDisable() {
+    if (lastTask != null) {
+      lastTask.cancel();
+    }
+    stopSmoke();
+    if (hasFinished) {
+      lastBlockBroken = getInitialBlockVector();
+    }
   }
 
   private void startSmoke() {
@@ -215,7 +229,7 @@ public class SuperMiningMachine {
     if (boostFactor > 0) {
       seconds -= seconds * boostFactor;
     }
-    this.smokeTask =
+    smokeTask =
         new BukkitRunnable() {
           @Override
           public void run() {
@@ -235,14 +249,24 @@ public class SuperMiningMachine {
   }
 
   private void stopSmoke() {
-    if (this.smokeTask != null) {
-      this.smokeTask.cancel();
+    if (smokeTask != null) {
+      smokeTask.cancel();
     }
   }
 
   private void restartSmoke() {
-    this.stopSmoke();
-    this.startSmoke();
+    stopSmoke();
+    startSmoke();
+  }
+
+  @Contract(" -> new")
+  private @NotNull SMMStateUpdateDto getUpdateDto() {
+    return new SMMStateUpdateDto(
+        isRunning ? 1 : 0,
+        hasFinished ? 1 : 0,
+        lastBlockBroken != null ? serializeLocation(lastBlockBroken.toLocation(getWorld())) : null,
+        boostTimes,
+        boostFactor);
   }
 
   private BlockVector getInitialBlockVector() {
@@ -269,15 +293,15 @@ public class SuperMiningMachine {
         z = (int) innerBoundingBox.getMinZ();
         y--;
         // If y goes below minY, no more blocks to mine
-        if (y < this.minY) {
-          this.lastBlockBroken = null;
+        if (y < minY) {
+          lastBlockBroken = null;
           return;
         }
       }
     }
-    this.lastBlockBroken.setY(y);
-    this.lastBlockBroken.setX(x);
-    this.lastBlockBroken.setZ(z);
+    lastBlockBroken.setY(y);
+    lastBlockBroken.setX(x);
+    lastBlockBroken.setZ(z);
   }
 
   private boolean isValidBlockToMine(@NotNull Block block) {
@@ -300,17 +324,18 @@ public class SuperMiningMachine {
   }
 
   private void scheduleNext() {
-    final var block = this.getNextBlock();
+    final var block = getNextBlock();
     if (block == null) {
-      this.lastTask = null;
-      this.hasFinished = true;
-      this.stop();
-      this.plugin.sendMessage(
+      lastTask = null;
+      hasFinished = true;
+      stop();
+      plugin.sendMessage(
           String.format(
               "Escavadeira na coordenada %s %s %s terminou a escavacao!",
               bottomLeftBlock.getX(), bottomLeftBlock.getY(), bottomLeftBlock.getZ()));
       return;
     }
+    updateDatabaseState();
     var seconds = SMMBlockDelay.get(block.getType());
     if (boostFactor > 0.0) {
       seconds -= seconds * boostFactor;
@@ -324,9 +349,10 @@ public class SuperMiningMachine {
         plugin.runLater(
             Tick.fromSeconds(seconds),
             () -> {
-              final var items = this.blockBreaker.breakAndGetDrops(block);
-              this.playSound(Sound.ENTITY_IRON_GOLEM_STEP);
-              this.playSound(Sound.ENTITY_IRON_GOLEM_STEP, block.getLocation());
+              final var items = blockBreaker.breakAndGetDrops(block);
+              if (Chance.of(1)) {
+                playSound(Sound.BLOCK_BEACON_AMBIENT);
+              }
               addItemsToChest(items);
               scheduleNext();
             });
@@ -355,30 +381,30 @@ public class SuperMiningMachine {
               signSide.line(0, Component.text("Levels de"));
               signSide.line(1, Component.text("experiencia"));
               signSide.line(2, Component.text("necessario:"));
-              signSide.line(3, Component.text(this.getExpLevelRequired()));
+              signSide.line(3, Component.text(getExpLevelRequired()));
               signSide.setGlowingText(true);
               signSide.setColor(DyeColor.WHITE);
             });
     sign.update();
   }
 
-  private DoubleChest createNewChest() {
+  private void createNewChest() {
     final var location =
-        this.chests.isEmpty()
+        chests.isEmpty()
             ? bottomLeftBlock
                 .getLocation()
                 .getBlock()
                 .getRelative(BlockFace.SOUTH)
                 .getLocation()
                 .clone()
-            : this.chests
+            : chests
                 .getLast()
                 .getLocation()
                 .getBlock()
                 .getRelative(BlockFace.UP)
                 .getLocation()
                 .clone();
-    this.plugin.log(
+    plugin.log(
         String.format(
             "Creating new chest at %s %s %s",
             location.getBlockX(), location.getBlockY(), location.getBlockZ()));
@@ -400,19 +426,23 @@ public class SuperMiningMachine {
 
     final var state = (org.bukkit.block.Chest) chest1.getState();
 
-    return (DoubleChest) state.getInventory().getHolder();
+    chests.add((DoubleChest) state.getInventory().getHolder());
+
+    assert plugin.smmManager != null;
+    plugin.smmManager.insertBlock(
+        new SMMBlockEntity(null, id, serializeLocation(chest1), SMMBlockEntity.chestType));
   }
 
   private void addItemsToChest(@NotNull Collection<ItemStack> items) {
-    this.plugin.log(String.format("Adding items (%s) to chest", items.size()), true);
+    plugin.log(String.format("Adding items (%s) to chest", items.size()), true);
     for (final var item : items) {
       int chestIndex = 0;
       HashMap<Integer, ItemStack> exceededItems;
       do {
-        if (chestIndex >= this.chests.size()) {
-          this.chests.add(this.createNewChest());
+        if (chestIndex >= chests.size()) {
+          createNewChest();
         }
-        final var chest = this.chests.get(chestIndex);
+        final var chest = chests.get(chestIndex);
         exceededItems = chest.getInventory().addItem(item);
         if (!exceededItems.isEmpty()) {
           chestIndex++;
@@ -424,10 +454,10 @@ public class SuperMiningMachine {
   }
 
   public void createBaseStructure() {
-    this.playSound(Sound.BLOCK_ANVIL_USE);
-    this.createSign();
-    if (this.chests.isEmpty()) {
-      this.createNewChest();
+    playSound(Sound.BLOCK_ANVIL_USE);
+    createSign();
+    if (chests.isEmpty()) {
+      createNewChest();
       final var leftFloor =
           bottomLeftBlock.getRelative(BlockFace.SOUTH).getRelative(BlockFace.DOWN);
       final var rightFloor = leftFloor.getRelative(BlockFace.EAST);
@@ -441,7 +471,7 @@ public class SuperMiningMachine {
         block.setType(Util.randomGlassList.next());
       }
     }
-    for (var block : this.blocks) {
+    for (var block : blocks) {
       final var location = block.getLocation();
       final var isNetherite = location.getBlock().getType().equals(Material.NETHERITE_BLOCK);
       final var blockFloorY = location.getBlockY() - 1;
@@ -461,37 +491,29 @@ public class SuperMiningMachine {
     return String.format(
         "SuperMiningMachine - blocks.size = %s | bottomLeft = %s | bottomRight = %s "
             + "| topLeft = %s | topRight = %s | boundingBox = %s | innerBoundingBox = %s",
-        this.blocks.size(),
-        this.bottomLeftBlock,
-        this.bottomRightBlock,
-        this.topLeftBlock,
-        this.topRightBlock,
-        this.boundingBox,
-        this.innerBoundingBox);
+        blocks.size(),
+        bottomLeftBlock,
+        bottomRightBlock,
+        topLeftBlock,
+        topRightBlock,
+        boundingBox,
+        innerBoundingBox);
   }
 
   public float getExplosionPower() {
-    return (float) (this.size + (this.boostTimes * 0.30));
+    return (float) (size + (boostTimes * 0.30));
   }
 
   private float getSoundVolume() {
-    return (float) this.size / 4;
+    return (float) size / 4;
   }
 
   private void playSound(Sound sound, Location location) {
-    this.plugin.log(
-        String.format(
-            "Playing sound %s at %s %s %s with volume = %s",
-            sound,
-            location.getBlockX(),
-            location.getBlockY(),
-            location.getBlockZ(),
-            this.getSoundVolume()));
-    this.getWorld().playSound(location, sound, this.getSoundVolume(), 1);
+    getWorld().playSound(location, sound, getSoundVolume(), 1);
   }
 
   private void playSound(Sound sound) {
-    final var location = this.boundingBox.getCenter().toLocation(this.getWorld());
+    final var location = boundingBox.getCenter().toLocation(getWorld());
     playSound(sound, location);
   }
 
@@ -555,9 +577,12 @@ public class SuperMiningMachine {
 
   public SMMEntity serialize() {
     final var blocks =
-        new ArrayList<SMMBlockEntity>(
+        new ArrayList<>(
             getBlocks().stream()
-                .map(block -> new SMMBlockEntity(null, id, serializeLocation(block), "block"))
+                .map(
+                    block ->
+                        new SMMBlockEntity(
+                            null, id, serializeLocation(block), SMMBlockEntity.blockType))
                 .toList());
     blocks.addAll(
         chests.stream()
@@ -567,8 +592,11 @@ public class SuperMiningMachine {
                       || chest.getLeftSide().getInventory().getLocation() == null) {
                     return null;
                   }
-                  final var block = chest.getLeftSide().getInventory().getLocation().getBlock();
-                  return new SMMBlockEntity(null, id, serializeLocation(block), "chest");
+                  return new SMMBlockEntity(
+                      null,
+                      id,
+                      serializeLocation(chest.getLeftSide().getInventory().getLocation()),
+                      SMMBlockEntity.chestType);
                 })
             .filter(Objects::nonNull)
             .toList());
@@ -597,6 +625,11 @@ public class SuperMiningMachine {
     return serializeLocation(block.getLocation().toVector().toBlockVector());
   }
 
+  @NotNull
+  public static String serializeLocation(@NotNull Location location) {
+    return serializeLocation(location.toVector().toBlockVector());
+  }
+
   public static BlockVector deserializeLocation(@NotNull String location) {
     final var coordinates = location.split(",");
     final var x = Integer.parseInt(coordinates[0]);
@@ -622,12 +655,12 @@ public class SuperMiningMachine {
     for (final var blockEntity : entity.blocks()) {
       final var block = deserializeLocation(blockEntity.location()).toLocation(world).getBlock();
       switch (blockEntity.type()) {
-        case "block":
+        case SMMBlockEntity.blockType:
           {
             blocks.add(block);
             break;
           }
-        case "chest":
+        case SMMBlockEntity.chestType:
           {
             if (!(block.getState() instanceof org.bukkit.block.Chest state)
                 || !(state.getInventory().getHolder() instanceof DoubleChest doubleChest)) {
@@ -640,5 +673,10 @@ public class SuperMiningMachine {
     }
     return new SuperMiningMachine(
         plugin, blocks, bottomLeft, bottomRight, topLeft, topRight, chests, entity);
+  }
+
+  public void updateDatabaseState() {
+    assert plugin.smmManager != null;
+    plugin.smmManager.updateState(id, getUpdateDto());
   }
 }
