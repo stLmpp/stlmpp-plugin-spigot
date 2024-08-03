@@ -312,18 +312,31 @@ public class Util {
               Material.RED_STAINED_GLASS,
               Material.BLACK_STAINED_GLASS));
 
-  private static final ArrayList<ItemStack> allTools =
+  private static ItemStack getWithFortune(Material material) {
+    final var item = new ItemStack(material);
+    item.addEnchantment(Enchantment.FORTUNE, 3);
+    return item;
+  }
+
+  private static final ArrayList<Supplier<ItemStack>> allTools =
       new ArrayList<>(
-          Stream.of(
-                  new ItemStack(Material.DIAMOND_PICKAXE),
-                  new ItemStack(Material.DIAMOND_SHOVEL),
-                  new ItemStack(Material.DIAMOND_AXE),
-                  new ItemStack(Material.DIAMOND_HOE))
-              .peek(itemStack -> itemStack.addEnchantment(Enchantment.FORTUNE, 3))
-              .toList());
+          List.of(
+              () -> getWithFortune(Material.DIAMOND_PICKAXE),
+              () -> getWithFortune(Material.DIAMOND_SHOVEL),
+              () -> getWithFortune(Material.DIAMOND_AXE),
+              () -> getWithFortune(Material.DIAMOND_HOE)));
+
+  private static final Map<Material, Supplier<ItemStack>> allToolsFastLookup = new HashMap<>();
 
   public static ItemStack findBestTool(Block block) {
-    return Optional.ofNullable(Util.findFirst(allTools, block::isPreferredTool))
-        .orElse(allTools.getFirst());
+    var tool = allToolsFastLookup.get(block.getType());
+    if (tool == null) {
+      tool =
+          Optional.ofNullable(
+                  Util.findFirst(allTools, toolGetter -> block.isPreferredTool(toolGetter.get())))
+              .orElse(allTools.getFirst());
+      allToolsFastLookup.put(block.getType(), tool);
+    }
+    return tool.get();
   }
 }

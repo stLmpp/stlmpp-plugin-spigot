@@ -117,6 +117,16 @@ public class SMMCreationEvent implements Listener {
             topLeft.block(),
             topRight.block());
 
+    if (plugin.smmManager.hasMaxMachinesBeenReached()) {
+      plugin.sendMessage(
+          String.format(
+              "%s essa escavadeira nao pode ser criada pois o maximo de %s ja estao criadas. Termine a execucao das outras ou destrua uma delas.",
+              event.getPlayer().getName(), plugin.smmManager.maxMachines));
+      plugin.sendMessage(
+          "Para buscar a localizacao das outras escavadeiras, digite /smm find-all no chat");
+      return;
+    }
+
     assert plugin.smmManager != null;
     if (plugin.smmManager.isOverlappingAnotherMachine(machine.boundingBox)) {
       log("{11} super mining machine is overlapping another machine");

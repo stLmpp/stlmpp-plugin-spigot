@@ -1,6 +1,7 @@
 package com.stlmpp.spigot.plugins.events.superminingmachine;
 
 import com.stlmpp.spigot.plugins.StlmppPlugin;
+import org.bukkit.Material;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -20,13 +21,14 @@ public class SMMDestroyEvent implements Listener {
 
   @EventHandler
   public void onBlockBreak(BlockBreakEvent event) {
-
     assert this.plugin.smmManager != null;
-    if (!this.plugin.smmManager.isBlockTypeValid(event.getBlock().getType())
-        || !this.plugin.smmManager.isWorldValid(event.getBlock().getWorld())) {
+    final var isValidBlock =
+        this.plugin.smmManager.isBlockTypeValid(event.getBlock().getType())
+            || event.getBlock().getType().equals(Material.CHEST);
+    if (!isValidBlock || !this.plugin.smmManager.isWorldValid(event.getBlock().getWorld())) {
       return;
     }
-    final var machine = this.plugin.smmManager.getMachineByBlock(event.getBlock());
+    final var machine = this.plugin.smmManager.getMachineByBlockOrChest(event.getBlock());
     if (machine == null) {
       return;
     }

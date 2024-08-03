@@ -9,10 +9,13 @@ import com.stlmpp.spigot.plugins.events.superminingmachine.entity.SMMStateUpdate
 import com.stlmpp.spigot.plugins.utils.Util;
 import java.util.ArrayList;
 import java.util.HashMap;
+
+import dev.jorel.commandapi.CommandAPICommand;
 import org.apache.commons.lang3.StringUtils;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Player;
 import org.bukkit.util.BoundingBox;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -29,11 +32,14 @@ public class SMMManager {
 
   private SMMManager(StlmppPlugin plugin) {
     this.plugin = plugin;
+    maxMachines = plugin.config.getInt(StlmppPluginConfig.superMiningMachineMaxQuantity);
     prepareDatabase();
     SMMCreationEvent.register(plugin);
     SMMStartEvent.register(plugin);
     SMMDestroyEvent.register(plugin);
   }
+
+  public final int maxMachines;
 
   private void prepareDatabase() {
     try (final var statement = plugin.getDatabaseConnection().createStatement()) {
@@ -60,8 +66,14 @@ public class SMMManager {
   }
 
   @Nullable
-  public SuperMiningMachine getMachineByBlock(Block block) {
-    return Util.findFirst(machines.values(), machine -> machine.hasBlock(block));
+  public SuperMiningMachine getMachineByBlockOrChest(Block block) {
+    return Util.findFirst(
+        machines.values(), machine -> machine.hasBlock(block) || machine.hasChest(block));
+  }
+
+  public boolean hasMaxMachinesBeenReached() {
+    return this.machines.values().stream().filter(machine -> !machine.getHasFinished()).count()
+        >= maxMachines;
   }
 
   public boolean isWorldValid(@NotNull World world) {
@@ -151,6 +163,122 @@ public class SMMManager {
     }
   }
 
+  private void createCommands() {
+    new CommandAPICommand("smm")
+        .withSubcommand(
+            new CommandAPICommand("find-all")
+                .executes(
+                    (sender, args) -> {
+                      if (machines.isEmpty()) {
+                        plugin.sendMessage("Nenhuma escavadeira encontrada!");
+                        return;
+                      }
+                      final var machinesCoords = new StringBuilder();
+                      for (final SuperMiningMachine machine : machines.values()) {
+                        final var center = machine.boundingBox.getCenter();
+                        machinesCoords
+                            .append("\n")
+                            .append(center.getBlockX())
+                            .append(" ")
+                            .append(center.getBlockY())
+                            .append(" ")
+                            .append(center.getBlockZ())
+                            .append(" - ");
+                        if (machine.getHasFinished()) {
+                          machinesCoords.append("Finalizada!");
+                        } else if (machine.getIsRunning()) {
+                          machinesCoords.append("Escavando");
+                        } else {
+                          machinesCoords.append("Parada");
+                        }
+                      }
+                      plugin.sendMessage("Escavadeiras construidas:" + machinesCoords);
+                    }))
+        .withSubcommand(
+            new CommandAPICommand("get-id")
+                .executesPlayer(
+                    (player) -> {
+                      final var machine = getMachinePlayerLookingAt(player.sender());
+                      if (machine == null) {
+                        plugin.sendMessage("Escavadeira nao encontrada!");
+                        return;
+                      }
+                      plugin.sendMessage("ID = " + machine.getId());
+                    }))
+        .withSubcommand(
+            new CommandAPICommand("stop")
+                .executesPlayer(
+                    (player) -> {
+                      if (!player.sender().isOp()) {
+                        return;
+                      }
+                      final var machine = getMachinePlayerLookingAt(player.sender());
+                      if (machine == null) {
+                        plugin.sendMessage("Escavadeira nao encontrada!");
+                        return;
+                      }
+                      if (!machine.getIsRunning()) {
+                        plugin.sendMessage("Essa escavadeira ja esta parada");
+                        return;
+                      }
+                      machine.stop();
+                    }))
+        .withSubcommand(
+            new CommandAPICommand("start")
+                .executesPlayer(
+                    (player) -> {
+                      if (!player.sender().isOp()) {
+                        return;
+                      }
+                      final var machine = getMachinePlayerLookingAt(player.sender());
+                      if (machine == null) {
+                        plugin.sendMessage("Escavadeira nao encontrada!");
+                        return;
+                      }
+                      if (machine.getIsRunning()) {
+                        plugin.sendMessage("Essa escavadeira ja em andamento");
+                        return;
+                      }
+                      machine.start();
+                    }))
+        .withSubcommand(
+            new CommandAPICommand("stop-all")
+                .executesPlayer(
+                    (player) -> {
+                      if (!player.sender().isOp()) {
+                        return;
+                      }
+                      for (final SuperMiningMachine machine : machines.values()) {
+                        if (machine.getIsRunning()) {
+                          machine.stop();
+                        }
+                      }
+                    }))
+        .withSubcommand(
+            new CommandAPICommand("start-all")
+                .executesPlayer(
+                    (player) -> {
+                      if (!player.sender().isOp()) {
+                        return;
+                      }
+                      for (final SuperMiningMachine machine : machines.values()) {
+                        if (!machine.getIsRunning()) {
+                          machine.start();
+                        }
+                      }
+                    }))
+        .register(plugin);
+  }
+
+  @Nullable
+  private SuperMiningMachine getMachinePlayerLookingAt(Player player) {
+    final var block = player.getTargetBlockExact(5);
+    if (block == null) {
+      return null;
+    }
+    return getMachineByBlockOrChest(block);
+  }
+
   public void onEnable() {
     try (final var statement = plugin.getDatabaseConnection().createStatement()) {
       final var results = statement.executeQuery(SMMQueries.selectAll);
@@ -196,6 +324,7 @@ public class SMMManager {
     } catch (Exception error) {
       plugin.log("Error trying find machines in the database: " + error.getMessage());
     }
+    createCommands();
   }
 
   public void onDisable() {

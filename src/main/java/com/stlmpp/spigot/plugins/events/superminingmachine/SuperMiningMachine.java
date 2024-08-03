@@ -187,6 +187,31 @@ public class SuperMiningMachine {
     return blocks.contains(block);
   }
 
+  public boolean hasChest(@NotNull Block block) {
+    return block.getState() instanceof org.bukkit.block.Chest chest
+        && chest.getInventory().getHolder() instanceof DoubleChest doubleChest
+        && doubleChest.getLeftSide() != null
+        && doubleChest.getLeftSide().getInventory().getLocation() != null
+        && chests.stream()
+            .anyMatch(
+                smmChest ->
+                    smmChest.getLeftSide() != null
+                        && smmChest.getLeftSide().getInventory().getLocation() != null
+                        && smmChest
+                            .getLeftSide()
+                            .getInventory()
+                            .getLocation()
+                            .toVector()
+                            .toBlockVector()
+                            .equals(
+                                doubleChest
+                                    .getLeftSide()
+                                    .getInventory()
+                                    .getLocation()
+                                    .toVector()
+                                    .toBlockVector()));
+  }
+
   public void start() {
     if (isRunning) {
       plugin.log(String.format("Machine %s is already running", id), true);

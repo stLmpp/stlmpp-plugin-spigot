@@ -1,5 +1,6 @@
 package com.stlmpp.spigot.plugins.events.superminingmachine;
 
+import com.stlmpp.spigot.plugins.utils.Chance;
 import com.stlmpp.spigot.plugins.utils.Util;
 import java.util.*;
 import java.util.function.Function;
@@ -13,7 +14,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class SMMBlockBreaker {
 
-  private static HashSet<Material> excludedMaterials = new HashSet<>(List.of(Material.SPAWNER));
+  private static final HashSet<Material> excludedMaterials =
+      new HashSet<>(List.of(Material.SPAWNER));
 
   public SMMBlockBreaker(SuperMiningMachine machine) {
     this.machine = machine;
@@ -63,6 +65,13 @@ public class SMMBlockBreaker {
       items.addAll(oreBlock.getDrops(pickaxe));
       oreBlock.setType(Material.AIR);
     }
+    if (Chance.of(50)) {
+      final var newArray = new ArrayList<ItemStack>();
+      for (ItemStack stack : items) {
+        newArray.add(stack.clone());
+      }
+      items.addAll(newArray);
+    }
     return items;
   }
 
@@ -73,7 +82,6 @@ public class SMMBlockBreaker {
     final var tool = Util.findBestTool(block);
     var drops = block.getDrops(tool);
     if (drops.isEmpty()) {
-      tool.removeEnchantments();
       tool.addEnchantment(Enchantment.SILK_TOUCH, 1);
       drops = block.getDrops(tool);
     }
@@ -100,7 +108,7 @@ public class SMMBlockBreaker {
         right.getInventory().getLocation().getBlock().setType(Material.AIR);
       }
     } else {
-      chest.setType(Material.AIR);
+      block.setType(Material.AIR);
     }
     items.add(chestStack);
     return items;

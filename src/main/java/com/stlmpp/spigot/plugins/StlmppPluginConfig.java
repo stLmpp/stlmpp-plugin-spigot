@@ -32,6 +32,7 @@ public class StlmppPluginConfig {
   public static final String deathEventEnabled = "death-event-enabled";
   public static final String superMiningMachineEnabled = "super-mining-machine-enabled";
   public static final String superMiningMachineMaxSize = "super-mining-machine-max-size";
+  public static final String superMiningMachineMaxQuantity = "super-mining-machine-max-quantity";
 
   public StlmppPluginConfig(StlmppPlugin plugin) {
     final var config = plugin.config;
@@ -61,6 +62,7 @@ public class StlmppPluginConfig {
     config.addDefault(StlmppPluginConfig.deathEventEnabled, true);
     config.addDefault(StlmppPluginConfig.superMiningMachineEnabled, true);
     config.addDefault(StlmppPluginConfig.superMiningMachineMaxSize, 50);
+    config.addDefault(StlmppPluginConfig.superMiningMachineMaxQuantity, 5);
     config.options().copyDefaults(true);
     plugin.saveConfig();
     plugin.isDevMode = config.getBoolean(devMode);

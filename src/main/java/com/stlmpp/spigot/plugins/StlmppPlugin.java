@@ -4,6 +4,13 @@ import com.stlmpp.spigot.plugins.events.*;
 import com.stlmpp.spigot.plugins.events.netherportalleaking.NetherPortalLeakingEvent;
 import com.stlmpp.spigot.plugins.events.superminingmachine.SMMManager;
 import com.stlmpp.spigot.plugins.tasks.NetherLightningTask;
+import dev.jorel.commandapi.CommandAPI;
+import dev.jorel.commandapi.CommandAPIBukkitConfig;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import net.kyori.adventure.text.Component;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -11,12 +18,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.Nullable;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 
 public class StlmppPlugin extends JavaPlugin {
 
@@ -71,6 +72,8 @@ public class StlmppPlugin extends JavaPlugin {
       log("Failed to connect to database.");
       throw new RuntimeException(e);
     }
+    CommandAPI.onLoad(new CommandAPIBukkitConfig(this).silentLogs(!isDevMode));
+    CommandAPI.onEnable();
     netherLightningTask = NetherLightningTask.register(this);
     AutoSeedEvent.register(this);
     LightningTeleportEvent.register(this);
@@ -94,6 +97,7 @@ public class StlmppPlugin extends JavaPlugin {
     if (smmManager != null) {
       smmManager.onDisable();
     }
+    CommandAPI.onDisable();
   }
 
   public BukkitTask runLater(long delay, Runnable function) {
