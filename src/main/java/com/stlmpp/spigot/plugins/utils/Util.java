@@ -6,8 +6,6 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
-
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -201,29 +199,44 @@ public class Util {
     return null;
   }
 
-  private static final BlockFace[] blockFaces = {
-    BlockFace.NORTH,
-    BlockFace.EAST,
-    BlockFace.SOUTH,
-    BlockFace.WEST,
-    BlockFace.UP,
-    BlockFace.DOWN,
-    BlockFace.NORTH_EAST,
-    BlockFace.NORTH_WEST,
-    BlockFace.SOUTH_EAST,
-    BlockFace.SOUTH_WEST
-  };
+  private static final List<BlockFace> blockFaces =
+      List.of(
+          BlockFace.NORTH,
+          BlockFace.EAST,
+          BlockFace.SOUTH,
+          BlockFace.WEST,
+          BlockFace.UP,
+          BlockFace.DOWN,
+          BlockFace.NORTH_EAST,
+          BlockFace.NORTH_WEST,
+          BlockFace.SOUTH_EAST,
+          BlockFace.SOUTH_WEST);
 
-  private static List<Block> getRelatives(@NotNull Block block) {
-    return Arrays.stream(blockFaces).map(block::getRelative).toList();
+  @NotNull
+  public static List<Block> getRelativesFilter(
+      @NotNull Collection<BlockFace> faces, @NotNull Block block, Predicate<Block> predicate) {
+    final List<Block> list = new ArrayList<>();
+    for (var blockFace : faces) {
+      final var newBlock = block.getRelative(blockFace);
+      if (predicate.test(newBlock)) {
+        list.add(newBlock);
+      }
+    }
+    return list;
   }
 
+  @NotNull
+  public static List<Block> getRelativesFilter(@NotNull Block block, Predicate<Block> predicate) {
+    return getRelativesFilter(blockFaces, block, predicate);
+  }
+
+  @NotNull
   public static HashSet<Block> getBlocksAround(Block startBlock, Predicate<Block> predicate) {
     int currentIteration = 0;
     final var blocks = new HashSet<Block>();
     final var visited = new HashSet<Block>();
     blocks.add(startBlock);
-    final var queue = new LinkedList<>(getRelatives(startBlock));
+    final var queue = new LinkedList<>(getRelativesFilter(startBlock, predicate));
     while (!queue.isEmpty() && currentIteration < 1024) {
       currentIteration++;
       final var block = queue.remove();
@@ -231,11 +244,8 @@ public class Util {
         continue;
       }
       visited.add(block);
-      if (!predicate.test(block)) {
-        continue;
-      }
       blocks.add(block);
-      queue.addAll(getRelatives(block));
+      queue.addAll(getRelativesFilter(block, predicate));
     }
     return blocks;
   }

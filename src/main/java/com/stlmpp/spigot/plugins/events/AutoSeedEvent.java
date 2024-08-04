@@ -3,6 +3,8 @@ package com.stlmpp.spigot.plugins.events;
 import com.stlmpp.spigot.plugins.StlmppPlugin;
 import com.stlmpp.spigot.plugins.StlmppPluginConfig;
 import java.util.*;
+
+import com.stlmpp.spigot.plugins.utils.Util;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -39,9 +41,8 @@ public class AutoSeedEvent implements Listener {
   }
 
   private final StlmppPlugin plugin;
-  private final BlockFace[] blockFaces = {
-    BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST
-  };
+  private final List<BlockFace> blockFaces =
+      List.of(BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST);
   private final Set<Material> allowedSeeds =
       new HashSet<>(
           List.of(
@@ -55,7 +56,12 @@ public class AutoSeedEvent implements Listener {
   private final int configAutoSeedMaxBlocks;
 
   private List<Block> getRelatives(@NotNull Block block) {
-    return Arrays.stream(this.blockFaces).map(block::getRelative).toList();
+    return Util.getRelativesFilter(
+        blockFaces,
+        block,
+        (blockFace) ->
+            blockFace.getType().equals(Material.FARMLAND)
+                && blockFace.getRelative(BlockFace.UP).getType().isAir());
   }
 
   private @NotNull Set<Block> getBlocks(Block startBlock, int maxBlocks) {
@@ -75,12 +81,7 @@ public class AutoSeedEvent implements Listener {
         continue;
       }
       visited.add(block);
-      if (block.getType() != Material.FARMLAND) {
-        continue;
-      }
-      if (block.getRelative(BlockFace.UP).getType().isAir()) {
-        blocks.add(block);
-      }
+      blocks.add(block);
       queue.addAll(this.getRelatives(block));
     }
     return blocks;

@@ -11,7 +11,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.BoundingBox;
 import org.jetbrains.annotations.Nullable;
 
@@ -81,30 +80,28 @@ public class EggRandomEffectEvent implements Listener {
       spawnLocation.add(0, 5, 0);
       final var plugin = this.plugin;
       final var seconds = (index + 0.1) * index * 0.50;
-      new BukkitRunnable() {
-        @Override
-        public void run() {
-          plugin.log(String.format("Spawning lightning at %s", randomLocation), true);
-          event.getEntity().getWorld().strikeLightning(randomLocation);
-        }
-      }.runTaskLater(this.plugin, Tick.fromSeconds(seconds));
-      new BukkitRunnable() {
-        @Override
-        public void run() {
-          plugin.log(String.format("Spawning %s at %s", entityToSpawn, spawnLocation), true);
-          final var entitySpawned =
-              event.getEntity().getWorld().spawnEntity(spawnLocation, entityToSpawn);
-          try {
-            final var source = event.getDamageSource().getCausingEntity();
-            if (entitySpawned instanceof Monster monster
-                && source instanceof LivingEntity damagerEntity) {
-              monster.setTarget(damagerEntity);
-            }
-          } catch (Exception ignored) {
+      plugin.runLater(
+          Tick.fromSeconds(seconds),
+          () -> {
+            plugin.log(String.format("Spawning lightning at %s", randomLocation), true);
+            event.getEntity().getWorld().strikeLightning(randomLocation);
+          });
+      plugin.runLater(
+          Tick.fromSeconds(seconds + 0.5),
+          () -> {
+            plugin.log(String.format("Spawning %s at %s", entityToSpawn, spawnLocation), true);
+            final var entitySpawned =
+                event.getEntity().getWorld().spawnEntity(spawnLocation, entityToSpawn);
+            try {
+              final var source = event.getDamageSource().getCausingEntity();
+              if (entitySpawned instanceof Monster monster
+                  && source instanceof LivingEntity damagerEntity) {
+                monster.setTarget(damagerEntity);
+              }
+            } catch (Exception ignored) {
 
-          }
-        }
-      }.runTaskLater(this.plugin, Tick.fromSeconds(seconds + 0.5));
+            }
+          });
     }
   }
 }

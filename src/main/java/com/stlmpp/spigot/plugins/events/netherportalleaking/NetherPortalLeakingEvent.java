@@ -54,7 +54,9 @@ public class NetherPortalLeakingEvent implements Listener {
             Material.ENDER_CHEST,
             Material.TRAPPED_CHEST,
             Material.BEEHIVE,
-            Material.CAMPFIRE));
+            Material.CAMPFIRE,
+            Material.NETHERITE_BLOCK,
+            Material.SHULKER_BOX));
   }
 
   public static boolean isValidMaterial(Material material) {
@@ -116,7 +118,12 @@ public class NetherPortalLeakingEvent implements Listener {
     if (!world.getName().equals(this.plugin.getWorldName())) {
       return;
     }
-    final var netherPortalBlocks = event.getBlocks().stream().map(BlockState::getBlock).toList();
+    final var netherPortalBlocks = new ArrayList<Block>();
+    for (BlockState blockState : event.getBlocks()) {
+      if (blockState.getType() == Material.NETHER_PORTAL) {
+        netherPortalBlocks.add(blockState.getBlock());
+      }
+    }
     if (netherPortalBlocks.isEmpty()) {
       return;
     }

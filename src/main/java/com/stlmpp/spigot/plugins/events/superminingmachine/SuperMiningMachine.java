@@ -22,7 +22,6 @@ import org.bukkit.block.Sign;
 import org.bukkit.block.data.type.Chest;
 import org.bukkit.block.sign.Side;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.BlockVector;
 import org.bukkit.util.BoundingBox;
@@ -255,22 +254,22 @@ public class SuperMiningMachine {
       seconds -= seconds * boostFactor;
     }
     smokeTask =
-        new BukkitRunnable() {
-          @Override
-          public void run() {
-            for (var corner : corners) {
-              final var random = ThreadLocalRandom.current();
-              final var location = corner.getLocation().add(0, 1, 0);
-              for (var i = 0; i < random.nextInt(1, 3); i++) {
-                final var spawnLocation =
-                    location.add(random.nextDouble(0, 0.99), 0, random.nextDouble(0, 0.99));
-                getWorld()
-                    .spawnParticle(
-                        Particle.CAMPFIRE_SIGNAL_SMOKE, spawnLocation, 0, 0, 0.5, 0, 0.1);
+        plugin.runTimer(
+            0,
+            Tick.fromSeconds(seconds),
+            () -> {
+              for (var corner : corners) {
+                final var random = ThreadLocalRandom.current();
+                final var location = corner.getLocation().add(0, 1, 0);
+                for (var i = 0; i < random.nextInt(1, 3); i++) {
+                  final var spawnLocation =
+                      location.add(random.nextDouble(0, 0.99), 0, random.nextDouble(0, 0.99));
+                  getWorld()
+                      .spawnParticle(
+                          Particle.CAMPFIRE_SIGNAL_SMOKE, spawnLocation, 0, 0, 0.5, 0, 0.1);
+                }
               }
-            }
-          }
-        }.runTaskTimerAsynchronously(plugin, 0, Tick.fromSeconds(seconds));
+            });
   }
 
   private void stopSmoke() {

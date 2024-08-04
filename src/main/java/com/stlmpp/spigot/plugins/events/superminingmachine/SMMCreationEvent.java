@@ -123,7 +123,8 @@ public class SMMCreationEvent implements Listener {
               "%s essa escavadeira nao pode ser criada pois o maximo de %s ja estao criadas. Termine a execucao das outras ou destrua uma delas.",
               event.getPlayer().getName(), plugin.smmManager.maxMachines));
       plugin.sendMessage(
-          "Para buscar a localizacao das outras escavadeiras, digite /smm find-all no chat");
+          "Para buscar a localizacao das outras escavadeiras, digite /smm find-working no chat"
+              + " para achar as escavadeiras que ainda nao finalizaram a escavacao");
       return;
     }
 

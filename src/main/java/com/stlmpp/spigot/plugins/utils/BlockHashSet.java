@@ -65,13 +65,13 @@ public class BlockHashSet implements Set<Block> {
 
   @NotNull
   @Override
-  public Object[] toArray() {
+  public Object @NotNull [] toArray() {
     return map.values().stream().map(coords -> coords.toBlock(world)).toArray();
   }
 
   @NotNull
   @Override
-  public <T> T[] toArray(@NotNull T[] a) {
+  public <T> T @NotNull [] toArray(@NotNull T @NotNull [] a) {
     return map.values().stream()
         .map(coords -> coords.toBlock(world))
         .toArray(size -> a.length >= size ? a : Arrays.copyOf(a, size));

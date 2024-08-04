@@ -95,7 +95,6 @@ public class DeathEvent implements Listener {
     }
 
     new BukkitRunnable() {
-
       @Override
       public void run() {
         Location location = null;

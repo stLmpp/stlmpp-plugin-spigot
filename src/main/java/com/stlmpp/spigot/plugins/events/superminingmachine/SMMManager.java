@@ -37,6 +37,7 @@ public class SMMManager {
     SMMCreationEvent.register(plugin);
     SMMStartEvent.register(plugin);
     SMMDestroyEvent.register(plugin);
+    plugin.log("Super Mining Machine activated");
   }
 
   public final int maxMachines;
@@ -135,7 +136,6 @@ public class SMMManager {
   }
 
   public void updateState(String id, SMMStateUpdateDto dto) {
-    plugin.log(String.format("Updating state of machine %s | %s", id, dto));
     try (final var statement =
         plugin.getDatabaseConnection().prepareStatement(SMMQueries.updateState)) {
       statement.setInt(1, dto.isRunning());
@@ -165,6 +165,38 @@ public class SMMManager {
 
   private void createCommands() {
     new CommandAPICommand("smm")
+        .withSubcommand(
+            new CommandAPICommand("find-working")
+                .executes(
+                    (sender, args) -> {
+                      if (machines.isEmpty()) {
+                        plugin.sendMessage("Nenhuma escavadeira encontrada!");
+                        return;
+                      }
+                      final var machinesCoords = new StringBuilder();
+                      for (final SuperMiningMachine machine : machines.values()) {
+                        if (machine.getHasFinished()) {
+                          continue;
+                        }
+                        final var center = machine.boundingBox.getCenter();
+                        machinesCoords
+                            .append("\n")
+                            .append(center.getBlockX())
+                            .append(" ")
+                            .append(center.getBlockY())
+                            .append(" ")
+                            .append(center.getBlockZ())
+                            .append(" - ");
+                        if (machine.getHasFinished()) {
+                          machinesCoords.append("Finalizada!");
+                        } else if (machine.getIsRunning()) {
+                          machinesCoords.append("Escavando");
+                        } else {
+                          machinesCoords.append("Parada");
+                        }
+                      }
+                      plugin.sendMessage("Escavadeiras construidas:" + machinesCoords);
+                    }))
         .withSubcommand(
             new CommandAPICommand("find-all")
                 .executes(
@@ -271,7 +303,7 @@ public class SMMManager {
   }
 
   @Nullable
-  private SuperMiningMachine getMachinePlayerLookingAt(Player player) {
+  private SuperMiningMachine getMachinePlayerLookingAt(@NotNull Player player) {
     final var block = player.getTargetBlockExact(5);
     if (block == null) {
       return null;
