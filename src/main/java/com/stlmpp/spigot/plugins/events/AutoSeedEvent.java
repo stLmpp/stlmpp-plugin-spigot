@@ -2,10 +2,9 @@ package com.stlmpp.spigot.plugins.events;
 
 import com.stlmpp.spigot.plugins.StlmppPlugin;
 import com.stlmpp.spigot.plugins.StlmppPluginConfig;
-import com.stlmpp.spigot.plugins.utils.Util;
-
 import java.util.*;
 
+import com.stlmpp.spigot.plugins.utils.Util;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -15,6 +14,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class AutoSeedEvent implements Listener {
@@ -38,26 +38,33 @@ public class AutoSeedEvent implements Listener {
     this.fromSeed.put(Material.BEETROOT_SEEDS, Material.BEETROOTS);
     this.fromSeed.put(Material.POTATO, Material.POTATOES);
     this.fromSeed.put(Material.CARROT, Material.CARROTS);
-    final var allowedSeedNames =
-        this.plugin.config.getList(StlmppPluginConfig.autoSeedAllowedSeedList);
-    if (allowedSeedNames != null) {
-      Util.setMaterialsFromNames(this.allowedSeeds, allowedSeedNames);
-    }
   }
 
   private final StlmppPlugin plugin;
-  private final BlockFace[] blockFaces = {
-    BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST
-  };
-  private final Set<Material> allowedSeeds = new HashSet<>();
+  private final List<BlockFace> blockFaces =
+      List.of(BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST);
+  private final Set<Material> allowedSeeds =
+      new HashSet<>(
+          List.of(
+              Material.WHEAT_SEEDS,
+              Material.MELON_SEEDS,
+              Material.BEETROOT_SEEDS,
+              Material.PUMPKIN_SEEDS,
+              Material.POTATO,
+              Material.CARROT));
   private final Map<Material, Material> fromSeed = new HashMap<>();
   private final int configAutoSeedMaxBlocks;
 
-  private List<Block> getRelatives(Block block) {
-    return Arrays.stream(this.blockFaces).map(block::getRelative).toList();
+  private List<Block> getRelatives(@NotNull Block block) {
+    return Util.getRelativesFilter(
+        blockFaces,
+        block,
+        (blockFace) ->
+            blockFace.getType().equals(Material.FARMLAND)
+                && blockFace.getRelative(BlockFace.UP).getType().isAir());
   }
 
-  private Set<Block> getBlocks(Block startBlock, int maxBlocks) {
+  private @NotNull Set<Block> getBlocks(Block startBlock, int maxBlocks) {
     int currentIteration = 0;
     final var blocks = new HashSet<Block>();
     final var visited = new HashSet<Block>();
@@ -74,12 +81,7 @@ public class AutoSeedEvent implements Listener {
         continue;
       }
       visited.add(block);
-      if (block.getType() != Material.FARMLAND) {
-        continue;
-      }
-      if (block.getRelative(BlockFace.UP).getType().isAir()) {
-        blocks.add(block);
-      }
+      blocks.add(block);
       queue.addAll(this.getRelatives(block));
     }
     return blocks;
@@ -99,7 +101,7 @@ public class AutoSeedEvent implements Listener {
   @EventHandler
   public void onBlockClick(PlayerInteractEvent event) {
     this.plugin.log(String.format("action = %s", event.getAction()), true);
-    if (event.getAction() != Action.RIGHT_CLICK_BLOCK) {
+    if (!event.getAction().equals(Action.RIGHT_CLICK_BLOCK)) {
       return;
     }
     final var itemInHand = event.getItem();

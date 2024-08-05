@@ -101,7 +101,7 @@ public class LightningTeleportEvent implements Listener {
         final var block = world.getBlockAt(x, floorY, z);
 
         if (!this.allowedMaterialsToReplace.contains(block.getType())
-            || !block.getType().isSolid()
+            || !block.isSolid()
             || !Chance.of(70)) {
           continue;
         }

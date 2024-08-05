@@ -1,7 +1,5 @@
 package com.stlmpp.spigot.plugins;
 
-import org.bukkit.Material;
-
 public class StlmppPluginConfig {
 
   public static final String netherLightningEnabled = "nether-lightning-enabled";
@@ -17,7 +15,6 @@ public class StlmppPluginConfig {
   public static final String worldNether = "world-nether";
   public static final String autoSeedMaxBlocks = "auto-seed-max-blocks";
   public static final String autoSeedEnabled = "auto-seed-enabled";
-  public static final String autoSeedAllowedSeedList = "auto-seed-allowed-seed-list";
   public static final String tpLightningEnabled = "tp-lightning-enabled";
   public static final String tpLightningNetherBlocksRadius = "tp-lightning-nether-blocks-radius";
   public static final String tpLightningChance = "tp-lightning-chance";
@@ -33,6 +30,9 @@ public class StlmppPluginConfig {
   public static final String eggRandomEventEnabled = "egg-random-event-enabled";
   public static final String eggRandomEventChance = "egg-random-event-chance";
   public static final String deathEventEnabled = "death-event-enabled";
+  public static final String superMiningMachineEnabled = "super-mining-machine-enabled";
+  public static final String superMiningMachineMaxSize = "super-mining-machine-max-size";
+  public static final String superMiningMachineMaxQuantity = "super-mining-machine-max-quantity";
 
   public StlmppPluginConfig(StlmppPlugin plugin) {
     final var config = plugin.config;
@@ -47,16 +47,6 @@ public class StlmppPluginConfig {
     config.addDefault(StlmppPluginConfig.worldNether, "world_nether");
     config.addDefault(StlmppPluginConfig.autoSeedEnabled, true);
     config.addDefault(StlmppPluginConfig.autoSeedMaxBlocks, 60);
-    config.addDefault(
-        StlmppPluginConfig.autoSeedAllowedSeedList,
-        new String[] {
-          Material.WHEAT_SEEDS.name(),
-          Material.MELON_SEEDS.name(),
-          Material.BEETROOT_SEEDS.name(),
-          Material.PUMPKIN_SEEDS.name(),
-          Material.POTATO.name(),
-          Material.CARROT.name(),
-        });
     config.addDefault(StlmppPluginConfig.world, "world");
     config.addDefault(StlmppPluginConfig.tpLightningEnabled, true);
     config.addDefault(StlmppPluginConfig.tpLightningChance, 75d);
@@ -70,6 +60,9 @@ public class StlmppPluginConfig {
     config.addDefault(StlmppPluginConfig.eggRandomEventEnabled, true);
     config.addDefault(StlmppPluginConfig.eggRandomEventChance, 10.0d);
     config.addDefault(StlmppPluginConfig.deathEventEnabled, true);
+    config.addDefault(StlmppPluginConfig.superMiningMachineEnabled, true);
+    config.addDefault(StlmppPluginConfig.superMiningMachineMaxSize, 50);
+    config.addDefault(StlmppPluginConfig.superMiningMachineMaxQuantity, 5);
     config.options().copyDefaults(true);
     plugin.saveConfig();
     plugin.isDevMode = config.getBoolean(devMode);
