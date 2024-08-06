@@ -33,6 +33,7 @@ public class StlmppPluginConfig {
   public static final String superMiningMachineEnabled = "super-mining-machine-enabled";
   public static final String superMiningMachineMaxSize = "super-mining-machine-max-size";
   public static final String superMiningMachineMaxQuantity = "super-mining-machine-max-quantity";
+  public static final String wardenBetterDropsEnabled = "warden-better-drops-enabled";
 
   public StlmppPluginConfig(StlmppPlugin plugin) {
     final var config = plugin.config;
@@ -63,6 +64,7 @@ public class StlmppPluginConfig {
     config.addDefault(StlmppPluginConfig.superMiningMachineEnabled, true);
     config.addDefault(StlmppPluginConfig.superMiningMachineMaxSize, 50);
     config.addDefault(StlmppPluginConfig.superMiningMachineMaxQuantity, 5);
+    config.addDefault(StlmppPluginConfig.wardenBetterDropsEnabled, true);
     config.options().copyDefaults(true);
     plugin.saveConfig();
     plugin.isDevMode = config.getBoolean(devMode);

@@ -3,6 +3,7 @@ package com.stlmpp.spigot.plugins;
 import com.stlmpp.spigot.plugins.events.*;
 import com.stlmpp.spigot.plugins.events.netherportalleaking.NetherPortalLeakingEvent;
 import com.stlmpp.spigot.plugins.events.superminingmachine.SMMManager;
+import com.stlmpp.spigot.plugins.events.wardenbetterdrops.WardenBetterDropsEvent;
 import com.stlmpp.spigot.plugins.tasks.NetherLightningTask;
 import dev.jorel.commandapi.CommandAPI;
 import dev.jorel.commandapi.CommandAPIBukkitConfig;
@@ -84,6 +85,7 @@ public class StlmppPlugin extends JavaPlugin {
     if (smmManager != null) {
       smmManager.onEnable();
     }
+    WardenBetterDropsEvent.register(this);
   }
 
   @Override
