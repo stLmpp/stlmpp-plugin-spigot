@@ -261,7 +261,8 @@ public class SuperMiningMachine {
               for (var corner : corners) {
                 final var random = ThreadLocalRandom.current();
                 final var location = corner.getLocation().add(0, 1, 0);
-                for (var i = 0; i < random.nextInt(1, 3); i++) {
+                final var max = random.nextInt(1, 4);
+                for (var i = 0; i < max; i++) {
                   final var spawnLocation =
                       location.add(random.nextDouble(0, 0.99), 0, random.nextDouble(0, 0.99));
                   getWorld()

@@ -67,7 +67,8 @@ public class NetherLightningTask extends BukkitRunnable {
   }
 
   private void startTask() {
-    final var secondsLater = ThreadLocalRandom.current().nextInt(this.minSeconds, this.maxSeconds);
+    final var secondsLater =
+        ThreadLocalRandom.current().nextInt(this.minSeconds, this.maxSeconds + 1);
     this.plugin.log(String.format("Next lightning in %s seconds", secondsLater), true);
     this.startTask(secondsLater);
   }

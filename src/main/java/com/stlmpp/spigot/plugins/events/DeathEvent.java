@@ -129,7 +129,7 @@ public class DeathEvent implements Listener {
         final var itemsLocation =
             Util.getRandomLocationAroundLocation(
                 location, new BoundingBox(-30, 0, -30, 30, 90, 30));
-        final var y = ThreadLocalRandom.current().nextInt(-60, 128);
+        final var y = ThreadLocalRandom.current().nextInt(-60, 129);
         itemsLocation.setY(y);
         itemsLocation.setY(Util.getFloor(itemsLocation));
 

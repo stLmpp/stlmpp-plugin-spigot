@@ -12,7 +12,7 @@ public class RandomList<T> {
   private final List<T> list;
 
   public T next() {
-    int randomElementIndex = ThreadLocalRandom.current().nextInt(0, this.list.size());
+    int randomElementIndex = ThreadLocalRandom.current().nextInt(this.list.size());
     return this.list.get(randomElementIndex);
   }
 }

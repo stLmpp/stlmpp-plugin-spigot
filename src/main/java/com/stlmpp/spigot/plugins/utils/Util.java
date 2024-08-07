@@ -166,7 +166,7 @@ public class Util {
       return null;
     }
     return Util.getRandomLocationAroundLocation(
-        players.get(ThreadLocalRandom.current().nextInt(0, playersSize)).getLocation());
+        players.get(ThreadLocalRandom.current().nextInt(playersSize)).getLocation());
   }
 
   public static Material convertToNetherMaterial(Material material) {

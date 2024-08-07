@@ -59,7 +59,7 @@ public record Drop(Material material, int maxAmount) {
     if (possibleEnchantments == null) {
       return item;
     }
-    final var numberOfEnchantments = ThreadLocalRandom.current().nextInt(1, 6);
+    final var numberOfEnchantments = ThreadLocalRandom.current().nextInt(1, 7);
     for (int i = 0; i < numberOfEnchantments; i++) {
       final var enchantment = possibleEnchantments.next();
       final var level = ThreadLocalRandom.current().nextInt(1, enchantment.getMaxLevel() + 1);
