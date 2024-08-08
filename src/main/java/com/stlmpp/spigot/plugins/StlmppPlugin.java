@@ -1,7 +1,7 @@
 package com.stlmpp.spigot.plugins;
 
 import com.stlmpp.spigot.plugins.events.*;
-import com.stlmpp.spigot.plugins.events.creepycave.CreepyCaveTask;
+import com.stlmpp.spigot.plugins.events.creepycaves.CreepyCavesTask;
 import com.stlmpp.spigot.plugins.events.netherportalleaking.NetherPortalLeakingEvent;
 import com.stlmpp.spigot.plugins.events.superminingmachine.SMMManager;
 import com.stlmpp.spigot.plugins.events.wardenbetterdrops.WardenBetterDropsEvent;
@@ -45,7 +45,7 @@ public class StlmppPlugin extends JavaPlugin {
 
   @Nullable private NetherPortalLeakingEvent netherPortalLeakingEvent;
   @Nullable private NetherLightningTask netherLightningTask;
-  @Nullable private CreepyCaveTask creepyCaveTask;
+  @Nullable private CreepyCavesTask creepyCavesTask;
 
   @Nullable public SMMManager smmManager;
 
@@ -90,7 +90,7 @@ public class StlmppPlugin extends JavaPlugin {
       smmManager.onEnable();
     }
     WardenBetterDropsEvent.register(this);
-    creepyCaveTask = CreepyCaveTask.register(this);
+    creepyCavesTask = CreepyCavesTask.register(this);
   }
 
   @Override
@@ -104,8 +104,8 @@ public class StlmppPlugin extends JavaPlugin {
     if (smmManager != null) {
       smmManager.onDisable();
     }
-    if (creepyCaveTask != null) {
-      creepyCaveTask.cancel();
+    if (creepyCavesTask != null) {
+      creepyCavesTask.cancel();
     }
     CommandAPI.onDisable();
   }

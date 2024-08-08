@@ -1,7 +1,6 @@
 package com.stlmpp.spigot.plugins.utils;
 
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class RandomList<T> {
   public RandomList(List<T> list) {
@@ -12,7 +11,7 @@ public class RandomList<T> {
   private final List<T> list;
 
   public T next() {
-    int randomElementIndex = ThreadLocalRandom.current().nextInt(this.list.size());
+    int randomElementIndex = Rng.nextInt(0, this.list.size());
     return this.list.get(randomElementIndex);
   }
 }

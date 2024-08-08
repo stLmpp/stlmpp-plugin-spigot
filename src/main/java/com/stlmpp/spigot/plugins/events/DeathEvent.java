@@ -3,9 +3,9 @@ package com.stlmpp.spigot.plugins.events;
 import com.stlmpp.spigot.plugins.StlmppPlugin;
 import com.stlmpp.spigot.plugins.StlmppPluginConfig;
 import com.stlmpp.spigot.plugins.utils.RandomList;
+import com.stlmpp.spigot.plugins.utils.Rng;
 import com.stlmpp.spigot.plugins.utils.Util;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -113,8 +113,7 @@ public class DeathEvent implements Listener {
           attempt++;
           structure = structures.next();
           final var structureSearch =
-              overworld.locateNearestStructure(
-                  playerLocation, structure, 2048, ThreadLocalRandom.current().nextBoolean());
+              overworld.locateNearestStructure(playerLocation, structure, 2048, Rng.nextBoolean());
           if (structureSearch != null) {
             location = structureSearch.getLocation();
           }
@@ -129,9 +128,9 @@ public class DeathEvent implements Listener {
         final var itemsLocation =
             Util.getRandomLocationAroundLocation(
                 location, new BoundingBox(-30, 0, -30, 30, 90, 30));
-        final var y = ThreadLocalRandom.current().nextInt(-60, 129);
+        final var y = Rng.nextInt(-60, 128);
         itemsLocation.setY(y);
-        itemsLocation.setY(Util.getFloor(itemsLocation));
+        Util.setFloor(itemsLocation);
 
         final var chest1 = itemsLocation.getBlock();
         final var chest2 = itemsLocation.clone().add(1, 0, 0).getBlock();

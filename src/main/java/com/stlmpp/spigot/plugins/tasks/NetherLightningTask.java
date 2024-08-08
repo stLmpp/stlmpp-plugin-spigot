@@ -2,14 +2,12 @@ package com.stlmpp.spigot.plugins.tasks;
 
 import com.stlmpp.spigot.plugins.StlmppPlugin;
 import com.stlmpp.spigot.plugins.StlmppPluginConfig;
-import com.stlmpp.spigot.plugins.utils.Chance;
+import com.stlmpp.spigot.plugins.utils.Rng;
 import com.stlmpp.spigot.plugins.utils.Tick;
 import com.stlmpp.spigot.plugins.utils.Util;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.concurrent.ThreadLocalRandom;
 
 public class NetherLightningTask extends BukkitRunnable {
 
@@ -67,8 +65,7 @@ public class NetherLightningTask extends BukkitRunnable {
   }
 
   private void startTask() {
-    final var secondsLater =
-        ThreadLocalRandom.current().nextInt(this.minSeconds, this.maxSeconds + 1);
+    final var secondsLater = Rng.nextInt(this.minSeconds, this.maxSeconds);
     this.plugin.log(String.format("Next lightning in %s seconds", secondsLater), true);
     this.startTask(secondsLater);
   }
@@ -84,7 +81,7 @@ public class NetherLightningTask extends BukkitRunnable {
   }
 
   private void execute() {
-    final var willRun = Chance.of(chance);
+    final var willRun = Rng.chance(chance);
     plugin.log(String.format("Running task Nether Lightning | willRun = %s", willRun), true);
     if (!willRun) {
       return;
@@ -99,8 +96,8 @@ public class NetherLightningTask extends BukkitRunnable {
     if (lightningLocation == null) {
       return;
     }
-    lightningLocation.setY(Util.getFloor(lightningLocation));
-    final var isReal = Chance.of(realChance + increasedRealChance);
+    Util.setFloor(lightningLocation);
+    final var isReal = Rng.chance(realChance + increasedRealChance);
     plugin.log(
         String.format(
             "Strike lightning at %s | isReal = %s | increasedRealChance = %s | increasedExplosionChance = %s",
@@ -115,13 +112,13 @@ public class NetherLightningTask extends BukkitRunnable {
     increasedRealChance = 0;
     realRound = Math.min(realRound + 0.1, 5.0);
     world.strikeLightning(lightningLocation);
-    if (!Chance.of(explosionChance + increasedExplosionChance)) {
+    if (!Rng.chance(explosionChance + increasedExplosionChance)) {
       increasedExplosionChance += 0.1;
       return;
     }
     increasedExplosionChance = 0;
     explosionRound = Math.min(explosionRound + 0.05, 5.0);
-    final var explosionPower = Util.randomFloat(explosionMinPower, explosionMaxPower);
+    final var explosionPower = Rng.nextFloat(explosionMinPower, explosionMaxPower);
     world.createExplosion(lightningLocation, explosionPower, true, true);
   }
 }

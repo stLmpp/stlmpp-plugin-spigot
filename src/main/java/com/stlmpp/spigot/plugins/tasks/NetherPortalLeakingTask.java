@@ -3,7 +3,7 @@ package com.stlmpp.spigot.plugins.tasks;
 import com.stlmpp.spigot.plugins.StlmppPluginConfig;
 import com.stlmpp.spigot.plugins.events.netherportalleaking.NetherPortal;
 import com.stlmpp.spigot.plugins.events.netherportalleaking.NetherPortalLeakingEvent;
-import com.stlmpp.spigot.plugins.utils.Chance;
+import com.stlmpp.spigot.plugins.utils.Rng;
 import com.stlmpp.spigot.plugins.utils.Tick;
 import com.stlmpp.spigot.plugins.utils.Util;
 import java.util.*;
@@ -121,7 +121,7 @@ public class NetherPortalLeakingTask extends BukkitRunnable {
     }
     final var netherMaterial = Util.convertToNetherMaterial(blockAtMaterial);
     block.setType(netherMaterial);
-    if (netherMaterial == Material.NETHERRACK && Chance.of(this.chanceOfNetherrackFire)) {
+    if (netherMaterial == Material.NETHERRACK && Rng.chance(this.chanceOfNetherrackFire)) {
       final var blockUp = block.getRelative(BlockFace.UP);
       if (blockUp.getType().isAir()) {
         blockUp.setType(Material.FIRE);

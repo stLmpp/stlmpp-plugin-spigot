@@ -4,12 +4,8 @@ import com.stlmpp.spigot.plugins.StlmppPlugin;
 import com.stlmpp.spigot.plugins.events.superminingmachine.entity.SMMBlockEntity;
 import com.stlmpp.spigot.plugins.events.superminingmachine.entity.SMMEntity;
 import com.stlmpp.spigot.plugins.events.superminingmachine.entity.SMMStateUpdateDto;
-import com.stlmpp.spigot.plugins.utils.BlockHashSet;
-import com.stlmpp.spigot.plugins.utils.Chance;
-import com.stlmpp.spigot.plugins.utils.Tick;
-import com.stlmpp.spigot.plugins.utils.Util;
+import com.stlmpp.spigot.plugins.utils.*;
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
@@ -259,12 +255,11 @@ public class SuperMiningMachine {
             Tick.fromSeconds(seconds),
             () -> {
               for (var corner : corners) {
-                final var random = ThreadLocalRandom.current();
                 final var location = corner.getLocation().add(0, 1, 0);
-                final var max = random.nextInt(1, 4);
+                final int max = Rng.nextInt(1, 4);
                 for (var i = 0; i < max; i++) {
                   final var spawnLocation =
-                      location.add(random.nextDouble(0, 0.99), 0, random.nextDouble(0, 0.99));
+                      location.add(Rng.nextDouble(0, 0.99), 0, Rng.nextDouble(0, 0.99));
                   getWorld()
                       .spawnParticle(
                           Particle.CAMPFIRE_SIGNAL_SMOKE, spawnLocation, 0, 0, 0.5, 0, 0.1);
@@ -375,7 +370,7 @@ public class SuperMiningMachine {
             Tick.fromSeconds(seconds),
             () -> {
               final var items = blockBreaker.breakAndGetDrops(block);
-              if (Chance.of(1)) {
+              if (Rng.chance(1)) {
                 playSound(Sound.BLOCK_BEACON_AMBIENT);
               }
               addItemsToChest(items);
@@ -581,7 +576,7 @@ public class SuperMiningMachine {
                 .getBlock()
                 .getWorld()
                 .createExplosion(explosionLocation, getExplosionPower(), true, true);
-            if (Chance.of(50)) {
+            if (Rng.chance(50)) {
               block.setType(Material.LAVA);
             }
             if (!isFinalBlock) {

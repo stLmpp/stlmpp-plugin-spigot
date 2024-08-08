@@ -1,6 +1,6 @@
 package com.stlmpp.spigot.plugins.events.superminingmachine;
 
-import com.stlmpp.spigot.plugins.utils.Chance;
+import com.stlmpp.spigot.plugins.utils.Rng;
 import com.stlmpp.spigot.plugins.utils.Util;
 import java.util.*;
 import java.util.function.Function;
@@ -65,7 +65,7 @@ public class SMMBlockBreaker {
       items.addAll(oreBlock.getDrops(pickaxe));
       oreBlock.setType(Material.AIR);
     }
-    if (Chance.of(50)) {
+    if (Rng.chance(50)) {
       final var newArray = new ArrayList<ItemStack>();
       for (ItemStack stack : items) {
         newArray.add(stack.clone());

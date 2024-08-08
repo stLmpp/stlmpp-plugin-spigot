@@ -2,12 +2,10 @@ package com.stlmpp.spigot.plugins.events;
 
 import com.stlmpp.spigot.plugins.StlmppPlugin;
 import com.stlmpp.spigot.plugins.StlmppPluginConfig;
-import com.stlmpp.spigot.plugins.utils.Chance;
+import com.stlmpp.spigot.plugins.utils.Rng;
 import com.stlmpp.spigot.plugins.utils.Util;
 import com.stlmpp.spigot.plugins.utils.WeightedRandomCollection;
-
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -102,16 +100,14 @@ public class LightningTeleportEvent implements Listener {
 
         if (!this.allowedMaterialsToReplace.contains(block.getType())
             || !block.isSolid()
-            || !Chance.of(70)) {
+            || !Rng.chance(70)) {
           continue;
         }
-        final var newType = this.specialReplacements.get(block.getType());
-        if (newType != null) {
-          final int randomIndex = new Random().nextInt(newType.size());
-          block.setType(newType.get(randomIndex));
-        } else {
-          block.setType(this.materials.next());
-        }
+        final var newType =
+            Optional.ofNullable(this.specialReplacements.get(block.getType()))
+                .map(list -> list.get(Rng.nextInt(0, list.size())))
+                .orElse(this.materials.next());
+        block.setType(newType);
       }
     }
   }
@@ -126,20 +122,16 @@ public class LightningTeleportEvent implements Listener {
     if (!player.isOp() || !world.getName().equals(this.plugin.getWorldName())) {
       return;
     }
-    final var from = event.getFrom().clone();
-    from.setY(Util.getFloor(from));
-    final var to = event.getTo().clone();
-    to.setY(Util.getFloor(to));
+    final var from = Util.setFloor(event.getFrom().clone());
+    final var to = Util.setFloor(event.getTo().clone());
     world.strikeLightning(from);
     world.strikeLightning(to);
     this.setBlocksRadius(world, from);
     this.setBlocksRadius(world, to);
-    if (!Chance.of(this.explosionChance)) {
+    if (!Rng.chance(this.explosionChance)) {
       return;
     }
-    world.createExplosion(
-        from, ThreadLocalRandom.current().nextInt(0, (this.radius / 2) + 1), true, true);
-    world.createExplosion(
-        to, ThreadLocalRandom.current().nextInt(0, (this.radius / 2) + 1), true, true);
+    world.createExplosion(from, Rng.nextInt(0, (this.radius / 2)), true, true);
+    world.createExplosion(to, Rng.nextInt(0, (this.radius / 2)), true, true);
   }
 }

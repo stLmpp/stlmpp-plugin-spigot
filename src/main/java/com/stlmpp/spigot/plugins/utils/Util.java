@@ -1,7 +1,6 @@
 package com.stlmpp.spigot.plugins.utils;
 
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -142,20 +141,17 @@ public class Util {
   public static Location getRandomLocationAroundLocation(Location location, BoundingBox distance) {
     final var newLocation = location.clone();
     newLocation.setX(
-        ThreadLocalRandom.current()
-            .nextInt(
-                location.getBlockX() + (int) distance.getMinX(),
-                location.getBlockX() + (int) distance.getMaxX()));
+        Rng.nextInt(
+            location.getBlockX() + (int) distance.getMinX(),
+            location.getBlockX() + (int) distance.getMaxX()));
     newLocation.setY(
-        ThreadLocalRandom.current()
-            .nextInt(
-                location.getBlockY() + (int) distance.getMinY(),
-                location.getBlockY() + (int) distance.getMaxY()));
+        Rng.nextInt(
+            location.getBlockY() + (int) distance.getMinY(),
+            location.getBlockY() + (int) distance.getMaxY()));
     newLocation.setZ(
-        ThreadLocalRandom.current()
-            .nextInt(
-                location.getBlockZ() + (int) distance.getMinZ(),
-                location.getBlockZ() + (int) distance.getMaxZ()));
+        Rng.nextInt(
+            location.getBlockZ() + (int) distance.getMinZ(),
+            location.getBlockZ() + (int) distance.getMaxZ()));
     return newLocation;
   }
 
@@ -171,7 +167,7 @@ public class Util {
       return null;
     }
     return Util.getRandomLocationAroundLocation(
-        players.get(ThreadLocalRandom.current().nextInt(playersSize)).getLocation());
+        players.get(Rng.nextInt(0, playersSize)).getLocation());
   }
 
   public static Material convertToNetherMaterial(Material material) {
@@ -184,14 +180,6 @@ public class Util {
 
   public static boolean isFromNether(Material material) {
     return Util.netherMaterials.contains(material);
-  }
-
-  public static float randomFloat(float startInclusive, float endExclusive) {
-    if (startInclusive == endExclusive) {
-      return startInclusive;
-    }
-    return startInclusive
-        + ((endExclusive - startInclusive) * ThreadLocalRandom.current().nextFloat());
   }
 
   @Nullable

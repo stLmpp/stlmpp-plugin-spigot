@@ -1,4 +1,4 @@
-package com.stlmpp.spigot.plugins.events.creepycave;
+package com.stlmpp.spigot.plugins.events.creepycaves;
 
 import com.stlmpp.spigot.plugins.StlmppPlugin;
 import com.stlmpp.spigot.plugins.StlmppPluginConfig;
@@ -11,21 +11,22 @@ import org.bukkit.entity.Cow;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.Nullable;
 
-public class CreepyCaveTask extends BukkitRunnable {
+public class CreepyCavesTask extends BukkitRunnable {
 
   @Nullable
-  public static CreepyCaveTask register(StlmppPlugin plugin) {
+  public static CreepyCavesTask register(StlmppPlugin plugin) {
     if (!plugin.config.getBoolean(StlmppPluginConfig.creepyCavesEnabled)) {
       return null;
     }
-    return new CreepyCaveTask(plugin);
+    return new CreepyCavesTask(plugin);
   }
 
-  private CreepyCaveTask(StlmppPlugin plugin) {
+  private CreepyCavesTask(StlmppPlugin plugin) {
     this.plugin = plugin;
     chance = plugin.config.getDouble(StlmppPluginConfig.creepyCavesSoundChance);
     cowChance = plugin.config.getDouble(StlmppPluginConfig.creepyCavesCowChance);
     this.runTaskTimer(plugin, 0, Tick.fromSeconds(10));
+    this.plugin.log(String.format("Creepy caves activated with %s%% chance of happening", chance));
   }
 
   private final StlmppPlugin plugin;
@@ -54,8 +55,10 @@ public class CreepyCaveTask extends BukkitRunnable {
     }
 
     final var possibleCowLocation =
-        player.getLocation().add(player.getLocation().getDirection().normalize().multiply(-2));
-    possibleCowLocation.add(0, 1, 0);
+        player
+            .getLocation()
+            .add(player.getLocation().getDirection().normalize().multiply(-2))
+            .add(0, 1, 0);
     possibleCowLocation.setY(Util.getFloor(possibleCowLocation) + 1);
     if (possibleCowLocation.getBlock().isSolid()
         || possibleCowLocation.clone().add(0, 1, 0).getBlock().isSolid()) {

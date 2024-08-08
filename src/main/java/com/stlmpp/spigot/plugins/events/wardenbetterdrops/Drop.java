@@ -1,14 +1,12 @@
 package com.stlmpp.spigot.plugins.events.wardenbetterdrops;
 
-import com.stlmpp.spigot.plugins.utils.Chance;
 import com.stlmpp.spigot.plugins.utils.RandomList;
+import com.stlmpp.spigot.plugins.utils.Rng;
 import io.papermc.paper.registry.RegistryAccess;
 import io.papermc.paper.registry.RegistryKey;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ThreadLocalRandom;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
@@ -51,18 +49,18 @@ public record Drop(Material material, int maxAmount) {
   }
 
   public ItemStack getStack() {
-    final var item = ItemStack.of(material, ThreadLocalRandom.current().nextInt(1, maxAmount + 1));
-    if (!Chance.of(70)) {
+    final var item = ItemStack.of(material, Rng.nextInt(1, maxAmount));
+    if (!Rng.chance(70)) {
       return item;
     }
     final var possibleEnchantments = map.get(material);
     if (possibleEnchantments == null) {
       return item;
     }
-    final var numberOfEnchantments = ThreadLocalRandom.current().nextInt(1, 7);
+    final int numberOfEnchantments = Rng.nextInt(1, 6);
     for (int i = 0; i < numberOfEnchantments; i++) {
       final var enchantment = possibleEnchantments.next();
-      final var level = ThreadLocalRandom.current().nextInt(1, enchantment.getMaxLevel() + 1);
+      final var level = Rng.nextInt(1, enchantment.getMaxLevel());
       item.addEnchantment(enchantment, level);
     }
     return item;

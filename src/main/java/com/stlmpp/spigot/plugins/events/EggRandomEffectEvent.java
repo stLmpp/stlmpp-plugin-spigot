@@ -2,10 +2,7 @@ package com.stlmpp.spigot.plugins.events;
 
 import com.stlmpp.spigot.plugins.StlmppPlugin;
 import com.stlmpp.spigot.plugins.StlmppPluginConfig;
-import com.stlmpp.spigot.plugins.utils.Chance;
-import com.stlmpp.spigot.plugins.utils.Tick;
-import com.stlmpp.spigot.plugins.utils.Util;
-import com.stlmpp.spigot.plugins.utils.WeightedRandomCollection;
+import com.stlmpp.spigot.plugins.utils.*;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -13,6 +10,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.util.BoundingBox;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.Optional;
 
 public class EggRandomEffectEvent implements Listener {
 
@@ -66,16 +65,20 @@ public class EggRandomEffectEvent implements Listener {
     if (!(damager instanceof Egg)
         || !(entity instanceof LivingEntity livingEntity)
         || entity.getLocation().getY() < 62
-        || !Chance.of(this.chance)) {
+        || !Rng.chance(this.chance)) {
       return;
     }
     final var spawnQuantity = this.quantitiesToSpawn.next();
     for (int index = 0; index < spawnQuantity; index++) {
       final var entityToSpawn = this.entitiesToSpawn.next();
       final var randomLocation =
-          Util.getRandomLocationAroundLocation(
-              livingEntity.getLocation(), new BoundingBox(-10, 0, -10, 11, 30, 11));
-      randomLocation.setY(Util.getFloor(randomLocation));
+          Optional.of(livingEntity.getLocation())
+              .map(
+                  location ->
+                      Util.getRandomLocationAroundLocation(
+                          location, new BoundingBox(-10, 0, -10, 11, 30, 11)))
+              .map(Util::setFloor)
+              .get();
       final var spawnLocation = randomLocation.clone();
       spawnLocation.add(0, 5, 0);
       final var plugin = this.plugin;
