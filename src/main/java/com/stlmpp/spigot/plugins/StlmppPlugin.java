@@ -1,6 +1,7 @@
 package com.stlmpp.spigot.plugins;
 
 import com.stlmpp.spigot.plugins.events.*;
+import com.stlmpp.spigot.plugins.events.creepycave.CreepyCaveTask;
 import com.stlmpp.spigot.plugins.events.netherportalleaking.NetherPortalLeakingEvent;
 import com.stlmpp.spigot.plugins.events.superminingmachine.SMMManager;
 import com.stlmpp.spigot.plugins.events.wardenbetterdrops.WardenBetterDropsEvent;
@@ -12,6 +13,7 @@ import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+
 import net.kyori.adventure.text.Component;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -43,6 +45,8 @@ public class StlmppPlugin extends JavaPlugin {
 
   @Nullable private NetherPortalLeakingEvent netherPortalLeakingEvent;
   @Nullable private NetherLightningTask netherLightningTask;
+  @Nullable private CreepyCaveTask creepyCaveTask;
+
   @Nullable public SMMManager smmManager;
 
   public String getWorldName() {
@@ -86,6 +90,7 @@ public class StlmppPlugin extends JavaPlugin {
       smmManager.onEnable();
     }
     WardenBetterDropsEvent.register(this);
+    creepyCaveTask = CreepyCaveTask.register(this);
   }
 
   @Override
@@ -98,6 +103,9 @@ public class StlmppPlugin extends JavaPlugin {
     }
     if (smmManager != null) {
       smmManager.onDisable();
+    }
+    if (creepyCaveTask != null) {
+      creepyCaveTask.cancel();
     }
     CommandAPI.onDisable();
   }

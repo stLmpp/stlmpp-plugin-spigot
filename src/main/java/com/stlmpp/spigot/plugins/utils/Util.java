@@ -114,6 +114,11 @@ public class Util {
               Material.WARPED_SLAB,
               Material.WARPED_STAIRS));
 
+  public static Location setFloor(Location location) {
+    location.setY(Util.getFloor(location));
+    return location;
+  }
+
   public static int getFloor(Location location) {
     Integer floor = Util.getFloor(location, false, 256);
     if (floor == null) {
