@@ -11,7 +11,7 @@ public class RandomList<T> {
   private final List<T> list;
 
   public T next() {
-    int randomElementIndex = Rng.nextInt(0, this.list.size());
+    int randomElementIndex = Rng.nextInt(0, this.list.size() - 1);
     return this.list.get(randomElementIndex);
   }
 }

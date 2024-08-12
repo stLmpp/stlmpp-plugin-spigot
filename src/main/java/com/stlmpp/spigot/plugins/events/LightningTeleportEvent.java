@@ -105,7 +105,7 @@ public class LightningTeleportEvent implements Listener {
         }
         final var newType =
             Optional.ofNullable(this.specialReplacements.get(block.getType()))
-                .map(list -> list.get(Rng.nextInt(0, list.size())))
+                .map(list -> list.get(Rng.nextInt(0, list.size() - 1)))
                 .orElse(this.materials.next());
         block.setType(newType);
       }

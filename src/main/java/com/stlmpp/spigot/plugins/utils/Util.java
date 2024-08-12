@@ -162,12 +162,11 @@ public class Util {
   @Nullable
   public static Location getRandomLocationAroundRandomPlayer(World world) {
     final var players = world.getPlayers();
-    final var playersSize = players.size();
-    if (playersSize == 0) {
+    if (players.isEmpty()) {
       return null;
     }
     return Util.getRandomLocationAroundLocation(
-        players.get(Rng.nextInt(0, playersSize)).getLocation());
+        players.get(Rng.nextInt(0, players.size() - 1)).getLocation());
   }
 
   public static Material convertToNetherMaterial(Material material) {
