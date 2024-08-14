@@ -21,7 +21,7 @@ public class Rng {
   }
 
   public static Double nextDouble(double min, double max) {
-    return ThreadLocalRandom.current().nextDouble(min, max + 1);
+    return ThreadLocalRandom.current().nextDouble(min, max + Double.MIN_VALUE);
   }
 
   public static Float nextFloat(float min, float max) {

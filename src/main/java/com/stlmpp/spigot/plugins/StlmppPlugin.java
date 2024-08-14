@@ -5,7 +5,7 @@ import com.stlmpp.spigot.plugins.events.creepycaves.CreepyCavesTask;
 import com.stlmpp.spigot.plugins.events.netherportalleaking.NetherPortalLeakingEvent;
 import com.stlmpp.spigot.plugins.events.superminingmachine.SMMManager;
 import com.stlmpp.spigot.plugins.events.wardenbetterdrops.WardenBetterDropsEvent;
-import com.stlmpp.spigot.plugins.tasks.NetherLightningTask;
+import com.stlmpp.spigot.plugins.tasks.netherlightning.NetherLightningTask;
 import dev.jorel.commandapi.CommandAPI;
 import dev.jorel.commandapi.CommandAPIBukkitConfig;
 import java.nio.file.Path;
