@@ -235,9 +235,12 @@ public class SuperMiningMachine {
     scheduleNext();
   }
 
+  public HashSet<Chunk> getChunks() {
+    return new HashSet<>(blocks.stream().map(Block::getChunk).toList());
+  }
+
   private void setForcedChunks(boolean force) {
-    final var chunks = new HashSet<>(blocks.stream().map(Block::getChunk).toList());
-    for (final var chunk : chunks) {
+    for (final var chunk : getChunks()) {
       plugin.log(
           String.format(
               "Setting chunk %s to force loaded = %s", chunk.getX() + "-" + chunk.getZ(), force),
@@ -504,11 +507,12 @@ public class SuperMiningMachine {
     final var exceededItems = chest.getInventory().addItem(item);
     if (!exceededItems.isEmpty()) {
       plugin.log(
-          String.format("Could not add stack to chest, will go for next chest. %s", exceededItems));
+          String.format("Could not add stack to chest, will go for next chest. %s", exceededItems),
+          true);
       addItemsToChest(
           exceededItems.values().stream().filter(Objects::nonNull).toList(), chestIndex + 1);
     } else {
-      plugin.log(String.format("Added %s to chest %s", item, chestIndex));
+      plugin.log(String.format("Added %s to chest %s", item, chestIndex), true);
     }
   }
 
