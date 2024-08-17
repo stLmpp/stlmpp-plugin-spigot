@@ -21,6 +21,8 @@ public class SMMBlockBreaker {
     this.machine = machine;
     this.map = new HashMap<>();
     this.map.put(Material.CHEST, this::onChest);
+    this.map.put(Material.LAVA, this::onLiquid);
+    this.map.put(Material.WATER, this::onLiquid);
     for (Material material : Util.oreList) {
       this.map.put(material, this::onOre);
     }
@@ -112,5 +114,10 @@ public class SMMBlockBreaker {
     }
     items.add(chestStack);
     return items;
+  }
+
+  private Collection<ItemStack> onLiquid(Block block) {
+    block.setType(Material.AIR);
+    return Collections.emptyList();
   }
 }

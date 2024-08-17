@@ -343,7 +343,9 @@ public class SuperMiningMachine {
   private boolean isValidBlockToMine(@NotNull Block block) {
     final var type = block.getType();
     return (type.isBlock() && block.isSolid() && !type.equals(Material.BEDROCK))
-        || type.equals(Material.CHEST);
+        || type.equals(Material.CHEST)
+        || type.equals(Material.WATER)
+        || type.equals(Material.LAVA);
   }
 
   @Nullable
