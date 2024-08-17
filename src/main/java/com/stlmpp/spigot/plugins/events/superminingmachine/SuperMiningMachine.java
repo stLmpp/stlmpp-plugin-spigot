@@ -227,6 +227,7 @@ public class SuperMiningMachine {
       plugin.log(String.format("Machine %s is already completed", id), true);
       return;
     }
+    setForcedChunks(true);
     playSound(Sound.BLOCK_BEACON_ACTIVATE);
     startSmoke();
     plugin.log(String.format("Starting machine %s", id), true);
@@ -234,7 +235,19 @@ public class SuperMiningMachine {
     scheduleNext();
   }
 
+  private void setForcedChunks(boolean force) {
+    final var chunks = new HashSet<>(blocks.stream().map(Block::getChunk).toList());
+    for (final var chunk : chunks) {
+      plugin.log(
+          String.format(
+              "Setting chunk %s to force loaded = %s", chunk.getX() + "-" + chunk.getZ(), force),
+          true);
+      chunk.setForceLoaded(force);
+    }
+  }
+
   public void onDisable() {
+    setForcedChunks(false);
     if (lastTask != null) {
       lastTask.cancel();
     }
@@ -430,6 +443,23 @@ public class SuperMiningMachine {
             location.getBlockX(), location.getBlockY(), location.getBlockZ()));
     final var chest1 = location.getBlock();
     final var chest2 = chest1.getRelative(BlockFace.EAST);
+
+    if (plugin.isDevMode) {
+      final var sign = chest1.getRelative(BlockFace.WEST);
+      sign.setType(Material.DARK_OAK_WALL_SIGN);
+
+      final var signState = (Sign) sign.getState();
+      final var signData = (org.bukkit.block.data.type.WallSign) signState.getBlockData();
+      signData.setFacing(BlockFace.WEST);
+      sign.setBlockData(signState.getBlockData());
+      final var signSide = signState.getSide(Side.FRONT);
+      signSide.line(0, Component.text("Chest index"));
+      signSide.line(1, Component.text(chests.size()));
+      signSide.setGlowingText(true);
+      signSide.setColor(DyeColor.WHITE);
+      signState.update();
+    }
+
     chest1.setType(Material.CHEST);
     chest2.setType(Material.CHEST);
 
@@ -454,22 +484,31 @@ public class SuperMiningMachine {
   }
 
   private void addItemsToChest(@NotNull Collection<ItemStack> items) {
+    addItemsToChest(items, 0);
+  }
+
+  private void addItemsToChest(@NotNull Collection<ItemStack> items, int chestIndex) {
     plugin.log(String.format("Adding items (%s) to chest", items.size()), true);
-    for (final var item : items) {
-      int chestIndex = 0;
-      HashMap<Integer, ItemStack> exceededItems;
-      do {
-        if (chestIndex >= chests.size()) {
-          createNewChest();
-        }
-        final var chest = chests.get(chestIndex);
-        exceededItems = chest.getInventory().addItem(item);
-        if (!exceededItems.isEmpty()) {
-          chestIndex++;
-        } else {
-          chestIndex = 0;
-        }
-      } while (!exceededItems.isEmpty());
+
+    for (final ItemStack item : items) {
+      addItemToChest(item, chestIndex);
+    }
+  }
+
+  private void addItemToChest(@NotNull ItemStack item, int chestIndex) {
+    if (chestIndex >= chests.size()) {
+      createNewChest();
+    }
+    final var chest = chests.get(chestIndex);
+    plugin.log(String.format("Trying to add %s to chest at %s", item, chestIndex), true);
+    final var exceededItems = chest.getInventory().addItem(item);
+    if (!exceededItems.isEmpty()) {
+      plugin.log(
+          String.format("Could not add stack to chest, will go for next chest. %s", exceededItems));
+      addItemsToChest(
+          exceededItems.values().stream().filter(Objects::nonNull).toList(), chestIndex + 1);
+    } else {
+      plugin.log(String.format("Added %s to chest %s", item, chestIndex));
     }
   }
 
