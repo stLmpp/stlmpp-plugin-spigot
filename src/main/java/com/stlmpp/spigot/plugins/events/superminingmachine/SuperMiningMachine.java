@@ -443,7 +443,8 @@ public class SuperMiningMachine {
     plugin.log(
         String.format(
             "Creating new chest at %s %s %s",
-            location.getBlockX(), location.getBlockY(), location.getBlockZ()));
+            location.getBlockX(), location.getBlockY(), location.getBlockZ()),
+        true);
     final var chest1 = location.getBlock();
     final var chest2 = chest1.getRelative(BlockFace.EAST);
 

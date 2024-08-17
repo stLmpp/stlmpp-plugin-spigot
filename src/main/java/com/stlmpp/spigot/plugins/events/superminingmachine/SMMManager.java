@@ -151,7 +151,7 @@ public class SMMManager {
   }
 
   public void insertBlock(SMMBlockEntity block) {
-    plugin.log(String.format("Inserting block on machine %s | %s", block.smmId(), block));
+    plugin.log(String.format("Inserting block on machine %s | %s", block.smmId(), block), true);
     try (final var statement =
         plugin.getDatabaseConnection().prepareStatement(SMMQueries.smmBlockInsert)) {
       statement.setString(1, block.smmId());
