@@ -79,7 +79,7 @@ public class SMMBlockBreaker {
 
   private Collection<ItemStack> onDefault(Block block) {
     if (excludedMaterials.contains(block.getType())) {
-      return Collections.emptyList();
+      return new ArrayList<>();
     }
     final var tool = Util.findBestTool(block);
     var drops = block.getDrops(tool);
@@ -117,7 +117,9 @@ public class SMMBlockBreaker {
   }
 
   private Collection<ItemStack> onLiquid(Block block) {
+    final var blocks = Util.getBlocksAround(block);
     block.setType(Material.AIR);
-    return Collections.emptyList();
+    blocks.forEach((additionalBlock) -> additionalBlock.setType(Material.AIR));
+    return new ArrayList<>();
   }
 }
