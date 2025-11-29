@@ -19,20 +19,11 @@ public class StlmppPluginConfig {
   public static final String tpLightningNetherBlocksRadius = "tp-lightning-nether-blocks-radius";
   public static final String tpLightningChance = "tp-lightning-chance";
   public static final String tpLightningExplosionChance = "tp-lightning-explosion-chance";
-  public static final String netherPortalLeakingEnabled = "nether-portal-leaking-enabled";
-  public static final String netherPortalLeakingRadius = "nether-portal-leaking-radius";
-  public static final String netherPortalLeakingChanceOfNetherrackFire =
-      "nether-portal-leaking-chance-of-netherrack-fire";
-  public static final String netherPortalLeakingKnockbackPower =
-      "nether-portal-leaking-knockback-power";
   public static final String world = "world";
   public static final String devMode = "dev-mode";
   public static final String eggRandomEventEnabled = "egg-random-event-enabled";
   public static final String eggRandomEventChance = "egg-random-event-chance";
   public static final String deathEventEnabled = "death-event-enabled";
-  public static final String superMiningMachineEnabled = "super-mining-machine-enabled";
-  public static final String superMiningMachineMaxSize = "super-mining-machine-max-size";
-  public static final String superMiningMachineMaxQuantity = "super-mining-machine-max-quantity";
   public static final String wardenBetterDropsEnabled = "warden-better-drops-enabled";
   public static final String moreExpEnabled = "more-exp-enabled";
   public static final String creepyCavesEnabled = "creepy-caves-enabled";
@@ -57,22 +48,15 @@ public class StlmppPluginConfig {
     config.addDefault(StlmppPluginConfig.tpLightningChance, 75d);
     config.addDefault(StlmppPluginConfig.tpLightningNetherBlocksRadius, 4);
     config.addDefault(StlmppPluginConfig.tpLightningExplosionChance, 0.25d);
-    config.addDefault(StlmppPluginConfig.netherPortalLeakingEnabled, true);
-    config.addDefault(StlmppPluginConfig.netherPortalLeakingRadius, 7);
-    config.addDefault(StlmppPluginConfig.netherPortalLeakingChanceOfNetherrackFire, 0.25d);
-    config.addDefault(StlmppPluginConfig.netherPortalLeakingKnockbackPower, 0.5d);
     config.addDefault(StlmppPluginConfig.devMode, false);
     config.addDefault(StlmppPluginConfig.eggRandomEventEnabled, true);
-    config.addDefault(StlmppPluginConfig.eggRandomEventChance, 10.0d);
+    config.addDefault(StlmppPluginConfig.eggRandomEventChance, 0.8d);
     config.addDefault(StlmppPluginConfig.deathEventEnabled, true);
-    config.addDefault(StlmppPluginConfig.superMiningMachineEnabled, true);
-    config.addDefault(StlmppPluginConfig.superMiningMachineMaxSize, 50);
-    config.addDefault(StlmppPluginConfig.superMiningMachineMaxQuantity, 5);
     config.addDefault(StlmppPluginConfig.wardenBetterDropsEnabled, true);
     config.addDefault(StlmppPluginConfig.moreExpEnabled, true);
     config.addDefault(StlmppPluginConfig.creepyCavesEnabled, true);
     config.addDefault(StlmppPluginConfig.creepyCavesSoundChance, 2.5);
-    config.addDefault(StlmppPluginConfig.creepyCavesCowChance, 30);
+    config.addDefault(StlmppPluginConfig.creepyCavesCowChance, 10);
     config.options().copyDefaults(true);
     plugin.saveConfig();
     plugin.isDevMode = config.getBoolean(devMode);

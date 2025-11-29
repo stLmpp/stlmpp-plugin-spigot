@@ -2,18 +2,13 @@ package com.stlmpp.spigot.plugins;
 
 import com.stlmpp.spigot.plugins.events.*;
 import com.stlmpp.spigot.plugins.events.creepycaves.CreepyCavesTask;
-import com.stlmpp.spigot.plugins.events.netherportalleaking.NetherPortalLeakingEvent;
-import com.stlmpp.spigot.plugins.events.superminingmachine.SMMManager;
 import com.stlmpp.spigot.plugins.events.wardenbetterdrops.WardenBetterDropsEvent;
 import com.stlmpp.spigot.plugins.tasks.netherlightning.NetherLightningTask;
-import dev.jorel.commandapi.CommandAPI;
-import dev.jorel.commandapi.CommandAPIBukkitConfig;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-
 import net.kyori.adventure.text.Component;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -43,11 +38,8 @@ public class StlmppPlugin extends JavaPlugin {
   public final FileConfiguration config = getConfig();
   public Boolean isDevMode = false;
 
-  @Nullable private NetherPortalLeakingEvent netherPortalLeakingEvent;
   @Nullable private NetherLightningTask netherLightningTask;
   @Nullable private CreepyCavesTask creepyCavesTask;
-
-  @Nullable public SMMManager smmManager;
 
   public String getWorldName() {
     return config.getString(StlmppPluginConfig.world);
@@ -77,37 +69,23 @@ public class StlmppPlugin extends JavaPlugin {
       log("Failed to connect to database.");
       throw new RuntimeException(e);
     }
-    CommandAPI.onLoad(new CommandAPIBukkitConfig(this).silentLogs(!isDevMode));
-    CommandAPI.onEnable();
     netherLightningTask = NetherLightningTask.register(this);
     AutoSeedEvent.register(this);
     LightningTeleportEvent.register(this);
-    netherPortalLeakingEvent = NetherPortalLeakingEvent.register(this);
     EggRandomEffectEvent.register(this);
     DeathEvent.register(this);
-    smmManager = SMMManager.register(this);
-    if (smmManager != null) {
-      smmManager.onEnable();
-    }
     WardenBetterDropsEvent.register(this);
     creepyCavesTask = CreepyCavesTask.register(this);
   }
 
   @Override
   public void onDisable() {
-    if (netherPortalLeakingEvent != null) {
-      netherPortalLeakingEvent.destroy();
-    }
     if (netherLightningTask != null) {
       netherLightningTask.stopLastTask();
-    }
-    if (smmManager != null) {
-      smmManager.onDisable();
     }
     if (creepyCavesTask != null) {
       creepyCavesTask.cancel();
     }
-    CommandAPI.onDisable();
   }
 
   public BukkitTask runLater(long delay, Runnable function) {
